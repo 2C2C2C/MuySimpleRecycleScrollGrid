@@ -980,6 +980,15 @@ namespace UnityEngine.UI
             SetDirtyCaching();
         }
 
+        private void OnDrawGizmos()
+        {
+            if (Application.isPlaying)
+            {
+                DebugDrawer.DrawBounds(m_ViewBounds, Color.yellow);
+                DebugDrawer.DrawBounds(m_ContentBounds, Color.red);
+            }
+        }
+
 #endif
     }
 }

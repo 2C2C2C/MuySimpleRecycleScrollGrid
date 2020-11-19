@@ -13,7 +13,7 @@ using UnityEngine.UI;
 namespace HikoShit.UI
 {
     [SelectionBase]
-    [ExecuteInEditMode]
+    //[ExecuteInEditMode]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(RectTransform))]
     public class BaseScrollRect : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement//, ILayoutGroup
@@ -75,10 +75,6 @@ namespace HikoShit.UI
         private ScrollRectEvent m_OnValueChanged = new ScrollRectEvent();
         public ScrollRectEvent onValueChanged { get { return m_OnValueChanged; } set { m_OnValueChanged = value; } }
 
-        // @Hiko shit
-        private ScrollRectEvent m_OnValueChangedDelta = new ScrollRectEvent(); // value delta
-        public ScrollRectEvent onValueChangedDelta { get { return m_OnValueChangedDelta; } set { m_OnValueChangedDelta = value; } }
-
         // The offset from handle position to mouse down position
         private Vector2 m_PointerStartLocalCursor = Vector2.zero;
         protected Vector2 m_ContentStartPosition = Vector2.zero;
@@ -104,7 +100,7 @@ namespace HikoShit.UI
 
         private bool m_Dragging;
 
-        private Vector2 m_PrevPosition = Vector2.zero;
+        private Vector2 m_PrevPosition;
         private Bounds m_PrevContentBounds;
         private Bounds m_PrevViewBounds;
         [NonSerialized]
@@ -121,12 +117,17 @@ namespace HikoShit.UI
             }
         }
 
-        private DrivenRectTransformTracker m_Tracker;
+        //private DrivenRectTransformTracker m_Tracker;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public event System.Action<Vector2> OnContentPositionChanged;
         [Header("test stuff")]
-        private Vector2 m_contentTestDelta = default;
-        public RectTransform m_testContent = null;
-        private Vector2 m_contentPos = default;
+        [SerializeField]
+        private Vector2 m_contentCenterPos; // maybe use it for simulate content move?
+        [SerializeField]
+        private Vector2 m_contentSize;
 
         public virtual void Rebuild(CanvasUpdate executing)
         {
@@ -170,7 +171,7 @@ namespace HikoShit.UI
             CanvasUpdateRegistry.UnRegisterCanvasElementForRebuild(this);
 
             m_HasRebuiltLayout = false;
-            m_Tracker.Clear();
+            //m_Tracker.Clear();
             m_Velocity = Vector2.zero;
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
             base.OnDisable();
@@ -187,9 +188,16 @@ namespace HikoShit.UI
                 Canvas.ForceUpdateCanvases();
         }
 
-        public virtual void StopMovement()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="contentCenterPosition"> the anchor pos when anchor is center </param>
+        /// <param name="contentSize"></param>
+        public void SetVirtualContent(Vector2 contentCenterPosition, Vector2 contentSize)
         {
-            m_Velocity = Vector2.zero;
+            m_contentCenterPos = contentCenterPosition;
+            m_contentSize = contentSize;
+            m_ContentBounds = new Bounds(m_contentCenterPos, contentSize);
         }
 
         public virtual void OnScroll(PointerEventData data)
@@ -219,7 +227,8 @@ namespace HikoShit.UI
             // TODO @Hiko should also do stuff for elastic move
             //Debug.Log($"get on scroll data {delta}");
             //m_OnValueChangedDelta?.Invoke(delta * 0.1f * m_ViewRect.rect.height * 0.1f);
-            m_OnValueChangedDelta?.Invoke(delta * m_ViewRect.rect.height * 0.1f);
+
+            //m_OnValueChangedDelta?.Invoke(delta * m_ViewRect.rect.height * 0.1f);
 
             //Vector2 position = m_DragContent.anchoredPosition;
             //position += delta * m_ScrollSensitivity;
@@ -248,10 +257,9 @@ namespace HikoShit.UI
 
             UpdateBounds();
 
-            m_contentTestDelta = Vector2.zero;
             m_PointerStartLocalCursor = Vector2.zero;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(viewRect, eventData.position, eventData.pressEventCamera, out m_PointerStartLocalCursor);
-            m_ContentStartPosition = m_DragContent.anchoredPosition;
+            m_ContentStartPosition = m_contentCenterPos;
             m_Dragging = true;
         }
 
@@ -261,11 +269,8 @@ namespace HikoShit.UI
                 return;
 
             m_Dragging = false;
-            m_pointerPos = Vector2.zero;
-            m_contentTestDelta = Vector2.zero;
         }
 
-        private Vector2 m_pointerPos = default;
         public virtual void OnDrag(PointerEventData eventData)
         {
             if (eventData.button != PointerEventData.InputButton.Left)
@@ -280,52 +285,43 @@ namespace HikoShit.UI
 
             UpdateBounds();
 
-            // it's delta from current point to the first start point
             Vector2 pointerDelta = localCursor - m_PointerStartLocalCursor;
-            Vector2 currentDelta = pointerDelta - m_pointerPos;
-            m_contentTestDelta += currentDelta;
-            Debug.Log($"check pointer delta {m_contentTestDelta}");
+            //Debug.Log($"check pointer delta {pointerDelta}");
 
-            m_pointerPos = pointerDelta;
-
-            // TODO @Hiko
-            if (true || MovementType.Clamped == m_MovementType)
-            {
-                // no speed move for it
-                m_OnValueChangedDelta.Invoke(currentDelta);
-            }
-
-            // do it properly, for the drag content
-            // Offset to get content into place in the view.
-
-            //Vector2 offset = CalculateOffset(position - m_DragContent.anchoredPosition);
-            //position += offset;
-            //if (m_MovementType == MovementType.Elastic)
-            //{
-            //    if (offset.x != 0)
-            //        position.x = position.x - RubberDelta(offset.x, m_ViewBounds.size.x);
-            //    if (offset.y != 0)
-            //        position.y = position.y - RubberDelta(offset.y, m_ViewBounds.size.y);
-            //}
-
-            //SetContentAnchoredPosition(position);
+            Vector2 nextPosition = CalculateNextPosition(pointerDelta);
+            ApplyContentCenterPosition(nextPosition);
         }
 
-        protected virtual void SetContentAnchoredPosition(Vector2 position)
+        private Vector2 CalculateNextPosition(Vector2 pointerDelta)
         {
-            // disble it for now cuz I dun move content object
-            return;
+            Vector2 nextPostion = m_ContentStartPosition + pointerDelta;
+            Vector2 offset = CalculateOffset(nextPostion - m_contentCenterPos);
+            nextPostion += offset;
 
-            if (!m_Horizontal)
-                position.x = m_DragContent.anchoredPosition.x;
-            if (!m_Vertical)
-                position.y = m_DragContent.anchoredPosition.y;
-
-            if (position != m_DragContent.anchoredPosition)
+            if (m_MovementType == MovementType.Elastic)
             {
-                m_DragContent.anchoredPosition = position;
+                if (offset.x != 0)
+                    nextPostion.x = nextPostion.x - RubberDelta(offset.x, m_ViewBounds.size.x);
+                if (offset.y != 0)
+                    nextPostion.y = nextPostion.y - RubberDelta(offset.y, m_ViewBounds.size.y);
+            }
+
+            return nextPostion;
+        }
+
+        private void ApplyContentCenterPosition(Vector2 nextPosition)
+        {
+            if (!m_Horizontal)
+                nextPosition.x = m_contentCenterPos.x;
+            if (!m_Vertical)
+                nextPosition.x = m_contentCenterPos.y;
+
+            if (nextPosition != m_contentCenterPos)
+            {
+                m_contentCenterPos = nextPosition;
                 UpdateBounds();
             }
+            OnContentPositionChanged?.Invoke(m_contentCenterPos);
         }
 
         protected virtual void LateUpdate()
@@ -336,34 +332,21 @@ namespace HikoShit.UI
             EnsureLayoutHasRebuilt();
             UpdateBounds();
             float deltaTime = Time.unscaledDeltaTime;
+
             Vector2 offset = CalculateOffset(Vector2.zero);
-
-            if (m_MovementType == MovementType.Clamped)
-            {
-                DoClampedMove(deltaTime);
-
-            }
-
-            if (m_Inertia)
-            {
-
-            }
-
-            return;
-
             if (!m_Dragging && (offset != Vector2.zero || m_Velocity != Vector2.zero))
             {
-                Vector2 position = m_DragContent.anchoredPosition;
+                Vector2 nextPosition = m_contentCenterPos;
                 for (int axis = 0; axis < 2; axis++)
                 {
                     // Apply spring physics if movement is elastic and content has an offset from the view.
                     if (m_MovementType == MovementType.Elastic && offset[axis] != 0)
                     {
                         float speed = m_Velocity[axis];
-                        position[axis] = Mathf.SmoothDamp(m_DragContent.anchoredPosition[axis], m_DragContent.anchoredPosition[axis] + offset[axis], ref speed, m_Elasticity, Mathf.Infinity, deltaTime);
+                        nextPosition[axis] = Mathf.SmoothDamp(m_contentCenterPos[axis], m_contentCenterPos[axis] + offset[axis], ref speed, m_Elasticity, Mathf.Infinity, deltaTime);
+                        if (Mathf.Abs(speed) < 1) // remove it
+                            speed = 0;
                         m_Velocity[axis] = speed;
-                        //if (Mathf.Abs(speed) < 1) // remove it
-                        //    speed = 0;
                     }
                     // Else move content according to velocity with deceleration applied.
                     else if (m_Inertia)
@@ -371,7 +354,7 @@ namespace HikoShit.UI
                         m_Velocity[axis] *= Mathf.Pow(m_DecelerationRate, deltaTime);
                         if (Mathf.Abs(m_Velocity[axis]) < 1)
                             m_Velocity[axis] = 0;
-                        position[axis] += m_Velocity[axis] * deltaTime;
+                        nextPosition[axis] += m_Velocity[axis] * deltaTime;
                     }
                     // If we have neither elaticity or friction, there shouldn't be any velocity.
                     else
@@ -384,21 +367,21 @@ namespace HikoShit.UI
                 {
                     if (m_MovementType == MovementType.Clamped)
                     {
-                        offset = CalculateOffset(position - m_DragContent.anchoredPosition);
-                        position += offset;
+                        offset = CalculateOffset(nextPosition - m_DragContent.anchoredPosition);
+                        nextPosition += offset;
                     }
 
-                    SetContentAnchoredPosition(position);
+                    ApplyContentCenterPosition(nextPosition);
                 }
             }
 
             if (m_Dragging && m_Inertia)
             {
-                Vector3 newVelocity = (m_DragContent.anchoredPosition - m_PrevPosition) / deltaTime;
+                Vector3 newVelocity = (m_contentCenterPos - m_PrevPosition) / deltaTime;
                 m_Velocity = Vector3.Lerp(m_Velocity, newVelocity, deltaTime * 10);
             }
 
-            if (m_ViewBounds != m_PrevViewBounds || m_ContentBounds != m_PrevContentBounds || m_DragContent.anchoredPosition != m_PrevPosition)
+            if (m_ViewBounds != m_PrevViewBounds || m_ContentBounds != m_PrevContentBounds || m_contentCenterPos != m_PrevPosition)
             {
                 //UISystemProfilerApi.AddMarker("ScrollRect.value", this);
                 m_OnValueChanged.Invoke(normalizedPosition);
@@ -406,26 +389,13 @@ namespace HikoShit.UI
             }
         }
 
-        // @Hiko
-        private void DoClampedMove(float deltaTime)
-        {
-            m_contentPos = m_testContent.anchoredPosition;
-
-            Vector2 move = m_contentTestDelta;
-            Bounds viewBounds = new Bounds(m_Viewport.rect.center, m_Viewport.rect.size);
-            Vector2 moveOffset = InternalCalculateOffset(ref viewBounds, ref viewBounds, true, true, MovementType.Clamped, ref move);
-            //m_contentPos += m_contentTestDelta;
-            m_contentPos += move;
-            m_testContent.anchoredPosition = m_contentPos;
-            m_contentTestDelta = Vector2.zero;
-        }
-
         protected void UpdatePrevData()
         {
             if (m_DragContent == null)
                 m_PrevPosition = Vector2.zero;
             else
-                m_PrevPosition = m_DragContent.anchoredPosition;
+                m_PrevPosition = m_contentCenterPos;
+
             m_PrevViewBounds = m_ViewBounds;
             m_PrevContentBounds = m_ContentBounds;
         }
@@ -474,9 +444,6 @@ namespace HikoShit.UI
             }
         }
 
-        private void SetHorizontalNormalizedPosition(float value) { SetNormalizedPosition(value, 0); }
-        private void SetVerticalNormalizedPosition(float value) { SetNormalizedPosition(value, 1); }
-
         protected virtual void SetNormalizedPosition(float value, int axis)
         {
             // TODO @Hiko set scroll by real content height
@@ -510,25 +477,6 @@ namespace HikoShit.UI
         protected override void OnRectTransformDimensionsChange()
         {
             SetDirty();
-        }
-
-        private bool hScrollingNeeded
-        {
-            get
-            {
-                if (Application.isPlaying)
-                    return m_ContentBounds.size.x > m_ViewBounds.size.x + 0.01f;
-                return true;
-            }
-        }
-        private bool vScrollingNeeded
-        {
-            get
-            {
-                if (Application.isPlaying)
-                    return m_ContentBounds.size.y > m_ViewBounds.size.y + 0.01f;
-                return true;
-            }
         }
 
         #region layout stuff
@@ -605,19 +553,18 @@ namespace HikoShit.UI
 
         #endregion
 
-        // @Hiko may need this to update the virual content's bounds
+        // @Hiko to understand this
         protected void UpdateBounds()
         {
             m_ViewBounds = new Bounds(viewRect.rect.center, viewRect.rect.size);
-            // @Hiko test m_ContentBounds = GetBounds();
-            m_ContentBounds = GetBounds(m_testContent);
+            m_ContentBounds = new Bounds(m_contentCenterPos, m_contentSize);
 
             if (m_DragContent == null)
                 return;
 
             Vector3 contentSize = m_ContentBounds.size;
             Vector3 contentPos = m_ContentBounds.center;
-            var contentPivot = m_DragContent.pivot;
+            Vector2 contentPivot = m_contentCenterPos;
             AdjustBounds(ref m_ViewBounds, ref contentPivot, ref contentSize, ref contentPos);
             m_ContentBounds.size = contentSize;
             m_ContentBounds.center = contentPos;
@@ -648,11 +595,13 @@ namespace HikoShit.UI
                 }
                 if (delta.sqrMagnitude > float.Epsilon)
                 {
-                    contentPos = m_DragContent.anchoredPosition + delta;
+                    contentPos = m_contentCenterPos + delta;
                     if (!m_Horizontal)
-                        contentPos.x = m_DragContent.anchoredPosition.x;
+                        contentPos.x = m_contentCenterPos.x;
+
                     if (!m_Vertical)
-                        contentPos.y = m_DragContent.anchoredPosition.y;
+                        contentPos.y = m_contentCenterPos.y;
+
                     AdjustBounds(ref m_ViewBounds, ref contentPivot, ref contentSize, ref contentPos);
                 }
             }
@@ -712,7 +661,7 @@ namespace HikoShit.UI
             return InternalCalculateOffset(ref m_ViewBounds, ref m_ContentBounds, m_Horizontal, m_Vertical, m_MovementType, ref delta);
         }
 
-        internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, bool horizontal, bool vertical, MovementType movementType, ref Vector2 delta)
+        private Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, bool horizontal, bool vertical, MovementType movementType, ref Vector2 delta)
         {
             Vector2 offset = Vector2.zero;
             if (movementType == MovementType.Unrestricted)
@@ -766,6 +715,41 @@ namespace HikoShit.UI
         protected override void OnValidate()
         {
             SetDirtyCaching();
+        }
+
+        private void OnDrawGizmos()
+        {
+            if (Application.isPlaying)
+            {
+                DrawVirtualContent();
+                DebugDrawer.DrawBounds(m_ViewBounds, Color.yellow);
+                DebugDrawer.DrawBounds(m_ContentBounds, Color.red);
+            }
+        }
+
+        private void DrawVirtualContent()
+        {
+            float width = m_contentSize.x;
+            float height = m_contentSize.y;
+
+            // to get top left point
+            Vector3 position = m_ViewRect.position + (Vector3)m_contentCenterPos;
+
+            Vector3 point1 = default, point2 = default;
+            point1 = position;
+            point1.x -= width * 0.5f;
+            point1.y += height * 0.5f;
+            point2 = point1;
+            point2.x += width;
+
+            Vector3 point3 = point1, point4 = point2;
+            point3.y -= height;
+            point4.y -= height;
+
+            Debug.DrawLine(point1, point2, Color.blue);
+            Debug.DrawLine(point1, point3, Color.blue);
+            Debug.DrawLine(point2, point4, Color.blue);
+            Debug.DrawLine(point3, point4, Color.blue);
         }
 
 #endif

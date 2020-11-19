@@ -33,8 +33,8 @@ namespace HikoShit.UI
         IReadOnlyList<TempDataItem> m_dataList = null;
 
         #region test shit
-        [Header("test shit")]
 
+        [Header("test shit")]
         public TempGridItem m_itemPrefab = null;
 
         #endregion
