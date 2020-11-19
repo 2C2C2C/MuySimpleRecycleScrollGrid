@@ -19,6 +19,7 @@ namespace HikoShit.UI
     public class BaseScrollRect : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement//, ILayoutGroup
     {
         #region enum define
+
         public enum MovementType
         {
             Unrestricted, // Unrestricted movement -- can scroll forever
@@ -123,8 +124,8 @@ namespace HikoShit.UI
         private DrivenRectTransformTracker m_Tracker;
 
         [Header("test stuff")]
+        private Vector2 m_contentTestDelta = default;
         public RectTransform m_testContent = null;
-        private Vector2 m_contentSize = default;
         private Vector2 m_contentPos = default;
 
         public virtual void Rebuild(CanvasUpdate executing)
@@ -247,6 +248,7 @@ namespace HikoShit.UI
 
             UpdateBounds();
 
+            m_contentTestDelta = Vector2.zero;
             m_PointerStartLocalCursor = Vector2.zero;
             RectTransformUtility.ScreenPointToLocalPointInRectangle(viewRect, eventData.position, eventData.pressEventCamera, out m_PointerStartLocalCursor);
             m_ContentStartPosition = m_DragContent.anchoredPosition;
@@ -260,6 +262,7 @@ namespace HikoShit.UI
 
             m_Dragging = false;
             m_pointerPos = Vector2.zero;
+            m_contentTestDelta = Vector2.zero;
         }
 
         private Vector2 m_pointerPos = default;
@@ -280,8 +283,10 @@ namespace HikoShit.UI
             // it's delta from current point to the first start point
             Vector2 pointerDelta = localCursor - m_PointerStartLocalCursor;
             Vector2 currentDelta = pointerDelta - m_pointerPos;
+            m_contentTestDelta += currentDelta;
+            Debug.Log($"check pointer delta {m_contentTestDelta}");
+
             m_pointerPos = pointerDelta;
-            //Debug.Log($"check pointer delta {currentDelta}");
 
             // TODO @Hiko
             if (true || MovementType.Clamped == m_MovementType)
@@ -332,6 +337,20 @@ namespace HikoShit.UI
             UpdateBounds();
             float deltaTime = Time.unscaledDeltaTime;
             Vector2 offset = CalculateOffset(Vector2.zero);
+
+            if (m_MovementType == MovementType.Clamped)
+            {
+                DoClampedMove(deltaTime);
+
+            }
+
+            if (m_Inertia)
+            {
+
+            }
+
+            return;
+
             if (!m_Dragging && (offset != Vector2.zero || m_Velocity != Vector2.zero))
             {
                 Vector2 position = m_DragContent.anchoredPosition;
@@ -388,10 +407,17 @@ namespace HikoShit.UI
         }
 
         // @Hiko
-        private void DoClampedMove()
+        private void DoClampedMove(float deltaTime)
         {
+            m_contentPos = m_testContent.anchoredPosition;
 
-
+            Vector2 move = m_contentTestDelta;
+            Bounds viewBounds = new Bounds(m_Viewport.rect.center, m_Viewport.rect.size);
+            Vector2 moveOffset = InternalCalculateOffset(ref viewBounds, ref viewBounds, true, true, MovementType.Clamped, ref move);
+            //m_contentPos += m_contentTestDelta;
+            m_contentPos += move;
+            m_testContent.anchoredPosition = m_contentPos;
+            m_contentTestDelta = Vector2.zero;
         }
 
         protected void UpdatePrevData()
@@ -579,10 +605,12 @@ namespace HikoShit.UI
 
         #endregion
 
+        // @Hiko may need this to update the virual content's bounds
         protected void UpdateBounds()
         {
             m_ViewBounds = new Bounds(viewRect.rect.center, viewRect.rect.size);
-            m_ContentBounds = GetBounds();
+            // @Hiko test m_ContentBounds = GetBounds();
+            m_ContentBounds = GetBounds(m_testContent);
 
             if (m_DragContent == null)
                 return;
@@ -653,11 +681,11 @@ namespace HikoShit.UI
         }
 
         private readonly Vector3[] m_Corners = new Vector3[4];
-        private Bounds GetBounds()
+        private Bounds GetBounds(RectTransform rectTransform)
         {
-            if (m_DragContent == null)
+            if (rectTransform == null)
                 return new Bounds();
-            m_DragContent.GetWorldCorners(m_Corners);
+            rectTransform.GetWorldCorners(m_Corners);
             var viewWorldToLocalMatrix = viewRect.worldToLocalMatrix;
             return InternalGetBounds(m_Corners, ref viewWorldToLocalMatrix);
         }
@@ -734,6 +762,7 @@ namespace HikoShit.UI
         }
 
 #if UNITY_EDITOR
+
         protected override void OnValidate()
         {
             SetDirtyCaching();
