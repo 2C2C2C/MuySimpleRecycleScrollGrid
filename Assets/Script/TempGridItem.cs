@@ -9,14 +9,22 @@ public class TempGridItem : MonoBehaviour
     private RectTransform m_rectTransform = null;
     public RectTransform ItemRectTransform => m_rectTransform;
     [SerializeField]
+    CanvasGroup m_canvasGroup = null;
+    [SerializeField]
     private Text m_label = null;
 
     private Vector2 m_itemSize = default;
     public Vector2 ItemSize => m_itemSize;
 
+    public void Hide()
+    {
+        m_canvasGroup.alpha = 0.0f;
+    }
+
     public void Setup(in string name)
     {
         m_label.text = name;
+        m_canvasGroup.alpha = 1.0f;
     }
 
     public void SetSize(Vector2 size)
