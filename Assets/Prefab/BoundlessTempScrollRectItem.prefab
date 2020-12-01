@@ -90,9 +90,9 @@ GameObject:
   - component: {fileID: 222895241312479452}
   - component: {fileID: 114467557769714726}
   - component: {fileID: 8723115222411949048}
-  - component: {fileID: 4473575851709532450}
+  - component: {fileID: 5922839548107084954}
   m_Layer: 5
-  m_Name: TempItemWa
+  m_Name: BoundlessTempScrollRectItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -168,7 +168,7 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
---- !u!114 &4473575851709532450
+--- !u!114 &5922839548107084954
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -177,12 +177,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 1818053662371582}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30602c6626fa8094ea1300769bdccbd6, type: 3}
+  m_Script: {fileID: 11500000, guid: 18e05dd7070f325459739dd7c54a2a05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_rectTransform: {fileID: 224671534218262706}
   m_canvasGroup: {fileID: 8723115222411949048}
-  m_label: {fileID: 114907119104544856}
+  m_dataText: {fileID: 114907119104544856}
 --- !u!1 &6763808958984725762
 GameObject:
   m_ObjectHideFlags: 0

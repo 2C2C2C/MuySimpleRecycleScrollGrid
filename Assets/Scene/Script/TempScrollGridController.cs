@@ -39,12 +39,6 @@ namespace HikoShit.UI
 
         #endregion
 
-        [ContextMenu("funs")]
-        public void TestSet()
-        {
-            m_scrollRect.normalizedPosition = Vector2.right;
-        }
-
         public void InjectData(IReadOnlyList<TempDataItem> dataList)
         {
             m_dataList = dataList;
@@ -150,7 +144,8 @@ namespace HikoShit.UI
             // set it height of content
             float tempHeight = Mathf.Abs(m_viewport.rect.y * m_viewport.localScale.y);
             m_viewItemCount = (int)(tempHeight / m_itemSize.y);
-            Debug.Log($"test viewport item count {m_viewItemCount}");
+
+            // Debug.Log($"test viewport item count {m_viewItemCount}");
             if (tempHeight % m_itemSize.y > 0)
                 m_viewItemCount++;
 
@@ -183,7 +178,7 @@ namespace HikoShit.UI
 
         #endregion
 
-        public static void DestroyAllChildren(Transform target)
+        private static void DestroyAllChildren(Transform target)
         {
             if (null == target)
             {
