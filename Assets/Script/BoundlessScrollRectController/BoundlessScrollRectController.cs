@@ -30,6 +30,10 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private Vector2 m_itemSize = Vector2.zero * 100.0f;
     private Vector2 m_itemStartPos = default; // the showing first item start pos in virwport
+
+    /// <summary>
+    /// including spacing
+    /// </summary>
     private Vector2 m_actualContentSize = default;
 
     private List<TempGridItem> m_uiItems = null;
@@ -117,11 +121,10 @@ public class BoundlessScrollRectController : MonoBehaviour
     private void OnScrollRectValueChanged(Vector2 position)
     {
         RefreshItemStartPosition();
-        if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
-            DrawStuffFixedColumnCount();
-        else
-            DrawStuffFixedRowCount();
-
+        //if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
+        //    DrawStuffFixedColumnCount();
+        //else
+        //    DrawStuffFixedRowCount();
         TestDrawContent();
     }
 
@@ -323,7 +326,36 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private void TestDrawContent()
     {
+        // to draw all the content correctly
+        Vector2 contentAnchorPosition = m_dragContent.anchoredPosition;
+        Vector3 ogPosition = m_viewport.position;
+        Vector3 dragContentPostion = m_dragContent.position;
+        m_actualContent.anchoredPosition = Vector2.zero;
 
+        // to get position delta
+        float xMove = dragContentPostion.x - ogPosition.x;
+        float yMove = dragContentPostion.y - ogPosition.y;
+
+        Vector2 itemSize = m_gridLayoutGroup.cellSize;
+        Vector2 spacing = m_gridLayoutGroup.spacing;
+        int tempXIndex = (int)(Mathf.Abs(xMove) / (itemSize.x + spacing.x));
+        int tempYIndex = (int)(Mathf.Abs(yMove) / (itemSize.y + spacing.y));
+
+        // deal with content from left to right (simple case) first
+        int dataIndex = 0;
+        for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
+        {
+            for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
+            {
+
+            }
+        }
+
+        while (dataIndex < m_uiItems.Count)
+        {
+            m_uiItems[dataIndex].Hide();
+            m_uiItems[dataIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
+        }
     }
 
     private void CalculateViewportShowCount()
