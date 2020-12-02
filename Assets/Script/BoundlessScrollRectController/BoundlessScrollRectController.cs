@@ -1,7 +1,10 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+
+/*
+@Hiko cant support Unrestricted move for now :)
+*/
 
 [RequireComponent(typeof(ScrollRect), typeof(GridLayoutGroup))]
 public class BoundlessScrollRectController : MonoBehaviour
@@ -17,7 +20,6 @@ public class BoundlessScrollRectController : MonoBehaviour
     private RectTransform m_actualContent = null;
     // these 2 content anchor are on top left 
 
-    // do vertical first
     private int m_viewItemCount = 0;
     private int m_viewItemCountInRow = 0;
     private int m_viewItemCountInColumn = 0;
@@ -47,6 +49,13 @@ public class BoundlessScrollRectController : MonoBehaviour
     */
     [Space, Header("Grid Layout Setting"), SerializeField]
     private BoundlessGridLayoutData m_gridLayoutGroup = default;
+
+#if UNITY_EDITOR
+    [Space, Header("Debug settings")]
+    public bool m_drawContentSize = true;
+    public bool m_drawGrids = true;
+    public bool m_drawShowingGrids = true;
+#endif
 
     public void RefreshLayout()
     {
@@ -121,10 +130,6 @@ public class BoundlessScrollRectController : MonoBehaviour
     private void OnScrollRectValueChanged(Vector2 position)
     {
         RefreshItemStartPosition();
-        //if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
-        //    DrawStuffFixedColumnCount();
-        //else
-        //    DrawStuffFixedRowCount();
         TestDrawContent();
     }
 
@@ -163,198 +168,91 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_itemStartPos = nextTopPos;
     }
 
-    private void DrawStuffFixedColumnCount()
-    {
-        // maybe this method is too long :(
-        Vector2 spacing = m_gridLayoutGroup.spacing;
-        Vector2 contentPos = m_dragContent.anchoredPosition;
-        Vector2 testOffset = Vector2.zero;
-
-        int startXIndex = (int)Mathf.FloorToInt(m_itemStartPos.x / (spacing.x + m_itemSize.x));
-        int startYIndex = (int)Mathf.FloorToInt(m_itemStartPos.y / (spacing.y + m_itemSize.y));
-
-        if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
-        {
-            // draw left to right for test
-            // draw up to down for test
-            int constraintCount = m_gridLayoutGroup.constraintCount;
-
-            int uiItemIndex = 0;
-            int outerViewCount = 0, innerViewCount = 0;
-
-            int startIndex = 0;
-            if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
-                startIndex = startYIndex * constraintCount + startXIndex;
-            else // GridLayoutGroup.Axis.Vertical == m_gridLayoutGroup.startAxis
-            {
-                constraintCount = (m_dataList.Count + m_dataList.Count % constraintCount) / constraintCount;
-                startIndex = startXIndex * constraintCount + startYIndex;
-            }
-
-            outerViewCount = m_viewItemCountInColumn;
-            innerViewCount = m_viewItemCountInRow;
-
-            for (int outerIndex = 0; outerIndex < outerViewCount; outerIndex++)
-            {
-                for (int innerIndex = 0; innerIndex < innerViewCount + 1; innerIndex++)
-                {
-                    Vector2 anchorPosition = default;
-                    int dataIndex = 0;
-
-                    if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
-                        dataIndex = startIndex + innerIndex + outerIndex * constraintCount;
-                    else // GridLayoutGroup.Axis.Vertical == m_gridLayoutGroup.startAxis
-                        dataIndex = startIndex + outerIndex + innerIndex * constraintCount;
-
-                    if (uiItemIndex < m_uiItems.Count)
-                    {
-                        bool hideItem = innerIndex >= innerViewCount - 1 || dataIndex < 0 || dataIndex >= m_dataList.Count;
-                        if (BoundlessGridLayoutData.StartAxis.Vertical == m_gridLayoutGroup.startAxis)
-                            hideItem = hideItem || (startIndex % constraintCount + outerIndex >= constraintCount);
-
-                        if (hideItem)
-                        {
-                            m_uiItems[uiItemIndex].Hide();
-                            m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
-                        }
-                        else
-                        {
-                            m_uiItems[uiItemIndex].Setup(m_dataList[dataIndex].TempName);
-                            anchorPosition = (innerIndex * Vector2.right * m_itemSize.x) + (innerIndex * spacing.x) * Vector2.right;
-                            anchorPosition += -(outerIndex * Vector2.up * m_itemSize.y) - (outerIndex * spacing.y) * Vector2.up;
-                            m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = anchorPosition;
-                        }
-
-                        uiItemIndex++;
-                    }
-                }
-            }
-
-            while (uiItemIndex < m_uiItems.Count)
-            {
-                m_uiItems[uiItemIndex].Hide();
-                m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
-                uiItemIndex++;
-            }
-
-            testOffset.x = m_dragContent.anchoredPosition.x - startXIndex * (m_itemSize.x + spacing.x);
-            testOffset.y = m_dragContent.anchoredPosition.y - startYIndex * (m_itemSize.y + spacing.y);
-            m_actualContent.anchoredPosition = testOffset;
-        }
-
-    }
-
-    private void DrawStuffFixedRowCount()
-    {
-        // maybe this method is too long :(
-        Vector2 spacing = m_gridLayoutGroup.spacing;
-        Vector2 contentPos = m_dragContent.anchoredPosition;
-        Vector2 testOffset = Vector2.zero;
-
-        int startXIndex = (int)Mathf.FloorToInt(m_itemStartPos.x / (spacing.x + m_itemSize.x));
-        int startYIndex = (int)Mathf.FloorToInt(m_itemStartPos.y / (spacing.y + m_itemSize.y));
-
-        if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedRowCount)
-        {
-            // draw left to right for test
-            // draw up to down for test
-
-            int constraintCount = m_gridLayoutGroup.constraintCount;
-            int uiItemIndex = 0;
-            int outerViewCount = 0, innerViewCount = 0;
-
-            int startIndex = 0;
-            if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
-                startIndex = startYIndex * constraintCount + startXIndex;
-            else // GridLayoutGroup.Axis.Vertical == m_gridLayoutGroup.startAxis
-            {
-                constraintCount = (m_dataList.Count + m_dataList.Count % constraintCount) / constraintCount;
-                startIndex = startXIndex * constraintCount + startYIndex;
-            }
-
-            outerViewCount = m_viewItemCountInColumn;
-            innerViewCount = m_viewItemCountInRow;
-
-            for (int outerIndex = 0; outerIndex < outerViewCount; outerIndex++)
-            {
-                for (int innerIndex = 0; innerIndex < innerViewCount + 1; innerIndex++)
-                {
-                    Vector2 anchorPosition = default;
-                    int dataIndex = 0;
-
-                    if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
-                        dataIndex = startIndex + innerIndex + outerIndex * constraintCount;
-                    else // GridLayoutGroup.Axis.Vertical == m_gridLayoutGroup.startAxis
-                        dataIndex = startIndex + outerIndex + innerIndex * constraintCount;
-
-                    if (uiItemIndex < m_uiItems.Count)
-                    {
-                        bool hideItem = innerIndex >= innerViewCount - 1 || dataIndex < 0 || dataIndex >= m_dataList.Count;
-                        if (BoundlessGridLayoutData.StartAxis.Vertical == m_gridLayoutGroup.startAxis)
-                            hideItem = hideItem || (startIndex % constraintCount + outerIndex >= constraintCount);
-
-                        if (hideItem)
-                        {
-                            m_uiItems[uiItemIndex].Hide();
-                            m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
-                        }
-                        else
-                        {
-                            m_uiItems[uiItemIndex].Setup(m_dataList[dataIndex].TempName);
-                            anchorPosition = (innerIndex * Vector2.right * m_itemSize.x) + (innerIndex * spacing.x) * Vector2.right;
-                            anchorPosition += -(outerIndex * Vector2.up * m_itemSize.y) - (outerIndex * spacing.y) * Vector2.up;
-                            m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = anchorPosition;
-                        }
-
-                        uiItemIndex++;
-                    }
-                }
-            }
-
-            while (uiItemIndex < m_uiItems.Count)
-            {
-                m_uiItems[uiItemIndex].Hide();
-                m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
-                uiItemIndex++;
-            }
-
-            testOffset.x = m_dragContent.anchoredPosition.x - startXIndex * (m_itemSize.x + spacing.x);
-            testOffset.y = m_dragContent.anchoredPosition.y - startYIndex * (m_itemSize.y + spacing.y);
-            m_actualContent.anchoredPosition = testOffset;
-        }
-    }
-
     private void TestDrawContent()
     {
-        // to draw all the content correctly
-        Vector2 contentAnchorPosition = m_dragContent.anchoredPosition;
         Vector3 ogPosition = m_viewport.position;
         Vector3 dragContentPostion = m_dragContent.position;
+        Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
         m_actualContent.anchoredPosition = Vector2.zero;
 
         // to get position delta
-        float xMove = dragContentPostion.x - ogPosition.x;
-        float yMove = dragContentPostion.y - ogPosition.y;
-
+        float xMove = Mathf.Abs(dragAnchorContentPostion.x);
+        float yMove = Mathf.Abs(dragAnchorContentPostion.y);
         Vector2 itemSize = m_gridLayoutGroup.cellSize;
         Vector2 spacing = m_gridLayoutGroup.spacing;
-        int tempXIndex = (int)(Mathf.Abs(xMove) / (itemSize.x + spacing.x));
-        int tempYIndex = (int)(Mathf.Abs(yMove) / (itemSize.y + spacing.y));
+        int tempColumnIndex = (int)Mathf.Floor(xMove / (itemSize.x + spacing.x));
+        int tempRowIndex = (int)Mathf.Floor(yMove / (itemSize.y + spacing.y));
 
-        // deal with content from left to right (simple case) first
-        int dataIndex = 0;
-        for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
+        // deal with different start axis
+        Vector3 tempMove = new Vector3(tempColumnIndex * (itemSize.x + spacing.x), -tempRowIndex * (itemSize.y + spacing.y), 0.0f);
+        Bounds contentBounds = new Bounds(m_dragContent.position + new Vector3(m_dragContent.rect.width * 0.5f, -m_dragContent.rect.height * 0.5f, 0.0f), m_dragContent.rect.size);
+
+        // to calculate it somewhere else :)
+        int rowDataCount = 0, columnDataCount = 0;
+        if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
         {
-            for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
-            {
-
-            }
+            rowDataCount = m_gridLayoutGroup.constraintCount;
+            columnDataCount = (int)Mathf.CeilToInt((float)m_dataList.Count / rowDataCount);
+        }
+        else
+        {
+            columnDataCount = m_gridLayoutGroup.constraintCount;
+            rowDataCount = (int)Mathf.CeilToInt((float)m_dataList.Count / columnDataCount);
         }
 
-        while (dataIndex < m_uiItems.Count)
+        // deal with content from left to right (simple case) first
+        int rowFirstDataIndex = 0, dataIndex = 0;
+        int uiItemIndex = 0;
+        Vector3 rowTopLeftPosition = default, itemTopLeftPosition = default;
+        rowTopLeftPosition = dragContentPostion + tempMove;
+        Bounds gridBounds = new Bounds(rowTopLeftPosition, itemSize);
+        Vector3 gridBoundsCenter = default;
+        bool hideItem = false;
+
+        // draw from left to right for test
+        for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
         {
-            m_uiItems[dataIndex].Hide();
-            m_uiItems[dataIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
+            itemTopLeftPosition = rowTopLeftPosition;
+            if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
+                rowFirstDataIndex = (tempRowIndex + rowIndex) * rowDataCount;
+            else
+                rowFirstDataIndex = tempRowIndex + rowIndex + tempColumnIndex * columnDataCount;
+
+            for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
+            {
+                gridBoundsCenter = itemTopLeftPosition;
+                gridBoundsCenter.x += itemSize.x;
+                gridBoundsCenter.y -= itemSize.y;
+                gridBounds.center = gridBoundsCenter;
+
+                if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
+                    dataIndex = rowFirstDataIndex + tempColumnIndex + columnIndex;
+                else
+                    dataIndex = rowFirstDataIndex + columnIndex * columnDataCount;
+
+                hideItem = !contentBounds.Intersects(gridBounds) || dataIndex >= m_dataList.Count || dataIndex < 0;
+                if (hideItem)
+                {
+                    m_uiItems[uiItemIndex].ItemRectTransform.position = Vector2.zero;
+                    m_uiItems[uiItemIndex].Hide();
+                }
+                else
+                {
+                    m_uiItems[uiItemIndex].ItemRectTransform.position = itemTopLeftPosition;
+                    m_uiItems[uiItemIndex].Setup(m_dataList[dataIndex].TempName);
+                    uiItemIndex++;
+                }
+
+                itemTopLeftPosition.x += spacing.x + itemSize.x;
+            }
+            rowTopLeftPosition.y -= spacing.y + itemSize.y;
+        }
+
+        while (uiItemIndex < m_uiItems.Count)
+        {
+            m_uiItems[uiItemIndex].Hide();
+            m_uiItems[uiItemIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
+            uiItemIndex++;
         }
     }
 
@@ -364,18 +262,15 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_viewItemCountInColumn = 0;
         m_itemSize = m_gridLayoutGroup.cellSize;
 
-        // set it height of content
         Vector2 spacing = m_gridLayoutGroup.spacing;
         float viewportHeight = Mathf.Abs(m_viewport.rect.height * m_viewport.localScale.y);
-        float viewportWidth = Mathf.Abs(m_viewport.rect.height * m_viewport.localScale.y);
-        m_viewItemCountInColumn = (int)(viewportHeight / (m_itemSize.y + spacing.y));
-        m_viewItemCountInRow = (int)(viewportWidth / (m_itemSize.x + spacing.x));
+        float viewportWidth = Mathf.Abs(m_viewport.rect.width * m_viewport.localScale.y);
+        m_viewItemCountInColumn = Mathf.CeilToInt(viewportHeight / (m_itemSize.y + spacing.y));
+        m_viewItemCountInRow = Mathf.CeilToInt(viewportWidth / (m_itemSize.x + spacing.x));
 
-        m_viewItemCountInColumn++;
         if (viewportHeight % (m_itemSize.y + spacing.y) > 0)
             m_viewItemCountInColumn++;
 
-        m_viewItemCountInRow++;
         if (viewportWidth % (m_itemSize.x + spacing.x) > 0)
             m_viewItemCountInRow++;
 
@@ -387,9 +282,8 @@ public class BoundlessScrollRectController : MonoBehaviour
         if (null == m_uiItems)
             m_uiItems = new List<TempGridItem>();
 
-        int spawnCount = m_viewItemCount + CACHE_COUNT;
         TempGridItem tempItem = null;
-        for (int i = 0; i < spawnCount; i++)
+        for (int i = 0; i < m_viewItemCount; i++)
         {
             tempItem = Instantiate(m_itemPrefab, m_actualContent);
             m_uiItems.Add(tempItem);
@@ -399,7 +293,8 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private void ClearCachedItems()
     {
-        m_uiItems.Clear();
+        if (null != m_uiItems)
+            m_uiItems.Clear();
         DestroyAllChildren(m_actualContent);
     }
 
@@ -428,6 +323,7 @@ public class BoundlessScrollRectController : MonoBehaviour
     {
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
         CalculateViewportShowCount();
+        ClearCachedItems();
         SpawnCachedItems();
     }
 
@@ -463,12 +359,18 @@ public class BoundlessScrollRectController : MonoBehaviour
                 m_uiItems[i].SetSize(m_itemSize);
     }
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR // some method to debug drawing or sth
 
     private void OnDrawGizmos()
     {
-        DrawDebugContentSize();
-        DrawDebugContentItems();
+        if (m_drawContentSize)
+            DrawDebugContentSize();
+
+        if (m_drawGrids)
+            DrawDebugGrids();
+
+        if (m_drawShowingGrids)
+            DrawDebugShowingGrids();
     }
 
     private void DrawDebugContentSize()
@@ -497,7 +399,7 @@ public class BoundlessScrollRectController : MonoBehaviour
     /// let it draw full stuff for now
     /// @TODO need think about spacing
     /// </summary>
-    private void DrawDebugContentItems()
+    private void DrawDebugGrids()
     {
         if (null == m_dataList)
             return;
@@ -535,6 +437,48 @@ public class BoundlessScrollRectController : MonoBehaviour
                 }
                 columnStartItemTopLeftPos.y -= m_itemSize.y + spacing.y;
             }
+        }
+    }
+
+    private void DrawDebugShowingGrids()
+    {
+        Vector3 dragContentPostion = m_dragContent.position;
+        Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
+
+        // to get position delta
+        float xMove = Mathf.Abs(dragAnchorContentPostion.x);
+        float yMove = Mathf.Abs(dragAnchorContentPostion.y);
+
+        Vector2 itemSize = m_gridLayoutGroup.cellSize;
+        Vector2 spacing = m_gridLayoutGroup.spacing;
+        int tempXIndex = (int)Mathf.Floor(xMove / (itemSize.x + spacing.x));
+        int tempYIndex = (int)Mathf.Floor(yMove / (itemSize.y + spacing.y));
+        Vector3 tempMove = new Vector3(tempXIndex * (itemSize.x + spacing.x), -tempYIndex * (itemSize.y + spacing.y), 0.0f);
+        Bounds contentBounds = new Bounds(m_dragContent.position + new Vector3(m_dragContent.rect.width * 0.5f, -m_dragContent.rect.height * 0.5f, 0.0f), m_dragContent.rect.size);
+
+        // deal with content from left to right (simple case) first
+        Vector3 rowTopLeftPosition = default, itemTopLeftPosition = default;
+        rowTopLeftPosition = dragContentPostion + tempMove;
+        Bounds gridBounds = new Bounds(rowTopLeftPosition, itemSize);
+        Vector3 gridBoundsCenter = default;
+        for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
+        {
+            itemTopLeftPosition = rowTopLeftPosition;
+            for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
+            {
+                gridBoundsCenter = itemTopLeftPosition;
+                gridBoundsCenter.x += itemSize.x;
+                gridBoundsCenter.y -= itemSize.y;
+                gridBounds.center = gridBoundsCenter;
+
+                if (contentBounds.Intersects(gridBounds))
+                    DrawOneDebugGridItem(itemTopLeftPosition, Color.white); // the real grid in the content
+                else
+                    DrawOneDebugGridItem(itemTopLeftPosition, Color.yellow); // the real grid in the content
+
+                itemTopLeftPosition.x += spacing.x + itemSize.x;
+            }
+            rowTopLeftPosition.y -= spacing.y + itemSize.y;
         }
     }
 

@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class BoundlessScrollRectControllerTester : MonoBehaviour
 {
-    [Range(4, 200)]
+    [Range(4, 800)]
     public int m_dataCount = 10;
     private TempDataItem[] m_dataArr = null;
 
