@@ -180,8 +180,8 @@ public class BoundlessScrollRectController : MonoBehaviour
         float yMove = Mathf.Abs(dragAnchorContentPostion.y);
         Vector2 itemSize = m_gridLayoutGroup.cellSize;
         Vector2 spacing = m_gridLayoutGroup.spacing;
-        int tempColumnIndex = (int)Mathf.Floor(xMove / (itemSize.x + spacing.x));
-        int tempRowIndex = (int)Mathf.Floor(yMove / (itemSize.y + spacing.y));
+        int tempColumnIndex = Mathf.FloorToInt(xMove / (itemSize.x + spacing.x));
+        int tempRowIndex = Mathf.FloorToInt(yMove / (itemSize.y + spacing.y));
 
         // deal with different start axis
         Vector3 tempMove = new Vector3(tempColumnIndex * (itemSize.x + spacing.x), -tempRowIndex * (itemSize.y + spacing.y), 0.0f);
@@ -318,6 +318,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_isVertical = m_scrollRect.vertical;
         m_isHorizontal = m_scrollRect.horizontal;
         m_scrollRect.StopMovement();
+        m_dragContent = m_scrollRect.content;
     }
 
     private void OnEnable()
@@ -364,6 +365,9 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (!Application.isPlaying)
+            return;
+
         if (m_drawContentSize)
             DrawDebugContentSize();
 
@@ -452,8 +456,8 @@ public class BoundlessScrollRectController : MonoBehaviour
 
         Vector2 itemSize = m_gridLayoutGroup.cellSize;
         Vector2 spacing = m_gridLayoutGroup.spacing;
-        int tempXIndex = (int)Mathf.Floor(xMove / (itemSize.x + spacing.x));
-        int tempYIndex = (int)Mathf.Floor(yMove / (itemSize.y + spacing.y));
+        int tempXIndex = Mathf.FloorToInt(xMove / (itemSize.x + spacing.x));
+        int tempYIndex = Mathf.FloorToInt(yMove / (itemSize.y + spacing.y));
         Vector3 tempMove = new Vector3(tempXIndex * (itemSize.x + spacing.x), -tempYIndex * (itemSize.y + spacing.y), 0.0f);
         Bounds contentBounds = new Bounds(m_dragContent.position + new Vector3(m_dragContent.rect.width * 0.5f, -m_dragContent.rect.height * 0.5f, 0.0f), m_dragContent.rect.size);
 
@@ -475,7 +479,7 @@ public class BoundlessScrollRectController : MonoBehaviour
                 if (contentBounds.Intersects(gridBounds))
                     DrawOneDebugGridItem(itemTopLeftPosition, Color.white); // the real grid in the content
                 else
-                    DrawOneDebugGridItem(itemTopLeftPosition, Color.yellow); // the real grid in the content
+                    DrawOneDebugGridItem(itemTopLeftPosition, Color.yellow); // the grid should not show
 
                 itemTopLeftPosition.x += spacing.x + itemSize.x;
             }
