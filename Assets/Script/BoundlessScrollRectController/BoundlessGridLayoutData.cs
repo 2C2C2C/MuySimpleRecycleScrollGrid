@@ -5,7 +5,7 @@ public class BoundlessGridLayoutData
 {
     // @Hiko use this later
     /// <summary>
-    /// this will use the data from padding
+    /// TODO to find a way to do those  
     /// </summary>
     public enum StartCorner
     {

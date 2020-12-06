@@ -10,6 +10,7 @@ public abstract class BoundlessBaseScrollRectItem : MonoBehaviour
     private CanvasGroup m_canvasGroup = null;
     private Vector2 m_itemSize = default;
 
+    public RectTransform ItemRectTransform => m_rectTransform;
     public Vector2 ItemSize => m_itemSize;
 
     /// <summary>
@@ -37,6 +38,11 @@ public abstract class BoundlessBaseScrollRectItem : MonoBehaviour
     #region mono method
 
     private void Reset()
+    {
+        m_rectTransform = GetComponent<RectTransform>();
+    }
+
+    private void Awake()
     {
         m_rectTransform = GetComponent<RectTransform>();
     }

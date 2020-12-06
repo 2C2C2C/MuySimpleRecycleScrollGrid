@@ -38,11 +38,8 @@ public class BoundlessScrollRectController : MonoBehaviour
     /// </summary>
     private Vector2 m_actualContentSize = default;
 
-    private List<TempGridItem> m_uiItems = null;
-    private IReadOnlyList<TempDataItem> m_dataList = null;
-
-    [Header("Temp Item Prefab"), Tooltip("should move it into settings or....")]
-    public TempGridItem m_itemPrefab = null;
+    private List<BoundlessBaseScrollRectItem> m_uiItems = null;
+    private IReadOnlyList<IBoundlessScrollRectItemData> m_dataList = null;
 
     /* a test component, we will move this component
     * and use this to setup the grid size
@@ -66,7 +63,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         OnScrollRectValueChanged(Vector2.zero);
     }
 
-    public void InjectData(IReadOnlyList<TempDataItem> dataList)
+    public void InjectData(IReadOnlyList<IBoundlessScrollRectItemData> dataList)
     {
         m_dataList = dataList;
         m_startIndex = 0;
@@ -87,7 +84,10 @@ public class BoundlessScrollRectController : MonoBehaviour
         for (int i = 0; i < m_uiItems.Count; i++)
         {
             if (i < dataList.Count)
-                m_uiItems[i].Setup(dataList[i].TempName);
+            {
+                m_uiItems[i].InjectData(dataList[i]);
+                //m_uiItems[i].Setup(dataList[i].TempName);
+            }
 
             Vector3 pos = m_uiItems[i].ItemRectTransform.anchoredPosition3D;
             pos -= i * m_uiItems[i].ItemRectTransform.up * m_itemSize.y;
@@ -239,7 +239,8 @@ public class BoundlessScrollRectController : MonoBehaviour
                 else
                 {
                     m_uiItems[uiItemIndex].ItemRectTransform.position = itemTopLeftPosition;
-                    m_uiItems[uiItemIndex].Setup(m_dataList[dataIndex].TempName);
+                    m_uiItems[uiItemIndex].InjectData(m_dataList[dataIndex]);
+                    m_uiItems[uiItemIndex].Show();
                     uiItemIndex++;
                 }
 
@@ -280,14 +281,14 @@ public class BoundlessScrollRectController : MonoBehaviour
     private void SpawnCachedItems()
     {
         if (null == m_uiItems)
-            m_uiItems = new List<TempGridItem>();
+            m_uiItems = new List<BoundlessBaseScrollRectItem>();
 
-        TempGridItem tempItem = null;
+        BoundlessBaseScrollRectItem tempItem = null;
         for (int i = 0; i < m_viewItemCount; i++)
         {
-            tempItem = Instantiate(m_itemPrefab, m_actualContent);
+            tempItem = Instantiate(m_gridLayoutGroup.GridItemPrefab, m_actualContent);
             m_uiItems.Add(tempItem);
-            tempItem.gameObject.SetActive(false);
+            tempItem.Hide();
         }
     }
 
@@ -356,7 +357,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_itemSize = m_gridLayoutGroup.cellSize;
         if (null != m_uiItems)
             for (int i = 0; i < m_uiItems.Count; i++)
-                m_uiItems[i].SetSize(m_itemSize);
+                m_uiItems[i].SetItemSize(m_itemSize);
     }
 
 #if UNITY_EDITOR // some method to debug drawing or sth
