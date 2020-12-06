@@ -266,8 +266,10 @@ public class BoundlessScrollRectController : MonoBehaviour
         Vector2 spacing = m_gridLayoutGroup.spacing;
         float viewportHeight = Mathf.Abs(m_viewport.rect.height * m_viewport.localScale.y);
         float viewportWidth = Mathf.Abs(m_viewport.rect.width * m_viewport.localScale.y);
-        m_viewItemCountInColumn = Mathf.CeilToInt(viewportHeight / (m_itemSize.y + spacing.y));
-        m_viewItemCountInRow = Mathf.CeilToInt(viewportWidth / (m_itemSize.x + spacing.x));
+        m_viewItemCountInColumn = Mathf.FloorToInt(viewportHeight / (m_itemSize.y + spacing.y));
+        m_viewItemCountInRow = Mathf.FloorToInt(viewportWidth / (m_itemSize.x + spacing.x));
+        m_viewItemCountInColumn++;
+        m_viewItemCountInRow++;
 
         if (viewportHeight % (m_itemSize.y + spacing.y) > 0)
             m_viewItemCountInColumn++;
@@ -355,6 +357,8 @@ public class BoundlessScrollRectController : MonoBehaviour
     private void SyncSize()
     {
         // sync the size form grid component to actual content size
+        // should we scale the content size? so it may show correctly
+        // also need to know the canvas scale or something :(
         m_itemSize = m_gridLayoutGroup.cellSize;
         if (null != m_uiItems)
             for (int i = 0; i < m_uiItems.Count; i++)
@@ -362,6 +366,8 @@ public class BoundlessScrollRectController : MonoBehaviour
     }
 
 #if UNITY_EDITOR // some method to debug drawing or sth
+
+    // TODO debug draw should also deal with canvas scale case
 
     private void OnDrawGizmos()
     {
@@ -411,7 +417,9 @@ public class BoundlessScrollRectController : MonoBehaviour
 
         int dataCount = m_dataList.Count;
         Vector3 columnStartItemTopLeftPos = m_dragContent.position;
+        columnStartItemTopLeftPos.z = 0.0f;
         Vector3 rowItemTopLeftPos = m_dragContent.position;
+        rowItemTopLeftPos.z = 0.0f;
         Vector2 spacing = m_gridLayoutGroup.spacing;
 
         // should know which axis get constrained
