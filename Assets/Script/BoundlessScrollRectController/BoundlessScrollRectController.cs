@@ -176,8 +176,10 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_actualContent.anchoredPosition = Vector2.zero;
 
         // to get position delta
-        float xMove = Mathf.Abs(dragAnchorContentPostion.x);
-        float yMove = Mathf.Abs(dragAnchorContentPostion.y);
+        // TODO should check with start direction
+        float xMove = Mathf.Clamp(-dragAnchorContentPostion.x, 0.0f, Mathf.Abs(dragAnchorContentPostion.x));
+        float yMove = Mathf.Clamp(dragAnchorContentPostion.y, 0.0f, Mathf.Abs(dragAnchorContentPostion.y));
+        //float yMove = Mathf.Abs(dragAnchorContentPostion.y);
         Vector2 itemSize = m_gridLayoutGroup.cellSize;
         Vector2 spacing = m_gridLayoutGroup.spacing;
         int tempColumnIndex = Mathf.FloorToInt(xMove / (itemSize.x + spacing.x));
@@ -459,8 +461,9 @@ public class BoundlessScrollRectController : MonoBehaviour
         Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
 
         // to get position delta
-        float xMove = Mathf.Abs(dragAnchorContentPostion.x);
-        float yMove = Mathf.Abs(dragAnchorContentPostion.y);
+        // TODO should check with start direction
+        float xMove = Mathf.Clamp(-dragAnchorContentPostion.x, 0.0f, Mathf.Abs(dragAnchorContentPostion.x));
+        float yMove = Mathf.Clamp(dragAnchorContentPostion.y, 0.0f, Mathf.Abs(dragAnchorContentPostion.y));
 
         Vector2 itemSize = m_gridLayoutGroup.cellSize;
         Vector2 spacing = m_gridLayoutGroup.spacing;
