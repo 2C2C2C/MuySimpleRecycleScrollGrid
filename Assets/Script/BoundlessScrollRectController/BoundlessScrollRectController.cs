@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
-/*
-@Hiko cant support Unrestricted move for now :)
-*/
 
 [RequireComponent(typeof(ScrollRect), typeof(GridLayoutGroup))]
 public class BoundlessScrollRectController : MonoBehaviour
@@ -46,6 +43,11 @@ public class BoundlessScrollRectController : MonoBehaviour
     */
     [Space, Header("Grid Layout Setting"), SerializeField]
     private BoundlessGridLayoutData m_gridLayoutGroup = default;
+    public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
+
+    // may need this to correctly scale the items :(
+    [SerializeField]
+    private Canvas m_canvas = null;
 
 #if UNITY_EDITOR
     [Space, Header("Debug settings")]
@@ -86,7 +88,7 @@ public class BoundlessScrollRectController : MonoBehaviour
             if (i < dataList.Count)
             {
                 m_uiItems[i].InjectData(dataList[i]);
-                //m_uiItems[i].Setup(dataList[i].TempName);
+                m_uiItems[i].SetItemSize(m_itemSize);
             }
 
             Vector3 pos = m_uiItems[i].ItemRectTransform.anchoredPosition3D;
@@ -98,6 +100,30 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_itemStartPos.y = 1.0f;
         UpdateAcutalContentSize();
         OnScrollRectValueChanged(Vector2.zero);
+    }
+
+    public void UpdateConstraintWithAutoFit()
+    {
+        if (GridLayoutData.AutoFit)
+        {
+            int constraintCount = 0;
+            float viewportHeight = 0.0f, viewportWidth = 0.0f;
+            Vector2 spacing = GridLayoutData.spacing;
+            viewportHeight = m_viewport.rect.height;
+            viewportWidth = m_viewport.rect.width;
+
+            if (BoundlessGridLayoutData.Constraint.FixedColumnCount == GridLayoutData.constraint)
+            {
+                constraintCount = Mathf.FloorToInt(viewportWidth / (m_itemSize.x + spacing.x));
+            }
+            else
+            {
+                constraintCount = Mathf.FloorToInt(viewportHeight / (m_itemSize.y + spacing.y));
+            }
+            constraintCount = Mathf.Clamp(constraintCount, 1, int.MaxValue);
+            GridLayoutData.constraintCount = constraintCount;
+        }
+        CalculateViewportShowCount();
     }
 
     private void UpdateAcutalContentSize()
@@ -176,10 +202,10 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_actualContent.anchoredPosition = Vector2.zero;
 
         // to get position delta
-        // TODO should check with start direction
+        // TODO should check with start point and direction
         float xMove = Mathf.Clamp(-dragAnchorContentPostion.x, 0.0f, Mathf.Abs(dragAnchorContentPostion.x));
         float yMove = Mathf.Clamp(dragAnchorContentPostion.y, 0.0f, Mathf.Abs(dragAnchorContentPostion.y));
-        //float yMove = Mathf.Abs(dragAnchorContentPostion.y);
+
         Vector2 itemSize = m_gridLayoutGroup.cellSize;
         Vector2 spacing = m_gridLayoutGroup.spacing;
         int tempColumnIndex = Mathf.FloorToInt(xMove / (itemSize.x + spacing.x));
@@ -279,6 +305,15 @@ public class BoundlessScrollRectController : MonoBehaviour
         if (viewportWidth % (m_itemSize.x + spacing.x) > 0)
             m_viewItemCountInRow++;
 
+        if (BoundlessGridLayoutData.Constraint.FixedColumnCount == GridLayoutData.constraint)
+        {
+            m_viewItemCountInRow = Mathf.Clamp(m_viewItemCountInRow, 1, GridLayoutData.constraintCount);
+        }
+        else
+        {
+            m_viewItemCountInColumn = Mathf.Clamp(m_viewItemCountInColumn, 1, GridLayoutData.constraintCount);
+        }
+
         m_viewItemCount = m_viewItemCountInRow * m_viewItemCountInColumn;
     }
 
@@ -314,6 +349,11 @@ public class BoundlessScrollRectController : MonoBehaviour
             m_scrollRect.StopMovement();
     }
 
+    private void OnLayoutFitTypeChanged(bool autoFit)
+    {
+        UpdateConstraintWithAutoFit();
+    }
+
     #region mono method
 
     private void Reset()
@@ -323,20 +363,25 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_isHorizontal = m_scrollRect.horizontal;
         m_scrollRect.StopMovement();
         m_dragContent = m_scrollRect.content;
+        m_canvas = GetComponentInParent<Canvas>();
     }
 
     private void OnEnable()
     {
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
+        UpdateConstraintWithAutoFit();
         CalculateViewportShowCount();
         ClearCachedItems();
         SpawnCachedItems();
+        m_canvas = GetComponentInParent<Canvas>();
+        GridLayoutData.OnFitTypeChanged += OnLayoutFitTypeChanged;
     }
 
     private void OnDisable()
     {
         m_scrollRect.onValueChanged.RemoveListener(OnScrollRectValueChanged);
         ClearCachedItems();
+        GridLayoutData.OnFitTypeChanged -= OnLayoutFitTypeChanged;
     }
 
     private void Update()
@@ -461,7 +506,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
 
         // to get position delta
-        // TODO should check with start direction
+        // TODO should check with start point and direction
         float xMove = Mathf.Clamp(-dragAnchorContentPostion.x, 0.0f, Mathf.Abs(dragAnchorContentPostion.x));
         float yMove = Mathf.Clamp(dragAnchorContentPostion.y, 0.0f, Mathf.Abs(dragAnchorContentPostion.y));
 
