@@ -24,7 +24,6 @@ public class BoundlessScrollRectController : MonoBehaviour
     // get rid of those viriable, use them from scrollrect
     private bool m_isVertical = true;
     private bool m_isHorizontal = false;
-    private int m_startIndex = 0;
     private const int CACHE_COUNT = 2;
 
     private Vector2 m_itemSize = Vector2.zero * 100.0f;
@@ -68,7 +67,6 @@ public class BoundlessScrollRectController : MonoBehaviour
     public void InjectData(IReadOnlyList<IBoundlessScrollRectItemData> dataList)
     {
         m_dataList = dataList;
-        m_startIndex = 0;
 
         // to set actual content correctly?
         m_actualContent.anchorMax = m_viewport.anchorMax;
@@ -81,7 +79,7 @@ public class BoundlessScrollRectController : MonoBehaviour
 
         SyncSize();
         // set default simple draw stuff
-        SpawnCachedItems();
+        AdjustCachedItems();
 
         for (int i = 0; i < m_uiItems.Count; i++)
         {
@@ -128,6 +126,8 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private void UpdateAcutalContentSize()
     {
+        // TODO apply padding here!!!
+
         Vector2 result = default;
         Vector2 cellSize = m_itemSize;
         // to use it later
@@ -317,17 +317,37 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_viewItemCount = m_viewItemCountInRow * m_viewItemCountInColumn;
     }
 
-    private void SpawnCachedItems()
+    private void AdjustCachedItems()
     {
         if (null == m_uiItems)
             m_uiItems = new List<BoundlessBaseScrollRectItem>();
 
         BoundlessBaseScrollRectItem tempItem = null;
-        for (int i = 0; i < m_viewItemCount; i++)
+        if (m_viewItemCount < m_uiItems.Count)
         {
-            tempItem = Instantiate(m_gridLayoutGroup.GridItemPrefab, m_actualContent);
-            m_uiItems.Add(tempItem);
-            tempItem.Hide();
+            int countTest = (int)(m_uiItems.Count * 0.75f);
+            if (countTest > m_viewItemCount)
+            {
+                // need delete
+                int deleteCount = m_uiItems.Count - countTest;
+
+                for (int i = 0; i < deleteCount; i++)
+                {
+                    tempItem = m_uiItems[m_uiItems.Count - 1 - i];
+                    m_uiItems.RemoveAt(m_uiItems.Count - 1 - i);
+                    Destroy(tempItem.gameObject);
+                }
+            }
+        }
+        else
+        {
+            int spawnCount = m_viewItemCount - m_uiItems.Count;
+            for (int i = 0; i < spawnCount; i++)
+            {
+                tempItem = Instantiate(m_gridLayoutGroup.GridItemPrefab, m_actualContent);
+                m_uiItems.Add(tempItem);
+                tempItem.Hide();
+            }
         }
     }
 
@@ -372,7 +392,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         UpdateConstraintWithAutoFit();
         CalculateViewportShowCount();
         ClearCachedItems();
-        SpawnCachedItems();
+        AdjustCachedItems();
         m_canvas = GetComponentInParent<Canvas>();
         GridLayoutData.OnFitTypeChanged += OnLayoutFitTypeChanged;
     }

@@ -7,7 +7,6 @@ using UnityEditor;
 public class BoundlessScrollRectControllerEditor : Editor
 {
     private BoundlessScrollRectController m_target = null;
-    private bool m_hasLayoutDataChanged = false;
 
     public override void OnInspectorGUI()
     {
