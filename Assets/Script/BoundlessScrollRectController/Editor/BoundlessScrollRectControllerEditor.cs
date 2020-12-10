@@ -19,7 +19,8 @@ public class BoundlessScrollRectControllerEditor : Editor
 
         if (hasChanged)
         {
-            m_target.UpdateConstraintWithAutoFit();
+            // too bad
+            m_target.GridLayoutData.IsAutoFit = m_target.GridLayoutData.IsAutoFit;
             m_target.RefreshLayout();
         }
     }

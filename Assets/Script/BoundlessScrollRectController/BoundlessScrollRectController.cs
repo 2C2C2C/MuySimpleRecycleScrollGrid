@@ -102,11 +102,12 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     public void UpdateConstraintWithAutoFit()
     {
-        if (GridLayoutData.AutoFit)
+        if (GridLayoutData.IsAutoFit)
         {
             int constraintCount = 0;
             float viewportHeight = 0.0f, viewportWidth = 0.0f;
             Vector2 spacing = GridLayoutData.spacing;
+            // need add padding
             viewportHeight = m_viewport.rect.height;
             viewportWidth = m_viewport.rect.width;
 
@@ -296,15 +297,17 @@ public class BoundlessScrollRectController : MonoBehaviour
         float viewportWidth = Mathf.Abs(m_viewport.rect.width * m_viewport.localScale.y);
         m_viewItemCountInColumn = Mathf.FloorToInt(viewportHeight / (m_itemSize.y + spacing.y));
         m_viewItemCountInRow = Mathf.FloorToInt(viewportWidth / (m_itemSize.x + spacing.x));
-        m_viewItemCountInColumn++;
-        m_viewItemCountInRow++;
 
         if (viewportHeight % (m_itemSize.y + spacing.y) > 0)
-            m_viewItemCountInColumn++;
+            m_viewItemCountInColumn += 2;
+        else
+            m_viewItemCountInColumn += 1;
 
         if (viewportWidth % (m_itemSize.x + spacing.x) > 0)
-            m_viewItemCountInRow++;
-
+            m_viewItemCountInRow += 2;
+        else
+            m_viewItemCountInRow += 1;
+        
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == GridLayoutData.constraint)
         {
             m_viewItemCountInRow = Mathf.Clamp(m_viewItemCountInRow, 1, GridLayoutData.constraintCount);
@@ -345,6 +348,7 @@ public class BoundlessScrollRectController : MonoBehaviour
             for (int i = 0; i < spawnCount; i++)
             {
                 tempItem = Instantiate(m_gridLayoutGroup.GridItemPrefab, m_actualContent);
+                tempItem.SetItemSize(m_itemSize);
                 m_uiItems.Add(tempItem);
                 tempItem.Hide();
             }
@@ -372,6 +376,8 @@ public class BoundlessScrollRectController : MonoBehaviour
     private void OnLayoutFitTypeChanged(bool autoFit)
     {
         UpdateConstraintWithAutoFit();
+        AdjustCachedItems();
+        RefreshLayout();
     }
 
     #region mono method
@@ -426,6 +432,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         // sync the size form grid component to actual content size
         // should we scale the content size? so it may show correctly
         // also need to know the canvas scale or something :(
+            
         m_itemSize = m_gridLayoutGroup.cellSize;
         if (null != m_uiItems)
             for (int i = 0; i < m_uiItems.Count; i++)

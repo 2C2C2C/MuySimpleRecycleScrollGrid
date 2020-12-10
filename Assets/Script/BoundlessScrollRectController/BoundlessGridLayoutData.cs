@@ -42,7 +42,7 @@ public class BoundlessGridLayoutData
 
     [SerializeField, Tooltip("auto fit means calculate the constraint count by viewport size")]
     private bool m_autoFit = false;
-    public bool AutoFit
+    public bool IsAutoFit
     {
         get { return m_autoFit; }
         set
@@ -56,7 +56,7 @@ public class BoundlessGridLayoutData
     public int constraintCount = default;
     public StartAxis startAxis = StartAxis.Horizontal;
 
-    public RectOffset m_padding = null;
+    public RectOffset RectPadding = null;
     public Vector2 cellSize = Vector2.one * 100.0f;
     public Vector2 spacing = default;
 
