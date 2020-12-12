@@ -57,6 +57,7 @@ public class BoundlessGridLayoutData
     public StartAxis startAxis = StartAxis.Horizontal;
 
     public RectOffset RectPadding = null;
+    public Vector2 StartOffset = default;
     public Vector2 cellSize = Vector2.one * 100.0f;
     public Vector2 spacing = default;
 

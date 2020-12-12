@@ -342,10 +342,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 401452300}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_ShowMaskGraphic: 0
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Softness: {x: 0, y: 0}
 --- !u!114 &401452303
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -809,23 +810,26 @@ MonoBehaviour:
   m_dragContent: {fileID: 1966762747}
   m_actualContent: {fileID: 1154351785}
   m_gridLayoutGroup:
-    m_startCorner: 0
     constraint: 0
+    m_autoFit: 0
     constraintCount: 15
     startAxis: 0
-    m_padding:
-      m_Left: 0
-      m_Right: 0
-      m_Top: 0
+    RectPadding:
+      m_Left: 50
+      m_Right: 50
+      m_Top: 50
       m_Bottom: 0
+    StartOffset: {x: 20, y: -20}
     cellSize: {x: 300, y: 200}
     spacing: {x: 10, y: 10}
     StopMagSqrVel: 100
     m_gridItemPrefab: {fileID: 5922839548107084954, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
       type: 3}
+  m_canvas: {fileID: 0}
   m_drawContentSize: 1
   m_drawGrids: 1
-  m_drawShowingGrids: 1
+  m_drawShowingGrids: 0
+  m_drawViewportWithPadding: 0
 --- !u!114 &1040434475
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -849,8 +853,8 @@ MonoBehaviour:
   m_Viewport: {fileID: 401452301}
   m_HorizontalScrollbar: {fileID: 1074357955}
   m_VerticalScrollbar: {fileID: 1594723080}
-  m_HorizontalScrollbarVisibility: 0
-  m_VerticalScrollbarVisibility: 0
+  m_HorizontalScrollbarVisibility: 1
+  m_VerticalScrollbarVisibility: 1
   m_HorizontalScrollbarSpacing: 0
   m_VerticalScrollbarSpacing: 0
   m_OnValueChanged:
@@ -930,7 +934,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: 0, y: -46}
-  m_SizeDelta: {x: 0, y: 46}
+  m_SizeDelta: {x: -46, y: 46}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1074357955
 MonoBehaviour:
@@ -1163,7 +1167,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 46, y: 0}
-  m_SizeDelta: {x: 46, y: 0}
+  m_SizeDelta: {x: 46, y: -46}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1594723080
 MonoBehaviour:
@@ -1409,6 +1413,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ead822277e5fd04799aa1b7f72c9790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_dataCount: 689
+  m_dataCount: 335
   m_gridConrtoller: {fileID: 1040434474}
   m_dataNames: []
