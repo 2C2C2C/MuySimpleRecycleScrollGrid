@@ -828,7 +828,7 @@ MonoBehaviour:
   m_canvas: {fileID: 0}
   m_drawContentSize: 1
   m_drawGrids: 1
-  m_drawShowingGrids: 0
+  m_drawShowingGrids: 1
   m_drawViewportWithPadding: 0
 --- !u!114 &1040434475
 MonoBehaviour:

@@ -29,6 +29,7 @@ public class BoundlessScrollRectController : MonoBehaviour
     private Vector2 m_itemSize = Vector2.zero * 100.0f;
     private Vector2 m_itemStartPos = default; // the showing first item start pos in virwport
 
+
     /// <summary>
     /// including spacing
     /// </summary>
