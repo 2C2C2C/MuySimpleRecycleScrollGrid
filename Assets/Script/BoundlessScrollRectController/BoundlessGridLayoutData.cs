@@ -9,7 +9,6 @@ apply padding
 [System.Serializable]
 public class BoundlessGridLayoutData
 {
-    // @Hiko use this later
     /// <summary>
     /// TODO to find a way to do those  
     /// </summary>
@@ -39,12 +38,11 @@ public class BoundlessGridLayoutData
     // public StartCorner m_startCorner = StartCorner.UpperLeft;
     public Constraint constraint = Constraint.FixedColumnCount;
 
-
     [SerializeField, Tooltip("auto fit means calculate the constraint count by viewport size")]
     private bool m_autoFit = false;
     public bool IsAutoFit
     {
-        get { return m_autoFit; }
+        get => m_autoFit;
         set
         {
             m_autoFit = value;
@@ -56,10 +54,20 @@ public class BoundlessGridLayoutData
     public int constraintCount = default;
     public StartAxis startAxis = StartAxis.Horizontal;
 
+    // Padding is to expend/shrink the REAL content
     public RectOffset RectPadding = null;
-    public Vector2 StartOffset = default;
-    public Vector2 cellSize = Vector2.one * 100.0f;
-    public Vector2 spacing = default;
+    [SerializeField]
+    private Vector2 m_cellSize = Vector2.one * 100.0f;
+    public Vector2 CellSize
+    {
+        get => m_cellSize;
+        set
+        {
+            m_cellSize = value;
+            OnCellSizeChanged?.Invoke(m_cellSize);
+        }
+    }
+    public Vector2 Spacing = default;
 
     public float StopMagSqrVel = 50.0f;
 
@@ -71,4 +79,8 @@ public class BoundlessGridLayoutData
     /// result is 'autofit'
     /// </summary>
     public event System.Action<bool> OnFitTypeChanged;
+    /// <summary>
+    /// result is 'cellsize'
+    /// </summary>
+    public event System.Action<Vector2> OnCellSizeChanged;
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// TODO clean up the member variable
 [RequireComponent(typeof(ScrollRect), typeof(GridLayoutGroup))]
 public class BoundlessScrollRectController : MonoBehaviour
 {
@@ -11,29 +12,21 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     [SerializeField]
     private RectTransform m_viewport = null;
+    // !!! these 2 content anchor are on top left 
     [SerializeField, Tooltip("the content that used to drag")]
-    private RectTransform m_dragContent = null;
+    private RectTransform m_dragContent = null; // currently only support 1 type of top left pivor
     [SerializeField, Tooltip("another content hold UI elements")]
     private RectTransform m_actualContent = null;
-    // these 2 content anchor are on top left 
+    // !!! these 2 content anchor are on top left 
 
     private int m_viewItemCount = 0;
     private int m_viewItemCountInRow = 0;
     private int m_viewItemCountInColumn = 0;
 
-    // get rid of those viriable, use them from scrollrect
-    private bool m_isVertical = true;
-    private bool m_isHorizontal = false;
-    private const int CACHE_COUNT = 2;
-
-    private Vector2 m_itemSize = Vector2.zero * 100.0f;
-    private Vector2 m_itemStartPos = default; // the showing first item start pos in virwport
-
-
     /// <summary>
     /// including spacing
     /// </summary>
-    private Vector2 m_actualContentSize = default;
+    private Vector2 m_actualContentSizeRaw = default;
 
     private List<BoundlessBaseScrollRectItem> m_uiItems = null;
     private IReadOnlyList<IBoundlessScrollRectItemData> m_dataList = null;
@@ -54,7 +47,6 @@ public class BoundlessScrollRectController : MonoBehaviour
     public bool m_drawContentSize = true;
     public bool m_drawGrids = true;
     public bool m_drawShowingGrids = true;
-    public bool m_drawViewportWithPadding = true;
 #endif
 
     public void RefreshLayout()
@@ -62,7 +54,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         // if value on inspector got changed or some value being changed by code, should also call this
         if (null == m_dataList)
             return;
-        UpdateAcutalContentSize();
+        UpdateAcutalContentSizeRaw();
         OnScrollRectValueChanged(Vector2.zero);
     }
 
@@ -79,26 +71,26 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_actualContent.anchoredPosition = m_viewport.anchoredPosition;
         m_actualContent.sizeDelta = m_viewport.sizeDelta;
 
-        SyncSize();
         // set default simple draw stuff
-        AdjustCachedItems();
 
+        AdjustCachedItems();
+        float canvasScaleFactor = m_canvas.scaleFactor;
+        Vector2 itemSize = GridLayoutData.CellSize * canvasScaleFactor;
         for (int i = 0; i < m_uiItems.Count; i++)
         {
             if (i < dataList.Count)
             {
                 m_uiItems[i].InjectData(dataList[i]);
-                m_uiItems[i].SetItemSize(m_itemSize);
             }
 
             Vector3 pos = m_uiItems[i].ItemRectTransform.anchoredPosition3D;
-            pos -= i * m_uiItems[i].ItemRectTransform.up * m_itemSize.y;
+            pos -= i * m_uiItems[i].ItemRectTransform.up * itemSize.y;
             m_uiItems[i].ItemRectTransform.anchoredPosition = pos;
             m_uiItems[i].gameObject.SetActive(true);
         }
 
-        m_itemStartPos.y = 1.0f;
-        UpdateAcutalContentSize();
+        SyncSize();
+        UpdateAcutalContentSizeRaw();
         OnScrollRectValueChanged(Vector2.zero);
     }
 
@@ -108,79 +100,80 @@ public class BoundlessScrollRectController : MonoBehaviour
         {
             int constraintCount = 0;
             float viewportHeight = 0.0f, viewportWidth = 0.0f;
-            Vector2 spacing = GridLayoutData.spacing;
-            // need add padding
+            Vector2 spacing = GridLayoutData.Spacing;
             viewportHeight = m_viewport.rect.height;
             viewportWidth = m_viewport.rect.width;
+            Vector2 itemSize = GridLayoutData.CellSize * m_canvas.scaleFactor;
 
             if (BoundlessGridLayoutData.Constraint.FixedColumnCount == GridLayoutData.constraint)
             {
-                constraintCount = Mathf.FloorToInt(viewportWidth / (m_itemSize.x + spacing.x));
+                constraintCount = Mathf.FloorToInt(viewportWidth / (itemSize.x + spacing.x));
             }
             else
             {
-                constraintCount = Mathf.FloorToInt(viewportHeight / (m_itemSize.y + spacing.y));
+                constraintCount = Mathf.FloorToInt(viewportHeight / (itemSize.y + spacing.y));
             }
             constraintCount = Mathf.Clamp(constraintCount, 1, int.MaxValue);
             GridLayoutData.constraintCount = constraintCount;
         }
     }
 
-    private void UpdateAcutalContentSize()
+    private void UpdateAcutalContentSizeRaw()
     {
+        float canvasScaleFactor = m_canvas.scaleFactor;
         RectOffset m_padding = GridLayoutData.RectPadding;
-        Vector2 result = default;
-        Vector2 cellSize = m_itemSize;
-        // to use it later
-        // RectOffset padding = m_layoutData.padding;
-        Vector2 spacing = m_gridLayoutGroup.spacing;
+        Vector2 itemSize = m_gridLayoutGroup.CellSize;
+        Vector2 spacing = m_gridLayoutGroup.Spacing;
         int dataCount = m_dataList.Count;
+        Vector2 result = default;
 
         // TODO @Hiko when calaulate size, should also deal with padding
         int constraintCount = m_gridLayoutGroup.constraintCount;
         int dynamicCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
         if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
         {
-            result.x = (constraintCount * m_itemSize.x) + ((constraintCount - 1) * spacing.x);
-            result.y = dynamicCount * m_itemSize.y + (dynamicCount - 1) * spacing.y;
+            result.x = (constraintCount * itemSize.x) + ((constraintCount - 1) * spacing.x);
+            result.y = dynamicCount * itemSize.y + (dynamicCount - 1) * spacing.y;
         }
         else if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedRowCount)
         {
-            result.y = (constraintCount * m_itemSize.y) + ((constraintCount - 1) * spacing.y);
-            result.x = dynamicCount * m_itemSize.x + (dynamicCount - 1) * spacing.x;
+            result.y = (constraintCount * itemSize.y) + ((constraintCount - 1) * spacing.y);
+            result.x = dynamicCount * itemSize.x + (dynamicCount - 1) * spacing.x;
         }
 
-        m_actualContentSize = result;
+        m_actualContentSizeRaw = result;
+        m_dragContent.sizeDelta = m_actualContentSizeRaw;
         if (null != GridLayoutData)
         {
             RectOffset padding = GridLayoutData.RectPadding;
-            m_actualContentSize += new Vector2(padding.horizontal, padding.vertical);
+            m_dragContent.sizeDelta += new Vector2(padding.horizontal, padding.vertical);
         }
-        m_dragContent.sizeDelta = m_actualContentSize;
     }
 
     private void OnScrollRectValueChanged(Vector2 position)
     {
         RefreshItemStartPosition();
-        TestDrawContent();
+        DrawContentItem();
     }
 
     private void RefreshItemStartPosition()
     {
-        UpdateAcutalContentSize();
+        UpdateAcutalContentSizeRaw();
 
         float minStartPosX = 0.0f, maxStartPosX = 0.0f;
         float minStartPosY = 0.0f, maxStartPosY = 0.0f;
+        RectOffset padding = GridLayoutData.RectPadding;
+        Vector2 actualContentWithPaddingSizeRaw = m_actualContentSizeRaw + new Vector2(padding.horizontal, padding.vertical);
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
         {
             // content may move vertical
             // start from left to right for test
             // start from up to down for test
             minStartPosY = 0.0f;
-            maxStartPosY = m_actualContentSize.y - m_viewport.rect.height;
+            maxStartPosY = actualContentWithPaddingSizeRaw.y - m_viewport.rect.height;
 
             minStartPosX = 0.0f;
-            maxStartPosX = m_viewport.rect.width - m_actualContentSize.x;
+            maxStartPosX = m_viewport.rect.width - actualContentWithPaddingSizeRaw.x;
         }
         else if (BoundlessGridLayoutData.Constraint.FixedRowCount == m_gridLayoutGroup.constraint)
         {
@@ -188,40 +181,53 @@ public class BoundlessScrollRectController : MonoBehaviour
             // start from left to right for test
             // start from up to down for test
             minStartPosY = 0.0f;
-            maxStartPosY = m_actualContentSize.y - m_viewport.rect.height;
+            maxStartPosY = actualContentWithPaddingSizeRaw.y - m_viewport.rect.height;
 
             minStartPosX = 0.0f;
-            maxStartPosX = m_viewport.rect.width - m_actualContentSize.x;
+            maxStartPosX = m_viewport.rect.width - actualContentWithPaddingSizeRaw.x;
         }
 
         Vector2 nextTopPos = new Vector2(m_dragContent.anchoredPosition.x, m_dragContent.anchoredPosition.y);
         nextTopPos.x = Mathf.Clamp(nextTopPos.x, Mathf.Min(minStartPosX, maxStartPosX), Mathf.Max(minStartPosX, maxStartPosX));
         nextTopPos.y = Mathf.Clamp(nextTopPos.y, Mathf.Min(minStartPosY, maxStartPosY), Mathf.Max(minStartPosY, maxStartPosY));
-        m_itemStartPos = nextTopPos;
     }
 
-    private void TestDrawContent()
+    private void DrawContentItem()
     {
-
-
-        Vector3 ogPosition = m_viewport.position;
         Vector3 dragContentPostion = m_dragContent.position;
         Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
         m_actualContent.anchoredPosition = Vector2.zero;
+        float canvasScaleFactor = m_canvas.scaleFactor;
 
-        // to get position delta
-        // TODO should check with start point and direction
-        float xMove = Mathf.Clamp(-dragAnchorContentPostion.x, 0.0f, Mathf.Abs(dragAnchorContentPostion.x));
-        float yMove = Mathf.Clamp(dragAnchorContentPostion.y, 0.0f, Mathf.Abs(dragAnchorContentPostion.y));
+        Vector2 itemSize = GridLayoutData.CellSize * canvasScaleFactor;
+        Vector2 spacing = GridLayoutData.Spacing * canvasScaleFactor;
 
-        Vector2 itemSize = m_gridLayoutGroup.cellSize;
-        Vector2 spacing = m_gridLayoutGroup.spacing;
-        int tempColumnIndex = Mathf.FloorToInt(xMove / (itemSize.x + spacing.x));
-        int tempRowIndex = Mathf.FloorToInt(yMove / (itemSize.y + spacing.y));
+        // TODO use offset as padding correctly
+        RectOffset padding = null;
+        if (null != GridLayoutData)
+            padding = GridLayoutData.RectPadding;
 
-        // deal with different start axis
+        Vector2 tempWa = dragAnchorContentPostion;
+        float xMove = (Mathf.Abs(tempWa.x) - padding.horizontal) * canvasScaleFactor;
+        xMove = Mathf.Clamp(xMove, 0.0f, Mathf.Abs(xMove));
+        float yMove = (Mathf.Abs(tempWa.y) - padding.vertical) * canvasScaleFactor;
+        yMove = Mathf.Clamp(yMove, 0.0f, Mathf.Abs(yMove));
+
+        int tempColumnIndex = Mathf.FloorToInt((xMove + spacing.x) / (itemSize.x + spacing.x));
+        if (xMove % (itemSize.x + spacing.x) - itemSize.x > spacing.x)
+            tempColumnIndex = Mathf.Clamp(tempColumnIndex - 1, 0, tempColumnIndex);
+
+        int tempRowIndex = Mathf.FloorToInt((yMove + spacing.y) / (itemSize.y + spacing.y));
+        if (yMove % (itemSize.y + spacing.y) - itemSize.y > spacing.y)
+            tempRowIndex = Mathf.Clamp(tempRowIndex - 1, 0, tempRowIndex);
+
+        // TODO temp calculate from top left
         Vector3 tempMove = new Vector3(tempColumnIndex * (itemSize.x + spacing.x), -tempRowIndex * (itemSize.y + spacing.y), 0.0f);
-        Bounds contentBounds = new Bounds(m_dragContent.position + new Vector3(m_dragContent.rect.width * 0.5f, -m_dragContent.rect.height * 0.5f, 0.0f), m_dragContent.rect.size);
+        Vector2 actualContentSize = m_actualContentSizeRaw * canvasScaleFactor;
+        Vector3 boundsCenter = m_dragContent.position;
+        boundsCenter.x += padding.left * canvasScaleFactor;
+        boundsCenter.y -= padding.top * canvasScaleFactor;
+        Bounds contentBounds = new Bounds(boundsCenter + new Vector3(actualContentSize.x * 0.5f, -actualContentSize.y * 0.5f, 0.0f), actualContentSize);
 
         // to calculate it somewhere else :)
         int rowDataCount = 0, columnDataCount = 0;
@@ -241,14 +247,9 @@ public class BoundlessScrollRectController : MonoBehaviour
         int uiItemIndex = 0;
         Vector3 rowTopLeftPosition = default, itemTopLeftPosition = default;
         rowTopLeftPosition = dragContentPostion + tempMove;
-        // TODO use offset as padding correctly
-        if (null != GridLayoutData)
-        {
-            RectOffset padding = GridLayoutData.RectPadding;
-            rowTopLeftPosition += new Vector3(padding.left, -padding.top, 0.0f);
-        }
-        Bounds gridBounds = new Bounds(rowTopLeftPosition, itemSize);
-        Vector3 gridBoundsCenter = default;
+        rowTopLeftPosition += new Vector3(padding.left, -padding.top, 0.0f) * canvasScaleFactor;
+        Bounds currentGridBounds = new Bounds(rowTopLeftPosition, itemSize);
+        Vector3 currentGridBoundsCenter = default;
         bool hideItem = false;
 
         // draw from left to right for test
@@ -262,17 +263,17 @@ public class BoundlessScrollRectController : MonoBehaviour
 
             for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
             {
-                gridBoundsCenter = itemTopLeftPosition;
-                gridBoundsCenter.x += itemSize.x;
-                gridBoundsCenter.y -= itemSize.y;
-                gridBounds.center = gridBoundsCenter;
+                currentGridBoundsCenter = itemTopLeftPosition;
+                currentGridBoundsCenter.x += itemSize.x;
+                currentGridBoundsCenter.y -= itemSize.y;
+                currentGridBounds.center = currentGridBoundsCenter;
 
                 if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
                     dataIndex = rowFirstDataIndex + tempColumnIndex + columnIndex;
                 else
                     dataIndex = rowFirstDataIndex + columnIndex * columnDataCount;
 
-                hideItem = !contentBounds.Intersects(gridBounds) || dataIndex >= m_dataList.Count || dataIndex < 0;
+                hideItem = !contentBounds.Intersects(currentGridBounds) || dataIndex >= m_dataList.Count || dataIndex < 0;
                 if (hideItem)
                 {
                     m_uiItems[uiItemIndex].ItemRectTransform.position = Vector2.zero;
@@ -303,32 +304,28 @@ public class BoundlessScrollRectController : MonoBehaviour
     {
         m_viewItemCountInRow = 0;
         m_viewItemCountInColumn = 0;
-        m_itemSize = m_gridLayoutGroup.cellSize;
+        Vector2 itemSize = m_gridLayoutGroup.CellSize * m_canvas.scaleFactor;
 
-        Vector2 spacing = m_gridLayoutGroup.spacing;
+        Vector2 spacing = m_gridLayoutGroup.Spacing;
         float viewportHeight = Mathf.Abs(m_viewport.rect.height * m_viewport.localScale.y);
         float viewportWidth = Mathf.Abs(m_viewport.rect.width * m_viewport.localScale.y);
-        m_viewItemCountInColumn = Mathf.FloorToInt(viewportHeight / (m_itemSize.y + spacing.y));
-        m_viewItemCountInRow = Mathf.FloorToInt(viewportWidth / (m_itemSize.x + spacing.x));
+        m_viewItemCountInColumn = Mathf.FloorToInt(viewportHeight / (itemSize.y + spacing.y));
+        m_viewItemCountInRow = Mathf.FloorToInt(viewportWidth / (itemSize.x + spacing.x));
 
-        if (viewportHeight % (m_itemSize.y + spacing.y) > 0)
+        if (viewportHeight % (itemSize.y + spacing.y) > 0)
             m_viewItemCountInColumn += 2;
         else
             m_viewItemCountInColumn += 1;
 
-        if (viewportWidth % (m_itemSize.x + spacing.x) > 0)
+        if (viewportWidth % (itemSize.x + spacing.x) > 0)
             m_viewItemCountInRow += 2;
         else
             m_viewItemCountInRow += 1;
 
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == GridLayoutData.constraint)
-        {
             m_viewItemCountInRow = Mathf.Clamp(m_viewItemCountInRow, 1, GridLayoutData.constraintCount);
-        }
         else
-        {
             m_viewItemCountInColumn = Mathf.Clamp(m_viewItemCountInColumn, 1, GridLayoutData.constraintCount);
-        }
 
         m_viewItemCount = m_viewItemCountInRow * m_viewItemCountInColumn;
     }
@@ -358,10 +355,11 @@ public class BoundlessScrollRectController : MonoBehaviour
         else
         {
             int spawnCount = m_viewItemCount - m_uiItems.Count;
+            Vector2 itemSize = GridLayoutData.CellSize * m_canvas.scaleFactor;
             for (int i = 0; i < spawnCount; i++)
             {
                 tempItem = Instantiate(m_gridLayoutGroup.GridItemPrefab, m_actualContent);
-                tempItem.SetItemSize(m_itemSize);
+                tempItem.SetItemSize(itemSize);
                 m_uiItems.Add(tempItem);
                 tempItem.Hide();
             }
@@ -395,13 +393,19 @@ public class BoundlessScrollRectController : MonoBehaviour
         RefreshLayout();
     }
 
+    private void OnCellSizeChanged(Vector2 cellSize)
+    {
+        SyncSize();
+        CalculateViewportShowCount();
+        AdjustCachedItems();
+        RefreshLayout();
+    }
+
     #region mono method
 
     private void Reset()
     {
         m_scrollRect.GetComponent<ScrollRect>();
-        m_isVertical = m_scrollRect.vertical;
-        m_isHorizontal = m_scrollRect.horizontal;
         m_scrollRect.StopMovement();
         m_dragContent = m_scrollRect.content;
         m_canvas = GetComponentInParent<Canvas>();
@@ -409,13 +413,14 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private void OnEnable()
     {
+        m_canvas = GetComponentInParent<Canvas>();
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
         UpdateConstraintWithAutoFit();
         CalculateViewportShowCount();
         ClearCachedItems();
         AdjustCachedItems();
-        m_canvas = GetComponentInParent<Canvas>();
         GridLayoutData.OnFitTypeChanged += OnLayoutFitTypeChanged;
+        GridLayoutData.OnCellSizeChanged += OnCellSizeChanged;
     }
 
     private void OnDisable()
@@ -423,6 +428,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         m_scrollRect.onValueChanged.RemoveListener(OnScrollRectValueChanged);
         ClearCachedItems();
         GridLayoutData.OnFitTypeChanged -= OnLayoutFitTypeChanged;
+        GridLayoutData.OnCellSizeChanged -= OnCellSizeChanged;
     }
 
     private void Update()
@@ -444,19 +450,15 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     private void SyncSize()
     {
-        // sync the size form grid component to actual content size
-        // should we scale the content size? so it may show correctly
-        // also need to know the canvas scale or something :(
-
-        m_itemSize = m_gridLayoutGroup.cellSize;
+        // sync the size form grid data
+        // the actual item size will also directly affected by parent canvas's scale factor, so we may not need to multiple it :D
+        Vector2 itemAcutalSize = m_gridLayoutGroup.CellSize;
         if (null != m_uiItems)
             for (int i = 0; i < m_uiItems.Count; i++)
-                m_uiItems[i].SetItemSize(m_itemSize);
+                m_uiItems[i].SetItemSize(itemAcutalSize);
     }
 
 #if UNITY_EDITOR // some method to debug drawing or sth
-
-    // TODO debug draw should also deal with canvas scale case
 
     private void OnDrawGizmos()
     {
@@ -473,25 +475,19 @@ public class BoundlessScrollRectController : MonoBehaviour
             DrawDebugShowingGrids();
     }
 
+    // TODO should apply canvas scale to make item size and content size correctly :)
+
     private void DrawDebugContentSize()
     {
         if (null == m_dataList)
             return;
 
-        Vector2 actualContentSize = m_actualContentSize;
-        RectOffset padding = new RectOffset();
-        if (null != GridLayoutData)
-        {
-            padding = GridLayoutData.RectPadding;
-            actualContentSize.x += padding.left + padding.right;
-            actualContentSize.y += padding.top + padding.bottom;
-        }
+        RectOffset padding = GridLayoutData.RectPadding;
+        Vector2 paddingValue = new Vector2(padding.horizontal, padding.vertical);
+        float canvasScaleFactor = m_canvas.scaleFactor;
+        Vector2 actualContentSize = (m_actualContentSizeRaw + paddingValue) * canvasScaleFactor;
 
-        // TODO 
         Vector3 topLeftPoint = m_dragContent.position;
-        topLeftPoint.x -= padding.left;
-        topLeftPoint.y -= padding.top;
-
         Vector3 topRightPoint = topLeftPoint;
         topRightPoint.x += actualContentSize.x;
 
@@ -499,8 +495,6 @@ public class BoundlessScrollRectController : MonoBehaviour
         Vector3 BottomRightPoint = topRightPoint;
         bottomLeftPoint.y -= actualContentSize.y;
         BottomRightPoint.y -= actualContentSize.y;
-
-        // implement padding correctly
 
         Debug.DrawLine(topLeftPoint, topRightPoint, Color.magenta);
         Debug.DrawLine(topLeftPoint, bottomLeftPoint, Color.magenta);
@@ -519,16 +513,18 @@ public class BoundlessScrollRectController : MonoBehaviour
 
         int dataCount = m_dataList.Count;
         Vector3 rowItemTopLeftPos = default;
-
         Vector3 columnStartItemTopLeftPos = m_dragContent.position;
         columnStartItemTopLeftPos.z = 0.0f;
+        float canvasScaleFactor = m_canvas.scaleFactor;
+
         // TODO use offset as padding correctly
         if (null != GridLayoutData)
         {
             RectOffset padding = GridLayoutData.RectPadding;
-            columnStartItemTopLeftPos += new Vector3(padding.left, -padding.top, 0.0f);
+            columnStartItemTopLeftPos += new Vector3(padding.left * canvasScaleFactor, -padding.top * canvasScaleFactor, 0.0f);
         }
-        Vector2 spacing = m_gridLayoutGroup.spacing;
+        Vector2 spacing = m_gridLayoutGroup.Spacing * canvasScaleFactor;
+        Vector2 itemSize = m_gridLayoutGroup.CellSize * canvasScaleFactor;
 
         // should know which axis get constrained
         int constraintCount = m_gridLayoutGroup.constraintCount;
@@ -540,10 +536,10 @@ public class BoundlessScrollRectController : MonoBehaviour
                 rowItemTopLeftPos = columnStartItemTopLeftPos;
                 for (int j = 0; j < constraintCount; j++)
                 {
-                    DrawOneDebugGridItem(rowItemTopLeftPos, Color.blue);
-                    rowItemTopLeftPos.x += spacing.x + m_itemSize.x;
+                    DrawOneDebugGridItem(rowItemTopLeftPos, itemSize, Color.blue);
+                    rowItemTopLeftPos.x += spacing.x + itemSize.x;
                 }
-                columnStartItemTopLeftPos.y -= m_itemSize.y + spacing.y;
+                columnStartItemTopLeftPos.y -= itemSize.y + spacing.y;
             }
         }
         else // if (BoundlessGridLayoutData.Constraint.FixedRowCount == m_gridLayoutGroup.constraint)
@@ -553,40 +549,55 @@ public class BoundlessScrollRectController : MonoBehaviour
                 rowItemTopLeftPos = columnStartItemTopLeftPos;
                 for (int j = 0; j < dynamicCount; j++)
                 {
-                    DrawOneDebugGridItem(rowItemTopLeftPos, Color.blue);
-                    rowItemTopLeftPos.x += spacing.x + m_itemSize.x;
+                    DrawOneDebugGridItem(rowItemTopLeftPos, itemSize, Color.blue);
+                    rowItemTopLeftPos.x += spacing.x + itemSize.x;
                 }
-                columnStartItemTopLeftPos.y -= m_itemSize.y + spacing.y;
+                columnStartItemTopLeftPos.y -= itemSize.y + spacing.y;
             }
         }
     }
 
     private void DrawDebugShowingGrids()
     {
+        float canvasScaleFactor = m_canvas.scaleFactor;
         Vector3 dragContentPostion = m_dragContent.position;
         Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
 
-        // to get position delta
-        // TODO should check with start point and direction
-        float xMove = Mathf.Clamp(-dragAnchorContentPostion.x, 0.0f, Mathf.Abs(dragAnchorContentPostion.x));
-        float yMove = Mathf.Clamp(dragAnchorContentPostion.y, 0.0f, Mathf.Abs(dragAnchorContentPostion.y));
+        // TODO use offset as padding correctly
+        RectOffset padding = null;
+        if (null != GridLayoutData)
+            padding = GridLayoutData.RectPadding;
 
-        Vector2 itemSize = m_gridLayoutGroup.cellSize;
-        Vector2 spacing = m_gridLayoutGroup.spacing;
-        int tempXIndex = Mathf.FloorToInt(xMove / (itemSize.x + spacing.x));
-        int tempYIndex = Mathf.FloorToInt(yMove / (itemSize.y + spacing.y));
+        Vector2 tempWa = dragAnchorContentPostion;
+        float xMove = (Mathf.Abs(tempWa.x) - padding.horizontal) * canvasScaleFactor;
+        xMove = Mathf.Clamp(xMove, 0.0f, Mathf.Abs(xMove));
+        float yMove = (Mathf.Abs(tempWa.y) - padding.vertical) * canvasScaleFactor;
+        yMove = Mathf.Clamp(yMove, 0.0f, Mathf.Abs(yMove));
+
+        Vector2 itemSize = m_gridLayoutGroup.CellSize * canvasScaleFactor;
+        Vector2 spacing = m_gridLayoutGroup.Spacing * canvasScaleFactor;
+
+        // re calculate
+        int tempXIndex = Mathf.FloorToInt((xMove + spacing.x) / (itemSize.x + spacing.x));
+        if (xMove % (itemSize.x + spacing.x) - itemSize.x > spacing.x)
+            tempXIndex = Mathf.Clamp(tempXIndex - 1, 0, tempXIndex);
+
+        int tempYIndex = Mathf.FloorToInt((yMove + spacing.y) / (itemSize.y + spacing.y));
+        if (yMove % (itemSize.y + spacing.y) - itemSize.y > spacing.y)
+            tempYIndex = Mathf.Clamp(tempYIndex - 1, 0, tempYIndex);
+
+        // TODO temp calculate from top left
         Vector3 tempMove = new Vector3(tempXIndex * (itemSize.x + spacing.x), -tempYIndex * (itemSize.y + spacing.y), 0.0f);
-        Bounds contentBounds = new Bounds(m_dragContent.position + new Vector3(m_dragContent.rect.width * 0.5f, -m_dragContent.rect.height * 0.5f, 0.0f), m_dragContent.rect.size);
+        Vector2 actualContentSize = m_actualContentSizeRaw * canvasScaleFactor;
+        Vector3 boundsCenter = m_dragContent.position;
+        boundsCenter.x += padding.left * canvasScaleFactor;
+        boundsCenter.y -= padding.top * canvasScaleFactor;
+        Bounds contentBounds = new Bounds(boundsCenter + new Vector3(actualContentSize.x * 0.5f, -actualContentSize.y * 0.5f, 0.0f), actualContentSize);
 
         // deal with content from left to right (simple case) first
         Vector3 rowTopLeftPosition = default, itemTopLeftPosition = default;
         rowTopLeftPosition = dragContentPostion + tempMove;
-        // TODO use offset as padding correctly
-        if (null != GridLayoutData)
-        {
-            RectOffset padding = GridLayoutData.RectPadding;
-            rowTopLeftPosition += new Vector3(padding.left, -padding.top, 0.0f);
-        }
+        rowTopLeftPosition += new Vector3(padding.left, -padding.top, 0.0f) * canvasScaleFactor;
         Bounds gridBounds = new Bounds(rowTopLeftPosition, itemSize);
         Vector3 gridBoundsCenter = default;
         for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
@@ -600,9 +611,9 @@ public class BoundlessScrollRectController : MonoBehaviour
                 gridBounds.center = gridBoundsCenter;
 
                 if (contentBounds.Intersects(gridBounds))
-                    DrawOneDebugGridItem(itemTopLeftPosition, Color.white); // the real grid in the content
+                    DrawOneDebugGridItem(itemTopLeftPosition, itemSize, Color.white); // the real grid in the content
                 else
-                    DrawOneDebugGridItem(itemTopLeftPosition, Color.yellow); // the grid should not show
+                    DrawOneDebugGridItem(itemTopLeftPosition, itemSize, Color.yellow); // the grid should not show
 
                 itemTopLeftPosition.x += spacing.x + itemSize.x;
             }
@@ -610,10 +621,8 @@ public class BoundlessScrollRectController : MonoBehaviour
         }
     }
 
-    private void DrawOneDebugGridItem(Vector3 topLeftPoint, Color color)
+    private void DrawOneDebugGridItem(Vector3 topLeftPoint, Vector3 itemSize, Color color)
     {
-        Vector3 itemSize = m_gridLayoutGroup.cellSize;
-
         Vector3 topRightPoint = topLeftPoint;
         topRightPoint.x += itemSize.x;
 
@@ -631,36 +640,6 @@ public class BoundlessScrollRectController : MonoBehaviour
 
         Debug.DrawLine(topLeftPoint, bottomRightPoint, color);
         Debug.DrawLine(topRightPoint, bottomLeftPoint, color);
-    }
-
-    private void DrawGridViewportSize()
-    {
-        if (null == GridLayoutData)
-            return;
-
-        RectOffset padding = GridLayoutData.RectPadding;
-        Rect showRect = m_actualContent.rect;
-
-        Vector3 topLeftPoint = m_dragContent.position;
-        topLeftPoint.x += padding.left;
-        topLeftPoint.y -= padding.top;
-
-        Vector3 topRightPoint = topLeftPoint + new Vector3(showRect.width, 0.0f, 0.0f);
-        topRightPoint.x -= padding.right;
-
-        Vector3 bottomLeftPoint = topLeftPoint + new Vector3(0.0f, -showRect.height, 0.0f);
-        Vector3 bottomRightPoint = bottomLeftPoint + new Vector3(showRect.width, 0.0f, 0.0f);
-        bottomRightPoint.x -= padding.right;
-
-        Color wireColor = Color.black;
-        Debug.DrawLine(topLeftPoint, topRightPoint, wireColor);
-        Debug.DrawLine(bottomLeftPoint, bottomRightPoint, wireColor);
-
-        Debug.DrawLine(topLeftPoint, bottomLeftPoint, wireColor);
-        Debug.DrawLine(topRightPoint, bottomRightPoint, wireColor);
-
-        Debug.DrawLine(topLeftPoint, bottomRightPoint, wireColor);
-        Debug.DrawLine(topRightPoint, bottomLeftPoint, wireColor);
     }
 
 #endif
