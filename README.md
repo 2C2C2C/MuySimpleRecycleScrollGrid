@@ -8,7 +8,7 @@ Debug drawing.
 Simple grid layout.
 
 TODO :
-Ttem start direction
+Item start direction
 
 ![TestImg](https://github.com/2C2C2C/MuyScrollRect/blob/master/TempSrc/scrollrect01.gif)
 
