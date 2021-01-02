@@ -6,6 +6,7 @@ The parent canvas need to scale with resolution.
 Supported:
 Debug drawing.
 Simple grid layout.
+Root scale(only set scale on viewport or higher parent)
 
 TODO :
 Ttem start direction
