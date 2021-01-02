@@ -9,7 +9,7 @@ Simple grid layout.
 Root scale(only set scale on viewport or higher parent)
 
 TODO :
-Ttem start direction
+Item start direction
 
 ![TestImg](https://github.com/2C2C2C/MuyScrollRect/blob/master/TempSrc/scrollrect01.gif)
 
