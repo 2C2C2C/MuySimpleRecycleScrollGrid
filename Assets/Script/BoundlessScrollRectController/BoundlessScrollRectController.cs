@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -524,10 +523,6 @@ public class BoundlessScrollRectController : MonoBehaviour
         Debug.DrawLine(bottomLeftPoint, BottomRightPoint, Color.magenta);
     }
 
-    /// <summary>
-    /// let it draw full stuff for now
-    /// @TODO need think about spacing
-    /// </summary>
     private void DrawDebugGrids()
     {
         if (null == m_dataList)
@@ -585,7 +580,6 @@ public class BoundlessScrollRectController : MonoBehaviour
         Vector3 dragAnchorContentPostion = m_dragContent.anchoredPosition;
         Vector3 globalScale = m_viewport.lossyScale;
 
-        // TODO use offset as padding correctly
         RectOffset padding = null;
         if (null != GridLayoutData)
             padding = GridLayoutData.RectPadding;
