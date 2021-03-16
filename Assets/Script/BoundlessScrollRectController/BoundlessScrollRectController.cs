@@ -222,10 +222,10 @@ public class BoundlessScrollRectController : MonoBehaviour
         if (null != GridLayoutData)
             padding = GridLayoutData.RectPadding;
 
-        Vector2 tempWa = dragAnchorContentPostion;
-        float xMove = (Mathf.Abs(tempWa.x) - padding.horizontal) * globalScale.x;
+        // TODO need to know the moving direction, then adjust it to prevent wrong draw
+        float xMove = dragAnchorContentPostion.x < 0 ? (-dragAnchorContentPostion.x - padding.horizontal) * globalScale.x : 0;
         xMove = Mathf.Clamp(xMove, 0.0f, Mathf.Abs(xMove));
-        float yMove = (Mathf.Abs(tempWa.y) - padding.vertical) * globalScale.y;
+        float yMove = dragAnchorContentPostion.y > 0 ? (dragAnchorContentPostion.y - padding.vertical) * globalScale.y : 0;
         yMove = Mathf.Clamp(yMove, 0.0f, Mathf.Abs(yMove));
 
         int tempColumnIndex = Mathf.FloorToInt((xMove + spacing.x) / (itemSize.x + spacing.x));
@@ -359,7 +359,6 @@ public class BoundlessScrollRectController : MonoBehaviour
             {
                 // need delete
                 int deleteCount = m_uiItems.Count - countTest;
-
                 for (int i = 0; i < deleteCount; i++)
                 {
                     tempItem = m_uiItems[m_uiItems.Count - 1 - i];
@@ -418,11 +417,30 @@ public class BoundlessScrollRectController : MonoBehaviour
         RefreshLayout();
     }
 
+    private void DestroyAllChildren(Transform target)
+    {
+        if (null == target)
+            return;
+
+        int childCount = target.childCount;
+        for (int i = childCount - 1; i >= 0; i--)
+            Destroy(target.GetChild(i).gameObject);
+    }
+
+    private void SyncSize()
+    {
+        // sync the size form grid data
+        // the actual item size will also directly affected by parent canvas's scale factor, so we may not need to multiple it :D
+        Vector2 itemAcutalSize = m_gridLayoutGroup.CellSize;
+        if (null != m_uiItems)
+            for (int i = 0; i < m_uiItems.Count; i++)
+                m_uiItems[i].SetItemSize(itemAcutalSize);
+    }
+
     #region mono method
 
     private void Reset()
     {
-        // m_rootTransfrom = this.transform;
         m_scrollRect.GetComponent<ScrollRect>();
         m_scrollRect.StopMovement();
         m_dragContent = m_scrollRect.content;
@@ -456,27 +474,9 @@ public class BoundlessScrollRectController : MonoBehaviour
 
     #endregion
 
-    private void DestroyAllChildren(Transform target)
-    {
-        if (null == target)
-            return;
-
-        int childCount = target.childCount;
-        for (int i = childCount - 1; i >= 0; i--)
-            Destroy(target.GetChild(i).gameObject);
-    }
-
-    private void SyncSize()
-    {
-        // sync the size form grid data
-        // the actual item size will also directly affected by parent canvas's scale factor, so we may not need to multiple it :D
-        Vector2 itemAcutalSize = m_gridLayoutGroup.CellSize;
-        if (null != m_uiItems)
-            for (int i = 0; i < m_uiItems.Count; i++)
-                m_uiItems[i].SetItemSize(itemAcutalSize);
-    }
-
 #if UNITY_EDITOR // some method to debug drawing or sth
+
+    #region debug draw
 
     private void OnDrawGizmos()
     {
@@ -584,10 +584,10 @@ public class BoundlessScrollRectController : MonoBehaviour
         if (null != GridLayoutData)
             padding = GridLayoutData.RectPadding;
 
-        Vector2 tempWa = dragAnchorContentPostion;
-        float xMove = (Mathf.Abs(tempWa.x) - padding.horizontal) * globalScale.x;
+        // TODO need to know the moving direction, then adjust it to prevent wrong draw
+        float xMove = dragAnchorContentPostion.x < 0 ? (-dragAnchorContentPostion.x - padding.horizontal) * globalScale.x : 0;
         xMove = Mathf.Clamp(xMove, 0.0f, Mathf.Abs(xMove));
-        float yMove = (Mathf.Abs(tempWa.y) - padding.vertical) * globalScale.y;
+        float yMove = dragAnchorContentPostion.y > 0 ? (dragAnchorContentPostion.y - padding.vertical) * globalScale.y : 0;
         yMove = Mathf.Clamp(yMove, 0.0f, Mathf.Abs(yMove));
 
         Vector2 itemSize = new Vector2(m_gridLayoutGroup.CellSize.x * globalScale.x, m_gridLayoutGroup.CellSize.y * globalScale.y);
@@ -657,6 +657,8 @@ public class BoundlessScrollRectController : MonoBehaviour
         Debug.DrawLine(topLeftPoint, bottomRightPoint, color);
         Debug.DrawLine(topRightPoint, bottomLeftPoint, color);
     }
+
+    #endregion
 
 #endif
 
