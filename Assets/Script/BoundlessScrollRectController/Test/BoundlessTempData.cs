@@ -1,5 +1,5 @@
 ﻿
-public class BoundlessTempData : IBoundlessScrollRectItemData
+public class BoundlessTempData
 {
     public readonly System.Guid ItemGuid;
     public readonly string ItemName;

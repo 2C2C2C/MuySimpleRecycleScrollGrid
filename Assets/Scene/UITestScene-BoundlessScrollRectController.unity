@@ -884,7 +884,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1040434472}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d4d94fc59acfad4f9a9988e3dc789cc, type: 3}
+  m_Script: {fileID: 11500000, guid: 7724b6184ab11b64780802bc645f86b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_scrollRect: {fileID: 1040434475}
@@ -904,13 +904,13 @@ MonoBehaviour:
     m_cellSize: {x: 300, y: 200}
     Spacing: {x: 15, y: 15}
     StopMagSqrVel: 100
-    m_gridItemPrefab: {fileID: 5922839548107084954, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
-      type: 3}
   m_canvas: {fileID: 0}
   m_drawContentSize: 1
   m_drawGrids: 1
   m_drawShowingGrids: 1
   m_drawActualUIItems: 1
+  m_grieItemPrefab: {fileID: 5922839548107084954, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
+    type: 3}
 --- !u!114 &1040434475
 MonoBehaviour:
   m_ObjectHideFlags: 0

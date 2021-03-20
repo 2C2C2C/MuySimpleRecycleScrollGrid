@@ -1,14 +1,14 @@
 ﻿using UnityEditor;
 
-[CustomEditor(typeof(BoundlessScrollRectController))]
+[CustomEditor(typeof(BoundlessScrollRectController<IBoundlessGridData>))]
 public class BoundlessScrollRectControllerEditor : Editor
 {
-    private BoundlessScrollRectController m_target = null;
+    private BoundlessScrollRectController<IBoundlessGridData> m_target = null;
 
     public override void OnInspectorGUI()
     {
         if (null == m_target)
-            m_target = base.target as BoundlessScrollRectController;
+            m_target = base.target as BoundlessScrollRectController<IBoundlessGridData>;
 
         EditorGUI.BeginChangeCheck();
         base.OnInspectorGUI();
@@ -17,6 +17,7 @@ public class BoundlessScrollRectControllerEditor : Editor
         if (hasChanged)
         {
             // too bad :)
+            UnityEngine.Debug.Log("test change");
             m_target.GridLayoutData.IsAutoFit = m_target.GridLayoutData.IsAutoFit;
             m_target.GridLayoutData.CellSize = m_target.GridLayoutData.CellSize;
             m_target.RefreshLayout();

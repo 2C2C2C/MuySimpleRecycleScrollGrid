@@ -1,23 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public abstract class BoundlessBaseScrollRectItem : MonoBehaviour
+// T is a data for each grid item
+public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour where T : IBoundlessGridData
 {
     protected RectTransform m_rectTransform = null;
 
     [SerializeField]
     private CanvasGroup m_canvasGroup = null;
-    private Vector2 m_itemSize = default;
 
     public RectTransform ItemRectTransform => m_rectTransform;
-    public Vector2 ItemSize => m_itemSize;
+    public Vector2 ItemSize { get; private set; }
+
+    public T ItemData { get; protected set; }
 
     /// <summary>
     /// to inject data and cast data
     /// </summary>
     /// <param name="data"></param>
-    public abstract void InjectData(IBoundlessScrollRectItemData data);
+    public abstract void InjectData(T data);
 
     public void Show()
     {
@@ -35,8 +35,8 @@ public abstract class BoundlessBaseScrollRectItem : MonoBehaviour
 
     public void SetItemSize(Vector2 nextSize)
     {
-        m_itemSize = nextSize;
-        m_rectTransform.sizeDelta = m_itemSize;
+        ItemSize = nextSize;
+        m_rectTransform.sizeDelta = ItemSize;
     }
 
     #region mono method

@@ -7,10 +7,10 @@ public class BoundlessScrollRectControllerTester : MonoBehaviour
 {
     [Range(4, 800)]
     public int m_dataCount = 10;
-    private BoundlessTempData[] m_dataArr = null;
+    private TempDataItem[] m_dataArr = null;
 
-    public BoundlessScrollRectController m_gridConrtoller = null;
-    ReadOnlyCollection<IBoundlessScrollRectItemData> m_itemList = null;
+    public BoundlessTempScrollRectController m_gridConrtoller = null;
+    ReadOnlyCollection<TempDataItem> m_itemList = null;
 
     public string[] m_dataNames = null;
 
@@ -18,17 +18,17 @@ public class BoundlessScrollRectControllerTester : MonoBehaviour
     void Start()
     {
 
-        m_dataArr = new BoundlessTempData[m_dataCount];
+        m_dataArr = new TempDataItem[m_dataCount];
         m_dataNames = new string[m_dataCount];
         for (int i = 0; i < m_dataCount; i++)
         {
-            m_dataArr[i] = new BoundlessTempData(System.Guid.NewGuid());
-            m_dataNames[i] = m_dataArr[i].ItemName;
+            m_dataArr[i] = new TempDataItem();
+            m_dataNames[i] = m_dataArr[i].TempName;
         }
 
         // then give data or?
 
-        m_itemList = new ReadOnlyCollection<IBoundlessScrollRectItemData>(m_dataArr);
+        m_itemList = new ReadOnlyCollection<TempDataItem>(new List<TempDataItem>(m_dataArr));
         m_gridConrtoller.InjectData(m_itemList);
 
         this.enabled = false;

@@ -71,10 +71,6 @@ public class BoundlessGridLayoutData
 
     public float StopMagSqrVel = 50.0f;
 
-    [SerializeField]
-    private BoundlessTempScrollRectItem m_gridItemPrefab = null;
-    public BoundlessTempScrollRectItem GridItemPrefab => m_gridItemPrefab;
-
     /// <summary>
     /// result is 'autofit'
     /// </summary>

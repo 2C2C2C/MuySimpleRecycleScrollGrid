@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using System;
 
-public class TempDataItem
+[Serializable]
+public class TempDataItem : IBoundlessGridData
 {
     private readonly System.Guid m_guid = default;
     private readonly string m_tempName = null;

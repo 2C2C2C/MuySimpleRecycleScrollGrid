@@ -4,8 +4,9 @@ using UnityEngine.UI;
 
 // TODO clean up the member variable
 // test if global scale can replace canvas scale
-[RequireComponent(typeof(ScrollRect), typeof(GridLayoutGroup))]
-public class BoundlessScrollRectController : MonoBehaviour
+// T is a data for each grid item
+[RequireComponent(typeof(ScrollRect))]
+public abstract class BoundlessScrollRectController<T> : MonoBehaviour where T : IBoundlessGridData
 {
     [SerializeField]
     private ScrollRect m_scrollRect = null;
@@ -29,8 +30,8 @@ public class BoundlessScrollRectController : MonoBehaviour
     /// </summary>
     private Vector2 m_actualContentSizeRaw = default;
 
-    private List<BoundlessBaseScrollRectItem> m_uiItems = null;
-    private IReadOnlyList<IBoundlessScrollRectItemData> m_dataList = null;
+    private List<BoundlessBaseScrollRectItem<T>> m_uiItems = null;
+    private IReadOnlyList<T> m_dataList = null;
 
     /* a test component, we will move this component
     * and use this to setup the grid size
@@ -42,6 +43,10 @@ public class BoundlessScrollRectController : MonoBehaviour
     // may need this to correctly scale the items :(
     [SerializeField]
     private Canvas m_canvas = null;
+
+    [SerializeField]
+    private BoundlessBaseScrollRectItem<T> m_gridItemPrefab = null;
+    public abstract BoundlessBaseScrollRectItem<T> GridItemPrefab { get; }
 
 #if UNITY_EDITOR
     [Space, Header("Debug settings")]
@@ -60,7 +65,7 @@ public class BoundlessScrollRectController : MonoBehaviour
         OnScrollRectValueChanged(Vector2.zero);
     }
 
-    public void InjectData(IReadOnlyList<IBoundlessScrollRectItemData> dataList)
+    public void InjectData(IReadOnlyList<T> dataList)
     {
         m_dataList = dataList;
 
@@ -349,9 +354,9 @@ public class BoundlessScrollRectController : MonoBehaviour
     private void AdjustCachedItems()
     {
         if (null == m_uiItems)
-            m_uiItems = new List<BoundlessBaseScrollRectItem>();
+            m_uiItems = new List<BoundlessBaseScrollRectItem<T>>();
 
-        BoundlessBaseScrollRectItem tempItem = null;
+        BoundlessBaseScrollRectItem<T> tempItem = null;
         if (m_viewItemCount < m_uiItems.Count)
         {
             int countTest = (int)(m_uiItems.Count * 0.75f);
@@ -374,7 +379,7 @@ public class BoundlessScrollRectController : MonoBehaviour
             Vector2 itemSize = new Vector2(GridLayoutData.CellSize.x * globalScale.x, GridLayoutData.CellSize.y * globalScale.y);
             for (int i = 0; i < spawnCount; i++)
             {
-                tempItem = Instantiate(m_gridLayoutGroup.GridItemPrefab, m_actualContent);
+                tempItem = Instantiate(GridItemPrefab, m_actualContent);
                 tempItem.SetItemSize(itemSize);
                 m_uiItems.Add(tempItem);
                 tempItem.Hide();
