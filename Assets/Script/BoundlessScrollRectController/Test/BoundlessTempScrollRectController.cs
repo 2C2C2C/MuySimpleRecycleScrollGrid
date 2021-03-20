@@ -4,5 +4,6 @@ public class BoundlessTempScrollRectController : BoundlessScrollRectController<T
 {
     [SerializeField]
     private BoundlessTempScrollRectItem m_grieItemPrefab;
+
     public override BoundlessBaseScrollRectItem<TempDataItem> GridItemPrefab => m_grieItemPrefab;
 }

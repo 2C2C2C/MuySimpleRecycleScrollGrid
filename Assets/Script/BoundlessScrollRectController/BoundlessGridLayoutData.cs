@@ -38,6 +38,7 @@ public class BoundlessGridLayoutData
     // public StartCorner m_startCorner = StartCorner.UpperLeft;
     public Constraint constraint = Constraint.FixedColumnCount;
 
+    // TODO @Hiko auto fit doesnt work, need to check
     [SerializeField, Tooltip("auto fit means calculate the constraint count by viewport size")]
     private bool m_autoFit = false;
     public bool IsAutoFit
@@ -79,4 +80,17 @@ public class BoundlessGridLayoutData
     /// result is 'cellsize'
     /// </summary>
     public event System.Action<Vector2> OnCellSizeChanged;
+
+    public event System.Action LayoutDataChanged;
+
+#if UNITY_EDITOR
+
+
+    public void CallRefresh()
+    {
+        LayoutDataChanged?.Invoke();
+    }
+
+#endif
+
 }

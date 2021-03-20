@@ -422,6 +422,12 @@ public abstract class BoundlessScrollRectController<T> : MonoBehaviour where T :
         RefreshLayout();
     }
 
+    private void OnlayoutDataChanged()
+    {
+        OnCellSizeChanged(GridLayoutData.CellSize);
+        OnLayoutFitTypeChanged(GridLayoutData.IsAutoFit);
+    }
+
     private void DestroyAllChildren(Transform target)
     {
         if (null == target)
@@ -462,6 +468,7 @@ public abstract class BoundlessScrollRectController<T> : MonoBehaviour where T :
         AdjustCachedItems();
         GridLayoutData.OnFitTypeChanged += OnLayoutFitTypeChanged;
         GridLayoutData.OnCellSizeChanged += OnCellSizeChanged;
+        GridLayoutData.LayoutDataChanged += OnlayoutDataChanged;
     }
 
     private void OnDisable()
@@ -470,6 +477,7 @@ public abstract class BoundlessScrollRectController<T> : MonoBehaviour where T :
         ClearCachedItems();
         GridLayoutData.OnFitTypeChanged -= OnLayoutFitTypeChanged;
         GridLayoutData.OnCellSizeChanged -= OnCellSizeChanged;
+        GridLayoutData.LayoutDataChanged -= OnlayoutDataChanged;
     }
 
     private void Update()
