@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 // T is a data for each grid item
-public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour where T : IBoundlessGridData
+public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour
 {
     protected RectTransform m_rectTransform = null;
 

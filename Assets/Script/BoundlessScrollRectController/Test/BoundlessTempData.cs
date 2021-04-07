@@ -16,4 +16,10 @@ public class BoundlessTempData
         ItemName = itemId.ToString().Substring(0, 5);
     }
 
+    public BoundlessTempData()
+    {
+        ItemGuid = System.Guid.NewGuid();
+        ItemName = ItemGuid.ToString().Substring(0, 5);
+    }
+
 }

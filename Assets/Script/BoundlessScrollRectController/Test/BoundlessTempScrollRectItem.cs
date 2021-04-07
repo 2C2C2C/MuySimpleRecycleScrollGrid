@@ -1,27 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
-public class BoundlessTempScrollRectItem : BoundlessBaseScrollRectItem<TempDataItem>, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+
+public class BoundlessTempScrollRectItem : BoundlessBaseScrollRectItem<BoundlessTempData>, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField]
     private UnityEngine.UI.Text m_dataText = null;
 
-    System.Action<TempDataItem> m_onPointerEnter = null;
-    System.Action<TempDataItem> m_onPointerLeave = null;
+    System.Action<BoundlessTempData> m_onPointerEnter = null;
+    System.Action<BoundlessTempData> m_onPointerLeave = null;
 
-    public override void InjectData(TempDataItem data)
+    public override void InjectData(BoundlessTempData data)
     {
-        ItemData = data;
-        m_dataText.text = ItemData.TempName;
-    }
-
-    public void SetupHoverCallback()
-    {
-
-    }
-
-    public void OnPointerClick(PointerEventData eventData)
-    {
-
+        m_dataText.text = data.ItemName;
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -33,4 +23,5 @@ public class BoundlessTempScrollRectItem : BoundlessBaseScrollRectItem<TempDataI
     {
         m_onPointerLeave?.Invoke(ItemData);
     }
+
 }
