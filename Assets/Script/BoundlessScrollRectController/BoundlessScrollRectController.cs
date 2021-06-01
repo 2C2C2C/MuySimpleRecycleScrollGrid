@@ -22,6 +22,10 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
 
     // Transform m_rootTransfrom = null;
     private int m_viewItemCount = 0;
+    ///// <summary>
+    ///// the actual item count can show in the viewport
+    ///// </summary>
+    //private int m_actualViewItemCount = 0;
     private int m_viewItemCountInRow = 0;
     private int m_viewItemCountInColumn = 0;
 
@@ -165,16 +169,26 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         int dataCount = m_dataList.Count;
         Vector2 result = default;
 
+        // too bad
+        Vector2 viewportSize = Viewport.rect.size;
+        int viewItemCountInColumn = Mathf.FloorToInt(viewportSize.y / (itemSize.y + spacing.y));
+        int viewItemCountInRow = Mathf.FloorToInt(viewportSize.x / (itemSize.x + spacing.x));
+        int viewItemCount = viewItemCountInColumn * viewItemCountInRow;
+
         // TODO @Hiko when calaulate size, should also deal with padding
         int constraintCount = m_gridLayoutGroup.constraintCount;
         int dynamicCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
         if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
         {
+            if (dataCount <= viewItemCount)
+                dynamicCount = viewItemCountInColumn;
             result.x = (constraintCount * itemSize.x) + ((constraintCount - 1) * spacing.x);
             result.y = dynamicCount * itemSize.y + (dynamicCount - 1) * spacing.y;
         }
         else if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedRowCount)
         {
+            if (dataCount <= viewItemCount)
+                dynamicCount = viewItemCountInRow;
             result.y = (constraintCount * itemSize.y) + ((constraintCount - 1) * spacing.y);
             result.x = dynamicCount * itemSize.x + (dynamicCount - 1) * spacing.x;
         }
@@ -275,10 +289,26 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
 
         // TODO fix temp calculate (now it isfrom top left)
         Vector3 tempMove = new Vector3(tempColumnIndex * (itemSize.x + spacing.x), -tempRowIndex * (itemSize.y + spacing.y), 0.0f);
-        Rect contentRect = new Rect(m_dragContent.position, m_dragContent.rect.size);
+        Rect contentRect = default;
+        Vector2 contentRectSize = (m_actualContentSizeRaw + new Vector2(padding.horizontal, padding.vertical));
+        contentRectSize.x *= globalScale.x;
+        contentRectSize.y *= globalScale.y;
+        contentRect = new Rect(m_dragContent.position, contentRectSize);
 
         // used for showing slots
-        Rect actualContentExpandRect = new Rect(m_dragContent.position, m_dragContent.rect.size);
+        Rect actualContentExpandRect = default;
+        if (m_viewItemCount > m_dataList.Count)
+        {
+            Vector2 viewportSize = m_viewport.rect.size;
+            Vector2 actualContentRectSize = (m_actualContentSizeRaw + new Vector2(padding.horizontal, padding.vertical));
+            if (m_viewItemCount > m_dataList.Count)
+            {
+                actualContentRectSize = (viewportSize + new Vector2(padding.horizontal, padding.vertical));
+            }
+            actualContentExpandRect = new Rect(m_dragContent.position, actualContentRectSize);
+        }
+        else
+            actualContentExpandRect = new Rect(m_dragContent.position, m_dragContent.rect.size);
 
         // to calculate it somewhere else :)
         int rowDataCount = 0, columnDataCount = 0;
@@ -300,7 +330,6 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         rowTopLeftPosition = dragContentPostion + tempMove;
         rowTopLeftPosition += new Vector3(padding.left * globalScale.x, -padding.top * globalScale.y, 0.0f);
         Rect currentGridRect = new Rect(rowTopLeftPosition, itemSize);
-        bool hideItem = false;
 
         // draw from left to right for test
         int testDelta = m_viewItemCountInRow - (m_dataList.Count % m_viewItemCountInRow);
@@ -322,11 +351,18 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
                 else
                     dataIndex = rowFirstDataIndex + columnIndex * columnDataCount;
 
-                hideItem = !contentRect.Contains(currentGridRect) || dataIndex >= m_dataList.Count || dataIndex < 0;
-                if (hideItem)
+                if (contentRect.Contains(currentGridRect))
                 {
-                    bool isEmptySlot = actualContentExpandRect.Contains(currentGridRect) && dataIndex >= 0;
-                    if (m_showEmptySlot && isEmptySlot)
+                    bool isValid = dataIndex > -1 && dataIndex < m_dataList.Count;
+                    isValid = isValid && ((dataIndex / m_viewItemCountInRow) == (tempRowIndex + rowIndex));
+                    if (isValid)
+                    {
+                        gridItems[uiItemIndex].ItemRectTransform.position = itemTopLeftPosition;
+                        gridItems[uiItemIndex].Setup(m_dataList[dataIndex]);
+                        gridItems[uiItemIndex].Show();
+                        uiItemIndex++;
+                    }
+                    else if (m_showEmptySlot)
                     {
                         gridItems[uiItemIndex].ItemRectTransform.position = itemTopLeftPosition;
                         gridItems[uiItemIndex].SetEmpty();
@@ -341,10 +377,8 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
                 }
                 else
                 {
-                    gridItems[uiItemIndex].ItemRectTransform.position = itemTopLeftPosition;
-                    gridItems[uiItemIndex].Setup(m_dataList[dataIndex]);
-                    gridItems[uiItemIndex].Show();
-                    uiItemIndex++;
+                    gridItems[uiItemIndex].ItemRectTransform.position = Vector2.zero;
+                    gridItems[uiItemIndex].Hide();
                 }
 
                 itemTopLeftPosition.x += spacing.x + itemSize.x;

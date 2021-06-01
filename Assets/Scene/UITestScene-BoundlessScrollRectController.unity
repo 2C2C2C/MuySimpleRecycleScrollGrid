@@ -971,7 +971,7 @@ MonoBehaviour:
   m_gridLayoutGroup:
     constraint: 0
     m_autoFit: 0
-    constraintCount: 3
+    constraintCount: 5
     startAxis: 0
     RectPadding:
       m_Left: 50
@@ -1001,7 +1001,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 1966762747}
-  m_Horizontal: 0
+  m_Horizontal: 1
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -1891,7 +1891,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ead822277e5fd04799aa1b7f72c9790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_dataCount: 5
+  m_dataCount: 17
   m_gridConrtoller: {fileID: 1040434474}
   m_dataNames: []
 --- !u!1 &2124475897

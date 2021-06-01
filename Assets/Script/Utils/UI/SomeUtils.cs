@@ -26,8 +26,8 @@ public static class SomeUtils
     public static bool Contains(this Rect self, Rect other)
     {
         // HACK the x,y is left top of the rect
-        bool result = (self.x <= other.x && self.xMax + self.width >= other.x + other.width);
-        result &= (self.y >= other.y && self.y - self.height <= other.y - other.height);
+        bool result = (self.x <= other.x && self.x + self.width >= other.x + other.width);
+        result = result && (self.y >= other.y && self.y - self.height <= other.y - other.height);
         return result;
     }
 }

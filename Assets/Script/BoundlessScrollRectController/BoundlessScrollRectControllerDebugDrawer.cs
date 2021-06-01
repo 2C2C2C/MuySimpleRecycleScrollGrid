@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-// some method to debug drawing or sth
 public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
 {
     [Space, Header("Debug settings")]
@@ -18,8 +17,6 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         m_dragContent = m_scrollRect.content;
         m_canvas = GetComponentInParent<Canvas>();
     }
-
-    #region debug draw
 
     private void OnDrawGizmos()
     {
@@ -147,8 +144,11 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
 
         // TODO temp calculate from top left
         Vector3 tempMove = new Vector3(tempXIndex * (itemSize.x + spacing.x), -tempYIndex * (itemSize.y + spacing.y), 0.0f);
-        Vector2 actualContentSize = new Vector2(m_actualContentSizeRaw.x * globalScale.x, m_actualContentSizeRaw.y * globalScale.y);
-        Rect contentRect = new Rect(m_dragContent.position, m_dragContent.rect.size);
+        Rect contentRect = default;
+        Vector2 contentRectSize = (m_actualContentSizeRaw + new Vector2(padding.horizontal, padding.vertical));
+        contentRectSize.x *= globalScale.x;
+        contentRectSize.y *= globalScale.y;
+        contentRect = new Rect(m_dragContent.position, contentRectSize);
 
         // deal with content from left to right (simple case) first
         Vector3 rowTopLeftPosition = default, itemTopLeftPosition = default;
@@ -194,7 +194,6 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         Debug.DrawLine(topRightPoint, bottomLeftPoint, color);
     }
 
-    #endregion
-
 }
+
 #endif
