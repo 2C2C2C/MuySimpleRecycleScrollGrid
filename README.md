@@ -9,6 +9,7 @@ Simple grid layout.
 Root scale(only set scale on viewport or higher parent)
 
 TODO :
+
 0. support empty item slot :(
 1. Item start direction
 
