@@ -17,7 +17,9 @@ public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour
     /// to inject data and cast data
     /// </summary>
     /// <param name="data"></param>
-    public abstract void InjectData(T data);
+    public abstract void Setup(T data);
+
+    public abstract void SetEmpty();
 
     public void Show()
     {

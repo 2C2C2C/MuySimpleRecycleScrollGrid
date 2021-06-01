@@ -1,19 +1,27 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace UnityEngine.UI
+﻿namespace UnityEngine.UI
 {
     public class EmptyRaycastTarget : MaskableGraphic
     {
-        protected EmptyRaycastTarget()
+        protected EmptyRaycastTarget() { }
+        public override void SetAllDirty() { }
+        public override void Rebuild(CanvasUpdate update) { }
+        public override void LayoutComplete() { }
+        public override void GraphicUpdateComplete() { }
+        public override void SetNativeSize() { }
+
+        protected override void OnRectTransformDimensionsChange() { }
+        protected override void OnDidApplyAnimationProperties() { }
+        protected override void UpdateMaterial() { }
+        protected override void UpdateGeometry() { }
+
+        protected override void OnPopulateMesh(VertexHelper vh)
         {
-            useLegacyMeshGeneration = false;
+            vh.Clear();
         }
 
-        protected override void OnPopulateMesh(VertexHelper toFill)
-        {
-            toFill.Clear();
-        }
+#if UNITY_EDITOR
+        public override void OnRebuildRequested() { }
+        protected override void Reset() { }
+#endif
     }
 }

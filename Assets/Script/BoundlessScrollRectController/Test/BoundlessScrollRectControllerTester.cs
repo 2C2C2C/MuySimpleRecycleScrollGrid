@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine;
 
@@ -14,10 +13,9 @@ public class BoundlessScrollRectControllerTester : MonoBehaviour
 
     public string[] m_dataNames = null;
 
-    // Start is called before the first frame update
-    void Start()
+    [ContextMenu("setup data")]
+    private void SetupData()
     {
-
         m_dataArr = new BoundlessTempData[m_dataCount];
         m_dataNames = new string[m_dataCount];
         for (int i = 0; i < m_dataCount; i++)
@@ -29,8 +27,13 @@ public class BoundlessScrollRectControllerTester : MonoBehaviour
         // then give data or?
 
         m_itemList = new ReadOnlyCollection<BoundlessTempData>(new List<BoundlessTempData>(m_dataArr));
-        m_gridConrtoller.InjectData(m_itemList);
+        m_gridConrtoller.Setup(m_itemList);
+    }
 
+    // Start is called before the first frame update
+    private void Start()
+    {
+        SetupData();
         this.enabled = false;
     }
 }
