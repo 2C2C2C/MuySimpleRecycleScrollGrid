@@ -967,7 +967,7 @@ MonoBehaviour:
   m_viewport: {fileID: 401452301}
   m_dragContent: {fileID: 1966762747}
   m_actualContent: {fileID: 1154351785}
-  m_showEmptySlot: 1
+  m_extendEmptySlotsToFitRow: 1
   m_gridLayoutGroup:
     constraint: 0
     m_autoFit: 0
@@ -1891,7 +1891,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ead822277e5fd04799aa1b7f72c9790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_dataCount: 17
+  m_dataCount: 11
   m_gridConrtoller: {fileID: 1040434474}
   m_dataNames: []
 --- !u!1 &2124475897

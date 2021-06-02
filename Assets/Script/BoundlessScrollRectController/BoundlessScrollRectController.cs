@@ -37,7 +37,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
     private IReadOnlyList<T> m_dataList = null;
 
     [SerializeField]
-    private bool m_showEmptySlot = false;
+    private bool m_extendEmptySlotsToFitRow = false;
 
     /* a test component, we will move this component
     * and use this to setup the grid size
@@ -57,7 +57,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
     public RectTransform ActualContent => m_actualContent;
     public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
     public abstract BoundlessBaseScrollRectItem<T> GridItemPrefab { get; }
-    protected abstract BoundlessBaseScrollRectItem<T>[] GridItemArray { get; set; }
+    protected abstract BoundlessBaseScrollRectItem<T>[] GridItemArray { get; }
 
     public void RefreshLayout()
     {
@@ -82,28 +82,20 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         m_actualContent.sizeDelta = m_viewport.sizeDelta;
 
         // set default simple draw stuff
-
-        AdjustCachedItems(m_viewItemCount);
-        Vector3 globalScale = m_viewport.lossyScale;
-        Vector2 itemSize = new Vector2(GridLayoutData.CellSize.x * globalScale.x, GridLayoutData.CellSize.y * globalScale.y);
-        var gridItems = GridItemArray;
-        for (int i = 0; i < gridItems.Length; i++)
-        {
-            if (i < dataList.Count)
-            {
-                gridItems[i].Setup(dataList[i]);
-            }
-
-            Vector3 pos = gridItems[i].ItemRectTransform.anchoredPosition3D;
-            pos -= i * gridItems[i].ItemRectTransform.up * itemSize.y;
-            gridItems[i].ItemRectTransform.anchoredPosition = pos;
-            gridItems[i].gameObject.SetActive(true);
-        }
-
+        CalculateViewportShowCount();
+        AdjustCachedItems();
         SyncSize();
         UpdateAcutalContentSizeRaw();
+
+        // refresh
+        RefreshItemStartPosition();
         OnScrollRectValueChanged(Vector2.zero);
     }
+
+    protected abstract void ResizeGridItemsListSize(int size);
+    protected virtual void BeforedCachedItemRefreshed() { }
+    protected virtual void OnCachedItemRefreshed() { }
+    protected virtual void OnContentItemFinishDrawing() { }
 
     public void UpdateConstraintWithAutoFit()
     {
@@ -159,6 +151,13 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
             m_viewItemCountInColumn = Mathf.Clamp(m_viewItemCountInColumn, 1, GridLayoutData.constraintCount);
 
         m_viewItemCount = m_viewItemCountInRow * m_viewItemCountInColumn;
+    }
+
+    private void AdjustCachedItems()
+    {
+        BeforedCachedItemRefreshed();
+        ResizeGridItemsListSize(m_viewItemCount);
+        OnCachedItemRefreshed();
     }
 
     private void UpdateAcutalContentSizeRaw()
@@ -362,7 +361,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
                         gridItems[uiItemIndex].Show();
                         uiItemIndex++;
                     }
-                    else if (m_showEmptySlot)
+                    else if (m_extendEmptySlotsToFitRow)
                     {
                         gridItems[uiItemIndex].ItemRectTransform.position = itemTopLeftPosition;
                         gridItems[uiItemIndex].SetEmpty();
@@ -392,43 +391,13 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
             gridItems[uiItemIndex].ItemRectTransform.anchoredPosition = Vector2.zero;
             uiItemIndex++;
         }
-    }
 
-    private void AdjustCachedItems(int nextSize)
-    {
-        BoundlessBaseScrollRectItem<T> tempItem = null;
-        var gridItems = GridItemArray;
-        if (nextSize < gridItems.Length)
-        {
-            for (int i = gridItems.Length - 1; i > nextSize - 1; i--)
-            {
-                GameObject.Destroy(gridItems[i].gameObject);
-                gridItems[i] = null;
-            }
-            System.Array.Resize(ref gridItems, nextSize);
-            GridItemArray = gridItems;
-        }
-        else if (nextSize > gridItems.Length)
-        {
-            // add extra items
-            int index = gridItems.Length;
-            System.Array.Resize(ref gridItems, nextSize);
-            Vector3 globalScale = m_viewport.lossyScale;
-            Vector2 itemSize = new Vector2(GridLayoutData.CellSize.x * globalScale.x, GridLayoutData.CellSize.y * globalScale.y);
-            for (; index < nextSize; index++)
-            {
-                tempItem = Instantiate(GridItemPrefab, m_actualContent);
-                tempItem.Hide();
-                gridItems[index] = tempItem;
-                tempItem.SetItemSize(itemSize);
-            }
-            GridItemArray = gridItems;
-        }
+        OnContentItemFinishDrawing();
     }
 
     private void ClearCachedItems()
     {
-        AdjustCachedItems(0);
+        ResizeGridItemsListSize(0);
         DestroyAllChildren(m_actualContent);
     }
 
@@ -447,7 +416,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
     {
         UpdateConstraintWithAutoFit();
         CalculateViewportShowCount();
-        AdjustCachedItems(m_viewItemCount);
+        ResizeGridItemsListSize(m_viewItemCount);
         RefreshLayout();
     }
 
@@ -455,7 +424,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
     {
         SyncSize();
         CalculateViewportShowCount();
-        AdjustCachedItems(m_viewItemCount);
+        ResizeGridItemsListSize(m_viewItemCount);
         RefreshLayout();
     }
 
@@ -479,7 +448,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
     {
         // sync the size form grid data
         // the actual item size will also directly affected by parent canvas's scale factor, so we may not need to multiple it :D
-        Vector2 itemAcutalSize = m_gridLayoutGroup.CellSize;
+        Vector2 itemAcutalSize = GridLayoutData.CellSize;
         var gridItems = GridItemArray;
         for (int i = 0; i < gridItems.Length; i++)
             gridItems[i].SetItemSize(itemAcutalSize);
@@ -493,10 +462,10 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
         UpdateConstraintWithAutoFit();
         CalculateViewportShowCount();
-        AdjustCachedItems(m_viewItemCount);
+        ResizeGridItemsListSize(m_viewItemCount);
         GridLayoutData.OnFitTypeChanged += OnLayoutFitTypeChanged;
         GridLayoutData.OnCellSizeChanged += OnCellSizeChanged;
-        GridLayoutData.LayoutDataChanged += OnlayoutDataChanged;
+        GridLayoutData.OnLayoutDataChanged += OnlayoutDataChanged;
     }
 
     private void OnDisable()
@@ -504,7 +473,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         m_scrollRect.onValueChanged.RemoveListener(OnScrollRectValueChanged);
         GridLayoutData.OnFitTypeChanged -= OnLayoutFitTypeChanged;
         GridLayoutData.OnCellSizeChanged -= OnCellSizeChanged;
-        GridLayoutData.LayoutDataChanged -= OnlayoutDataChanged;
+        GridLayoutData.OnLayoutDataChanged -= OnlayoutDataChanged;
     }
 
     private void Update()

@@ -38,4 +38,5 @@ public class BoundlessTempScrollRectItem : BoundlessBaseScrollRectItem<Boundless
         m_onPointerLeave?.Invoke(ItemData);
     }
 
+    protected override void OnAwake() { }
 }

@@ -81,14 +81,14 @@ public class BoundlessGridLayoutData
     /// </summary>
     public event System.Action<Vector2> OnCellSizeChanged;
 
-    public event System.Action LayoutDataChanged;
+    public event System.Action OnLayoutDataChanged;
 
 #if UNITY_EDITOR
 
 
     public void CallRefresh()
     {
-        LayoutDataChanged?.Invoke();
+        OnLayoutDataChanged?.Invoke();
     }
 
 #endif

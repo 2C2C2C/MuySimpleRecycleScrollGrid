@@ -41,6 +41,8 @@ public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour
         m_rectTransform.sizeDelta = ItemSize;
     }
 
+    protected abstract void OnAwake();
+
     #region mono method
 
     private void Reset()
@@ -51,7 +53,15 @@ public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour
     private void Awake()
     {
         m_rectTransform = GetComponent<RectTransform>();
+        OnAwake();
     }
+
+    /// <summary>
+    /// This callback is called if an associated RectTransform has its dimensions changed. The call is also made to all child rect transforms, even if the child transform itself doesn't change - as it could have, depending on its anchoring.
+    /// </summary>
+    private void OnRectTransformDimensionsChange() { }
+    private void OnBeforeTransformParentChanged() { }
+    private void OnTransformParentChanged() { }
 
     #endregion
 
