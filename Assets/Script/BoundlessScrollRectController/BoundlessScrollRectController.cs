@@ -283,10 +283,8 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
             tempRowIndex = Mathf.Clamp(tempRowIndex - 1, 0, tempRowIndex);
 
         Vector2Int tempIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
-        Debug.Log($"check current index {tempIndex}");
-
+        Debug.Log($"check current top index {tempIndex}");
         // TODO fix temp calculate (now it isfrom top left)
-        // Vector3 tempMove = new Vector3(tempColumnIndex * (itemSize.x + spacing.x), -tempRowIndex * (itemSize.y + spacing.y), 0.0f);
         Rect contentRect = new Rect(m_dragContent.position, (m_dragContent.rect.size + new Vector2(padding.horizontal, padding.vertical)));
 
         // to calculate it somewhere else :)
@@ -307,9 +305,6 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
         int uiItemIndex = 0;
         Vector3 rowTopLeftPosition = default, itemTopLeftPosition = default;
         // TODO @Hiko use a fake position
-        // rowTopLeftPosition = dragContentLocalPostion + tempMove;
-        // Debug.Log(dragContentLocalPostion);
-        // TODO @Hiko use a fake position
         rowTopLeftPosition = Vector3.zero;
         rowTopLeftPosition += new Vector3(-padding.left, -padding.top, 0.0f);
         Rect currentGridRect = new Rect(rowTopLeftPosition, itemSize);
@@ -318,13 +313,16 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
         var gridItems = GridItemArray;
         for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
         {
-            itemTopLeftPosition = rowTopLeftPosition + Vector3.down * (rowIndex + tempIndex.x) * itemSize.y;
+            // TODO APPLY padding?
+            itemTopLeftPosition = rowTopLeftPosition + Vector3.down * (rowIndex + tempIndex.x) * (itemSize.y + spacing.y);
 
             for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
             {
                 currentGridRect.position = itemTopLeftPosition;
                 if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
                     dataIndex = (rowIndex + tempIndex.x) * rowDataCount + (columnIndex + tempIndex.y);
+                else
+                    dataIndex = (rowIndex + tempIndex.x) + columnDataCount * (columnIndex + tempIndex.y);
 
                 if (true || contentRect.Contains(currentGridRect))
                 {

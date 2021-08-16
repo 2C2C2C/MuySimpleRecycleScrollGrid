@@ -36,7 +36,7 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
     }
 #endif
 
-    // TODO should apply canvas scale to make item size and content size correctly :)
+    // TODO @Hiko should not use scale, maybe...
 
     private void DrawDebugContentSize()
     {
