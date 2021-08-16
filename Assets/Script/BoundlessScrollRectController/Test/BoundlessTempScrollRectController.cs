@@ -32,7 +32,7 @@ public class BoundlessTempScrollRectController : BoundlessScrollRectController<B
             Vector2 itemSize = new Vector2(GridLayoutData.CellSize.x * globalScale.x, GridLayoutData.CellSize.y * globalScale.y);
             for (; tail < size; tail++)
             {
-                tempGridItem = Instantiate(m_grieItemPrefab, ActualContent);
+                tempGridItem = Instantiate(m_grieItemPrefab, DragContent);
                 tempGridItem.SetItemSize(itemSize);
                 m_gridItems[tail] = tempGridItem;
                 tempGridItem.Hide();
@@ -40,10 +40,20 @@ public class BoundlessTempScrollRectController : BoundlessScrollRectController<B
         }
     }
 
-    private void Awake()
+    protected override void Awake()
     {
         m_gridItems = new BoundlessTempScrollRectItem[0];
         CalculateViewportShowCount();
     }
+
+    protected override void BeforedCachedItemRefreshed() { }
+
+    protected override void OnCachedItemRefreshed() { }
+
+    protected override void OnContentItemFinishDrawing() { }
+
+    protected override void OnMonoEnable() { }
+
+    protected override void OnMonoDisable() { }
 
 }

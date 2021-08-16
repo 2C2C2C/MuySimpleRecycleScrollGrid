@@ -2,6 +2,22 @@
 
 public static class SomeUtils
 {
+    public enum UIOffsetType
+    {
+        Center = 0,
+
+        Top = 1,
+        Bottom = 2,
+        Left = 3,
+        Right = 4,
+
+        TopLeft = 5,
+        TopRight = 6,
+
+        BottomLeft = 7,
+        BottomRight = 8,
+    }
+
     // anchoredPosition =localPosition -（anchorMinPos + anchorSize * pivot ）
     /// <summary>
     /// get the (actual screen)position? from a rect transfrom 
@@ -25,9 +41,114 @@ public static class SomeUtils
 
     public static bool Contains(this Rect self, Rect other)
     {
-        // HACK the x,y is left top of the rect
-        bool result = (self.x <= other.x && self.x + self.width >= other.x + other.width);
-        result = result && (self.y >= other.y && self.y - self.height <= other.y - other.height);
+        bool result = self.Contains(other.min) && self.Contains(other.max);
         return result;
     }
+
+    public static Vector3 GetOffsetPostion(this RectTransform target, UIOffsetType offsetType)
+    {
+        Vector3 result = target.position;
+        Vector2 targetSize = target.sizeDelta;
+        Vector2 targetPivot = target.pivot;
+
+        Vector2 pivotOffset = Vector2.one * 0.5f - targetPivot;
+        pivotOffset.x *= targetSize.x;
+        pivotOffset.y *= targetSize.y;
+
+        result += (Vector3)pivotOffset;
+
+        switch (offsetType)
+        {
+            case UIOffsetType.Top:
+                result.y += targetSize.y * 0.5f;
+                break;
+            case UIOffsetType.Bottom:
+                result.y -= targetSize.y * 0.5f;
+                break;
+            case UIOffsetType.Left:
+                result.x -= targetSize.x * 0.5f;
+                break;
+            case UIOffsetType.Right:
+                result.x += targetSize.x * 0.5f;
+                break;
+
+            case UIOffsetType.TopLeft:
+                result.y += targetSize.y * 0.5f;
+                result.x -= targetSize.x * 0.5f;
+                break;
+            case UIOffsetType.TopRight:
+                result.y += targetSize.y * 0.5f;
+                result.x += targetSize.x * 0.5f;
+                break;
+
+            case UIOffsetType.BottomLeft:
+                result.y -= targetSize.y * 0.5f;
+                result.x -= targetSize.x * 0.5f;
+                break;
+
+            case UIOffsetType.BottomRight:
+                result.y -= targetSize.y * 0.5f;
+                result.x += targetSize.x * 0.5f;
+                break;
+
+            default:
+                break;
+        }
+
+        return result;
+    }
+
+    public static Vector3 GetOffsetLocalPosition(this RectTransform target, UIOffsetType offsetType)
+    {
+        Vector3 result = Vector3.zero;
+        Vector2 targetSize = target.rect.size;
+        Vector2 targetPivot = target.pivot;
+
+        Vector2 pivotOffset = Vector2.one * 0.5f - targetPivot;
+        pivotOffset.x *= targetSize.x;
+        pivotOffset.y *= targetSize.y;
+
+        result += (Vector3)pivotOffset;
+
+        switch (offsetType)
+        {
+            case UIOffsetType.Top:
+                result.y += targetSize.y * 0.5f;
+                break;
+            case UIOffsetType.Bottom:
+                result.y -= targetSize.y * 0.5f;
+                break;
+            case UIOffsetType.Left:
+                result.x -= targetSize.x * 0.5f;
+                break;
+            case UIOffsetType.Right:
+                result.x += targetSize.x * 0.5f;
+                break;
+
+            case UIOffsetType.TopLeft:
+                result.y += targetSize.y * 0.5f;
+                result.x -= targetSize.x * 0.5f;
+                break;
+            case UIOffsetType.TopRight:
+                result.y += targetSize.y * 0.5f;
+                result.x += targetSize.x * 0.5f;
+                break;
+
+            case UIOffsetType.BottomLeft:
+                result.y -= targetSize.y * 0.5f;
+                result.x -= targetSize.x * 0.5f;
+                break;
+
+            case UIOffsetType.BottomRight:
+                result.y -= targetSize.y * 0.5f;
+                result.x += targetSize.x * 0.5f;
+                break;
+
+            default:
+                break;
+        }
+
+        return result;
+    }
+
 }

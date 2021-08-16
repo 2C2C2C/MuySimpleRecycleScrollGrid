@@ -1,8 +1,9 @@
 ﻿#if UNITY_EDITOR
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
+public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
 {
     [Space, Header("Debug settings")]
     public bool m_drawContentSize = true;
@@ -10,7 +11,8 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
     public bool m_drawShowingGrids = true;
     public bool m_drawActualUIItems = true;
 
-    private void Reset()
+#if UNITY_EDITOR
+    protected override void Reset()
     {
         m_scrollRect.GetComponent<ScrollRect>();
         m_scrollRect.StopMovement();
@@ -32,6 +34,7 @@ public abstract partial class BoundlessScrollRectController<T> : MonoBehaviour
         if (m_drawShowingGrids)
             DrawDebugShowingGrids();
     }
+#endif
 
     // TODO should apply canvas scale to make item size and content size correctly :)
 

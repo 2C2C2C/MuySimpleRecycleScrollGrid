@@ -24,8 +24,6 @@ public class BoundlessScrollRectControllerTester : MonoBehaviour
             m_dataNames[i] = m_dataArr[i].ItemName;
         }
 
-        // then give data or?
-
         m_itemList = new ReadOnlyCollection<BoundlessTempData>(new List<BoundlessTempData>(m_dataArr));
         m_gridConrtoller.Setup(m_itemList);
     }
