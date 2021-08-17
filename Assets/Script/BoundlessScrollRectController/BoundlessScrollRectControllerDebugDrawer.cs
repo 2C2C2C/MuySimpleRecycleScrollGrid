@@ -17,7 +17,6 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
         m_scrollRect.GetComponent<ScrollRect>();
         m_scrollRect.StopMovement();
         m_dragContent = m_scrollRect.content;
-        m_canvas = GetComponentInParent<Canvas>();
     }
 
     private void OnDrawGizmos()

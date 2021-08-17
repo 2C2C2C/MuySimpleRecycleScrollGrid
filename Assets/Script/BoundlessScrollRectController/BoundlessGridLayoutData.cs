@@ -1,25 +1,8 @@
 ﻿using UnityEngine;
 
-/*
-TODO
-apply start axis
-apply padding
-*/
-
 [System.Serializable]
 public class BoundlessGridLayoutData
 {
-    /// <summary>
-    /// TODO to find a way to do those  
-    /// </summary>
-    // public enum StartCorner
-    // {
-    //     UpperLeft = 0,
-    //     UpperRight = 1,
-    //     LowerLeft = 2,
-    //     LowerRight = 3
-    // }
-
     public enum Constraint
     {
         // in this mode they will just extend vertical side
@@ -34,11 +17,8 @@ public class BoundlessGridLayoutData
         Vertical = 1,
     }
 
-    // // TODO use it
-    // public StartCorner m_startCorner = StartCorner.UpperLeft;
     public Constraint constraint = Constraint.FixedColumnCount;
 
-    // TODO @Hiko auto fit doesnt work, need to check
     [SerializeField, Tooltip("auto fit means calculate the constraint count by viewport size")]
     private bool m_autoFit = false;
     public bool IsAutoFit
@@ -73,7 +53,7 @@ public class BoundlessGridLayoutData
     public float StopMagSqrVel = 50.0f;
 
     /// <summary>
-    /// result is 'autofit'
+    /// result is 'isAutoFit'
     /// </summary>
     public event System.Action<bool> OnFitTypeChanged;
     /// <summary>
@@ -84,7 +64,6 @@ public class BoundlessGridLayoutData
     public event System.Action OnLayoutDataChanged;
 
 #if UNITY_EDITOR
-
 
     public void CallRefresh()
     {
