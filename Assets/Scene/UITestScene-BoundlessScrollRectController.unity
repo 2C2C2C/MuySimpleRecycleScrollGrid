@@ -2172,7 +2172,7 @@ PrefabInstance:
     - target: {fileID: 5438040487593130231, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_drawShowingGrids
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5438040487593130231, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
