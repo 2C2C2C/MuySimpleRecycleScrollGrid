@@ -1,38 +1,40 @@
 ﻿using UnityEngine;
 
-// T is a data for each grid item
-public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour
+public class BoundlessScrollRectElement : MonoBehaviour
 {
-    protected RectTransform m_rectTransform = null;
+    /// <summary>
+    /// -1 as a invalid index
+    /// </summary>
+    public readonly static int INVALID_INDEX = -1;
 
     [SerializeField]
     private CanvasGroup m_canvasGroup = null;
 
+    private RectTransform m_rectTransform = null;
+
     public RectTransform ItemRectTransform => m_rectTransform;
     public Vector2 ItemSize { get; private set; }
 
-    public T ItemData { get; protected set; }
-
     /// <summary>
-    /// to inject data and cast data
+    /// -1 as a invalid index
     /// </summary>
-    /// <param name="data"></param>
-    public abstract void Setup(T data);
+    public int ItemIndex { get; protected set; } = INVALID_INDEX;
 
-    public abstract void SetEmpty();
+    public void Setup(int index)
+    {
+        ItemIndex = index;
+    }
 
     public void Show()
     {
-        m_canvasGroup.alpha = 1.0f;
-        m_canvasGroup.interactable = true;
-        m_canvasGroup.blocksRaycasts = true;
+        if (!this.gameObject.activeSelf)
+            this.gameObject.SetActive(true);
     }
 
     public void Hide()
     {
-        m_canvasGroup.alpha = 0.0f;
-        m_canvasGroup.interactable = false;
-        m_canvasGroup.blocksRaycasts = false;
+        if (this.gameObject.activeSelf)
+            this.gameObject.SetActive(false);
     }
 
     public void SetItemSize(Vector2 nextSize)
@@ -41,19 +43,16 @@ public abstract class BoundlessBaseScrollRectItem<T> : MonoBehaviour
         m_rectTransform.sizeDelta = ItemSize;
     }
 
-    protected abstract void OnAwake();
-
     #region mono method
+
+    private void Awake()
+    {
+        m_rectTransform = (RectTransform)this.transform;
+    }
 
     private void Reset()
     {
         m_rectTransform = GetComponent<RectTransform>();
-    }
-
-    private void Awake()
-    {
-        m_rectTransform = GetComponent<RectTransform>();
-        OnAwake();
     }
 
     /// <summary>

@@ -1,0 +1,31 @@
+﻿public class GuidTempData
+{
+    public readonly System.Guid ItemGuid;
+    public readonly string ItemName;
+    public readonly int TempIndex = -1;
+
+    public GuidTempData(in System.Guid itemId, in string itemName)
+    {
+        ItemGuid = itemId;
+        ItemName = itemName;
+    }
+
+    public GuidTempData(in System.Guid itemId)
+    {
+        ItemGuid = itemId;
+        ItemName = itemId.ToString().Substring(0, 5);
+    }
+
+    public GuidTempData()
+    {
+        ItemGuid = System.Guid.NewGuid();
+        ItemName = ItemGuid.ToString().Substring(0, 5);
+    }
+
+    public GuidTempData(int index)
+    {
+        ItemGuid = System.Guid.NewGuid();
+        TempIndex = index;
+        ItemName = $"{index}_{ItemGuid.ToString().Substring(0, 5)}";
+    }
+}

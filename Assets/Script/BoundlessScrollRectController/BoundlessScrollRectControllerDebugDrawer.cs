@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
+public partial class BoundlessScrollRectController : UIBehaviour
 {
     [Space, Header("Debug settings")]
     public bool m_drawContentSize = true;
@@ -14,7 +14,7 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
 #if UNITY_EDITOR
     protected override void Reset()
     {
-        m_scrollRect.GetComponent<ScrollRect>();
+        m_scrollRect = this.GetComponent<ScrollRect>();
         m_scrollRect.StopMovement();
         m_dragContent = m_scrollRect.content;
     }
@@ -35,14 +35,12 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
     }
 #endif
 
-    // TODO @Hiko remove global scale
-
     private void DrawDebugContentSize()
     {
-        if (null == m_dataList)
+        if (0 == m_modelContainer.DataCount)
             return;
 
-        RectOffset padding = GridLayoutData.RectPadding;
+        RectOffset padding = m_gridLayoutGroup.RectPadding;
         Vector2 paddingValueRaw = new Vector2(padding.horizontal, padding.vertical);
         Vector2 actualContentSize = m_actualContentSizeRaw;
 
@@ -69,17 +67,17 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
 
     private void DrawDebugGrids()
     {
-        if (null == m_dataList)
+        int dataCount = m_modelContainer.DataCount;
+        if (0 == dataCount)
             return;
 
-        int dataCount = m_dataList.Count;
         Vector3 rowItemTopLeftPos = default;
         Vector3 columnStartItemTopLeftPos = Vector3.zero;
 
         // TODO use offset as padding correctly
-        if (null != GridLayoutData)
+        if (null != m_gridLayoutGroup)
         {
-            RectOffset padding = GridLayoutData.RectPadding;
+            RectOffset padding = m_gridLayoutGroup.RectPadding;
             columnStartItemTopLeftPos += new Vector3(padding.left, -padding.top, 0.0f);
         }
         Vector2 spacing = new Vector2(m_gridLayoutGroup.Spacing.x, m_gridLayoutGroup.Spacing.y);
@@ -119,13 +117,14 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
 
     private void DrawDebugShowingGrids()
     {
+        int dataCount = m_modelContainer.DataCount;
         Vector3 dragContentAnchorPostion = m_dragContent.anchoredPosition;
         Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(m_dragContent, SomeUtils.UIOffsetType.TopLeft);
-        Vector2 itemSize = GridLayoutData.CellSize, spacing = GridLayoutData.Spacing;
+        Vector2 itemSize = m_gridLayoutGroup.CellSize, spacing = m_gridLayoutGroup.Spacing;
 
         RectOffset padding = null;
-        if (null != GridLayoutData)
-            padding = GridLayoutData.RectPadding;
+        if (null != m_gridLayoutGroup)
+            padding = m_gridLayoutGroup.RectPadding;
 
         // TODO need to know the moving direction, then adjust it to prevent wrong draw
         float xMove = contentMove.x < 0 ? (-contentMove.x - padding.horizontal) : 0;
@@ -149,19 +148,18 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
         {
             rowDataCount = m_gridLayoutGroup.constraintCount;
-            columnDataCount = Mathf.CeilToInt((float)m_dataList.Count / rowDataCount);
+            columnDataCount = Mathf.CeilToInt((float)dataCount / rowDataCount);
         }
         else
         {
             columnDataCount = m_gridLayoutGroup.constraintCount;
-            rowDataCount = Mathf.CeilToInt((float)m_dataList.Count / columnDataCount);
+            rowDataCount = Mathf.CeilToInt((float)dataCount / columnDataCount);
         }
 
         // deal with content from left to right (simple case)
         Matrix4x4 localToWorldMatrix = m_dragContent.localToWorldMatrix;
         int dataIndex = 0;
         Vector3 rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f), itemTopLeftPosition = Vector3.zero;
-        var gridItems = GridItemArray;
         for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
         {
             if (rowIndex + ropLeftItemIndex.x == columnDataCount)
@@ -180,7 +178,7 @@ public abstract partial class BoundlessScrollRectController<T> : UIBehaviour
                 else
                     dataIndex = (rowIndex + ropLeftItemIndex.x) + columnDataCount * (columnIndex + ropLeftItemIndex.y);
 
-                if (dataIndex > -1 && dataIndex < m_dataList.Count)
+                if (dataIndex > -1 && dataIndex < dataCount)
                 {
                     // the item can show
                     DrawOneDebugGridItem(itemTopLeftPosition, itemSize, localToWorldMatrix, Color.white);

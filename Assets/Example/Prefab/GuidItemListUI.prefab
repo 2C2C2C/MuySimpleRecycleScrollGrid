@@ -295,7 +295,7 @@ GameObject:
   - component: {fileID: 5438040486657257703}
   - component: {fileID: 5438040486657257702}
   m_Layer: 5
-  m_Name: BoundlesUnityScrollView
+  m_Name: GuidItemListUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -308,7 +308,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5438040486657257700}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -333,7 +333,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ead822277e5fd04799aa1b7f72c9790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_dataCount: 31
+  m_dataCount: 32
   m_gridConrtoller: {fileID: 5438040487593130231}
   m_dataNames: []
 --- !u!1 &5438040486668900135
@@ -372,7 +372,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: -0.000061035156}
-  m_SizeDelta: {x: 800, y: 600}
+  m_SizeDelta: {x: 910, y: 505}
   m_Pivot: {x: 0, y: 1}
 --- !u!222 &5438040486668900128
 CanvasRenderer:
@@ -712,6 +712,7 @@ GameObject:
   - component: {fileID: 5438040487593130224}
   - component: {fileID: 5438040487593130225}
   - component: {fileID: 5438040487593130230}
+  - component: {fileID: 4279281952223755839}
   - component: {fileID: 5438040487593130231}
   m_Layer: 5
   m_Name: ScrollView
@@ -809,6 +810,38 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4279281952223755839
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5438040487593130229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2d4d94fc59acfad4f9a9988e3dc789cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_scrollRect: {fileID: 5438040487593130230}
+  m_viewport: {fileID: 5438040487183274192}
+  m_dragContent: {fileID: 5438040486668900134}
+  m_gridLayoutGroup:
+    constraint: 0
+    m_autoFit: 0
+    constraintCount: 3
+    startAxis: 0
+    RectPadding:
+      m_Left: 0
+      m_Right: 0
+      m_Top: 0
+      m_Bottom: 0
+    m_cellSize: {x: 300, y: 250}
+    Spacing: {x: 5, y: 5}
+    StopMagSqrVel: 50
+  m_drawContentSize: 1
+  m_drawGrids: 1
+  m_drawShowingGrids: 1
+  m_drawActualUIItems: 1
 --- !u!114 &5438040487593130231
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -816,31 +849,11 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5438040487593130229}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7724b6184ab11b64780802bc645f86b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_scrollRect: {fileID: 5438040487593130230}
-  m_viewport: {fileID: 5438040487183274192}
-  m_dragContent: {fileID: 5438040486668900134}
-  m_gridLayoutGroup:
-    constraint: 1
-    m_autoFit: 0
-    constraintCount: 3
-    startAxis: 0
-    RectPadding:
-      m_Left: 50
-      m_Right: 50
-      m_Top: 50
-      m_Bottom: 50
-    m_cellSize: {x: 300, y: 200}
-    Spacing: {x: 15, y: 15}
-    StopMagSqrVel: 100
-  m_canvas: {fileID: 0}
-  m_drawContentSize: 1
-  m_drawGrids: 1
-  m_drawShowingGrids: 1
-  m_drawActualUIItems: 1
-  m_grieItemPrefab: {fileID: 5922839548107084954, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
+  m_scrollRectController: {fileID: 4279281952223755839}
+  m_itemPrefab: {fileID: 5922839548107084954, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
     type: 3}
