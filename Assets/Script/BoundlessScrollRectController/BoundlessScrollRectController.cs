@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -9,9 +8,8 @@ using UnityEngine.UI;
 /// TODO @Hiko
 /// how to give those item to the other controller to let them setup stuff
 /// remove some nolonger used methods
-/// fix editor issues
+/// did some editor stuff (maybe I can directly use grid layout)
 /// </summary>
-/// <typeparam name="T">T is a data for each grid item</typeparam>
 [RequireComponent(typeof(ScrollRect))]
 public partial class BoundlessScrollRectController : UIBehaviour
 {
@@ -25,12 +23,12 @@ public partial class BoundlessScrollRectController : UIBehaviour
     /// anchor should be top left 
     /// </summary>
     [SerializeField, Tooltip("the content that used to drag")]
-    private RectTransform m_dragContent = null; // currently only support 1 type of top left pivor
+    private RectTransform m_content = null; // currently only support 1 type of top left pivor
 
     // <summary>
     // the actual item count may show in the viewport
     // </summary>
-    private int m_viewItemCount = 0;
+    private int m_viewItemCount = -1;
 
     private int m_viewItemCountInRow = 0;
     private int m_viewItemCountInColumn = 0;
@@ -44,29 +42,29 @@ public partial class BoundlessScrollRectController : UIBehaviour
     [Space, Header("Grid Layout Setting"), SerializeField]
     private BoundlessGridLayoutData m_gridLayoutGroup = new BoundlessGridLayoutData();
 
-    IElementBuilder m_modelContainer;
-
-    private bool m_hasLayoutChanged = false;
+    IListElementUI[] m_elementArray = new IListElementUI[0];
+    IListViewUI m_listView;
 
     public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
 
-    public RectTransform Content => m_dragContent;
+    public RectTransform Content => m_content;
+
+    private int CurrentCount => m_listView == null ? 0 : m_listView.Length;
 
     public event Action OnContentItemFinishDrawing;
-
     public event Action BeforedItemArrayResized;
     public event Action OnItemArrayResized;
 
-    public void Setup(IElementBuilder itemBuilder)
+    public void Setup(IListViewUI listView)
     {
-        m_modelContainer = itemBuilder;
+        m_listView = listView;
         int currentShowCount = CalculateCurrentViewportShowCount();
         if (currentShowCount != m_viewItemCount)
         {
             m_viewItemCount = currentShowCount;
             AdjustCachedItems();
         }
-        SyncSize();
+        ApplySizeOnElements();
         UpdateAcutalContentSizeRaw();
         // refresh
         OnScrollRectValueChanged(Vector2.zero);
@@ -98,7 +96,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         UpdateConstraintWithAutoFit();
         UpdateAcutalContentSizeRaw();
         AdjustCachedItems();
-        SyncSize();
+        ApplySizeOnElements();
         OnScrollRectValueChanged(Vector2.zero);
     }
 
@@ -139,14 +137,14 @@ public partial class BoundlessScrollRectController : UIBehaviour
     {
         BeforedItemArrayResized?.Invoke();
         m_viewItemCount = CalculateCurrentViewportShowCount();
-        m_modelContainer.ResizeArray(m_viewItemCount);
-        SyncSize();
+        AdjustElementArray(m_viewItemCount);
+        ApplySizeOnElements();
         OnItemArrayResized?.Invoke();
     }
 
     private void UpdateAcutalContentSizeRaw()
     {
-        int dataCount = m_modelContainer.DataCount;
+        int dataCount = CurrentCount;
         RectOffset m_padding = m_gridLayoutGroup.RectPadding;
         Vector2 itemSize = m_gridLayoutGroup.CellSize;
         Vector2 spacing = m_gridLayoutGroup.Spacing;
@@ -177,28 +175,25 @@ public partial class BoundlessScrollRectController : UIBehaviour
         }
 
         m_actualContentSizeRaw = result;
-        m_dragContent.sizeDelta = m_actualContentSizeRaw;
+        m_content.sizeDelta = m_actualContentSizeRaw;
         if (null != m_gridLayoutGroup)
         {
             RectOffset padding = m_gridLayoutGroup.RectPadding;
-            m_dragContent.sizeDelta += new Vector2(padding.horizontal, padding.vertical);
+            m_content.sizeDelta += new Vector2(padding.horizontal, padding.vertical);
         }
     }
 
     private void OnScrollRectValueChanged(Vector2 position)
     {
 #if UNITY_EDITOR
-        if (m_drawActualUIItems)
+        if (m_drawActualUIItemsB)
             DrawContentItem();
-        else
+        else if (m_elementArray != null)
         {
             // hide all Items
-            var gridItems = m_modelContainer.ItemRectTransformArray;
-            for (int i = 0; i < gridItems.Count; i++)
+            for (int i = 0; i < m_elementArray.Length; i++)
             {
-                // TODO @Hiko
-                // put it into some where else so we can hid it?
-                m_modelContainer.HideItem(i);
+                m_elementArray[i].Hide();
             }
         }
 #else
@@ -208,17 +203,17 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawContentItem()
     {
-        int dataCount = m_modelContainer.DataCount;
+        int dataCount = CurrentCount;
         // TODO @Hiko use a general calculation
-        bool test = m_dragContent.anchorMin != Vector2.up || m_dragContent.anchorMax != Vector2.up || m_dragContent.pivot != Vector2.up;
+        bool test = m_content.anchorMin != Vector2.up || m_content.anchorMax != Vector2.up || m_content.pivot != Vector2.up;
         if (test)
         {
-            m_dragContent.anchorMin = Vector2.up;
-            m_dragContent.anchorMax = Vector2.up;
-            m_dragContent.pivot = Vector2.up;
+            m_content.anchorMin = Vector2.up;
+            m_content.anchorMax = Vector2.up;
+            m_content.pivot = Vector2.up;
         }
-        Vector3 dragContentAnchorPostion = m_dragContent.anchoredPosition;
-        Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(m_dragContent, SomeUtils.UIOffsetType.TopLeft);
+        Vector3 dragContentAnchorPostion = m_content.anchoredPosition;
+        Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(m_content, SomeUtils.UIOffsetType.TopLeft);
         Vector2 itemSize = m_gridLayoutGroup.CellSize, spacing = m_gridLayoutGroup.Spacing;
 
         RectOffset padding = null;
@@ -258,7 +253,6 @@ public partial class BoundlessScrollRectController : UIBehaviour
         // deal with content from left to right (simple case)
         int dataIndex = 0, uiItemIndex = 0;
         Vector3 rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f), itemTopLeftPosition = Vector3.zero;
-        var rectTransformArray = m_modelContainer.ItemRectTransformArray;
         for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
         {
             if (rowIndex + ropLeftItemIndex.x == columnDataCount)
@@ -278,22 +272,23 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
                 if (dataIndex > -1 && dataIndex < dataCount)
                 {
-                    rectTransformArray[uiItemIndex].localPosition = itemTopLeftPosition;
-                    m_modelContainer.SetupItem(uiItemIndex, dataIndex);
+                    m_elementArray[uiItemIndex].ElementRectTransform.localPosition = itemTopLeftPosition;
+                    m_elementArray[uiItemIndex].SetIndex(dataIndex);
                     uiItemIndex++;
                 }
                 else
                 {
-                    m_modelContainer.HideItem(uiItemIndex);
-                    rectTransformArray[uiItemIndex].position = Vector3.zero;
+                    m_elementArray[uiItemIndex].SetIndex(-1);
+                    m_elementArray[uiItemIndex].Hide();
+                    m_elementArray[uiItemIndex].ElementRectTransform.position = Vector3.zero;
                 }
             }
         }
 
-        while (uiItemIndex < rectTransformArray.Count)
+        while (uiItemIndex < m_elementArray.Length)
         {
-            m_modelContainer.HideItem(uiItemIndex);
-            rectTransformArray[uiItemIndex].position = Vector3.zero;
+            m_elementArray[uiItemIndex].Hide();
+            m_elementArray[uiItemIndex].ElementRectTransform.position = Vector3.zero;
             uiItemIndex++;
         }
 
@@ -309,32 +304,39 @@ public partial class BoundlessScrollRectController : UIBehaviour
             m_scrollRect.StopMovement();
     }
 
-    // optimize those 3 methods
-
-    private void OnLayoutFitTypeChanged(bool autoFit)
+    private void AdjustElementArray(int size)
     {
-        m_hasLayoutChanged = true;
+        if (m_listView == null) return;
+        int index = 0;
+        int currentSize = m_viewItemCount;
+        if (size > currentSize)
+        {
+            // directly add
+            Array.Resize<IListElementUI>(ref m_elementArray, size);
+            index = currentSize;
+            while (index < size)
+                m_elementArray[index++] = m_listView.Add();
+        }
+        else if (size < currentSize)
+        {
+            index = currentSize - 1;
+            while (index >= size)
+            {
+                // TODO @Hiko
+                m_listView.Remove(index);
+                m_elementArray[index--] = null;
+                index--;
+            }
+            Array.Resize<IListElementUI>(ref m_elementArray, size);
+        }
     }
 
-    private void OnCellSizeChanged(Vector2 cellSize)
-    {
-        m_hasLayoutChanged = true;
-    }
-
-    private void OnlayoutDataChanged()
-    {
-        m_hasLayoutChanged = true;
-    }
-
-    // optimize those 3 methods
-
-    private void SyncSize()
+    private void ApplySizeOnElements()
     {
         // sync the size form grid data
         Vector2 itemAcutalSize = GridLayoutData.CellSize;
-        var rectTransformArray = m_modelContainer.ItemRectTransformArray;
-        for (int i = 0; i < rectTransformArray.Count; i++)
-            rectTransformArray[i].sizeDelta = itemAcutalSize;
+        for (int i = 0; i < m_elementArray.Length; i++)
+            m_elementArray[i].ElementRectTransform.sizeDelta = itemAcutalSize;
     }
 
     #region mono method
@@ -343,28 +345,26 @@ public partial class BoundlessScrollRectController : UIBehaviour
     {
         UpdateConstraintWithAutoFit();
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
-        m_gridLayoutGroup.OnFitTypeChanged += OnLayoutFitTypeChanged;
-        m_gridLayoutGroup.OnCellSizeChanged += OnCellSizeChanged;
-        m_gridLayoutGroup.OnLayoutDataChanged += OnlayoutDataChanged;
     }
 
     protected override void OnDisable()
     {
         m_scrollRect.onValueChanged.RemoveListener(OnScrollRectValueChanged);
-        m_gridLayoutGroup.OnFitTypeChanged -= OnLayoutFitTypeChanged;
-        m_gridLayoutGroup.OnCellSizeChanged -= OnCellSizeChanged;
-        m_gridLayoutGroup.OnLayoutDataChanged -= OnlayoutDataChanged;
     }
 
     private void Update()
     {
-        if (m_hasLayoutChanged)
-        {
-            RefreshLayoutChanges();
-            m_hasLayoutChanged = false;
-        }
         ClampVelocityToToStop();
     }
+
+#if UNITY_EDITOR
+    protected override void OnValidate()
+    {
+        // something may got changed on inspector
+        // try refresh all?
+        RefreshLayoutChanges();
+    }
+#endif
 
     #endregion
 }

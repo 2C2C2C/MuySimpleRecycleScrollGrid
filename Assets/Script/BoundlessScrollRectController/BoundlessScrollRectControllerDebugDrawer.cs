@@ -5,18 +5,21 @@ using UnityEngine.UI;
 
 public partial class BoundlessScrollRectController : UIBehaviour
 {
-    [Space, Header("Debug settings")]
-    public bool m_drawContentSize = true;
-    public bool m_drawGrids = true;
-    public bool m_drawShowingGrids = true;
     public bool m_drawActualUIItems = true;
+    public bool m_debugDrawStyleA = false;
+    public bool m_debugDrawStyleB = true;
+
+    [Space, Header("Debug draw style A")]
+    public bool m_drawContentSizeA = true;
+    public bool m_drawGridsA = true;
+    public bool m_drawShowingGridsA = true;
 
 #if UNITY_EDITOR
     protected override void Reset()
     {
         m_scrollRect = this.GetComponent<ScrollRect>();
         m_scrollRect.StopMovement();
-        m_dragContent = m_scrollRect.content;
+        m_content = m_scrollRect.content;
     }
 
     private void OnDrawGizmos()
@@ -24,20 +27,23 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (!Application.isPlaying)
             return;
 
-        if (m_drawContentSize)
-            DrawDebugContentSize();
-
-        if (m_drawGrids)
-            DrawDebugGrids();
-
-        if (m_drawShowingGrids)
-            DrawDebugShowingGrids();
+        if (m_debugDrawStyleA) DebugDrawStyleA();
+        if (m_debugDrawStyleB) DebugDrawStyleB();
     }
 #endif
 
+    private void DebugDrawStyleA()
+    {
+        if (m_drawContentSizeA) DrawDebugContentSize();
+
+        if (m_drawGridsA) DrawDebugGrids();
+
+        if (m_drawShowingGridsA) DrawDebugShowingGrids();
+    }
+
     private void DrawDebugContentSize()
     {
-        if (0 == m_modelContainer.DataCount)
+        if (0 == CurrentCount)
             return;
 
         RectOffset padding = m_gridLayoutGroup.RectPadding;
@@ -53,7 +59,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         bottomLeftPoint.y -= actualContentSize.y;
         BottomRightPoint.y -= actualContentSize.y;
 
-        Matrix4x4 localToWorld = m_dragContent.localToWorldMatrix;
+        Matrix4x4 localToWorld = m_content.localToWorldMatrix;
         topLeftPoint = localToWorld.MultiplyPoint(topLeftPoint);
         topRightPoint = localToWorld.MultiplyPoint(topRightPoint);
         bottomLeftPoint = localToWorld.MultiplyPoint(bottomLeftPoint);
@@ -67,7 +73,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawDebugGrids()
     {
-        int dataCount = m_modelContainer.DataCount;
+        int dataCount = CurrentCount;
         if (0 == dataCount)
             return;
 
@@ -84,7 +90,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         Vector2 itemSize = new Vector2(m_gridLayoutGroup.CellSize.x, m_gridLayoutGroup.CellSize.y);
 
         // should know which axis get constrained
-        Matrix4x4 localToWorld = m_dragContent.localToWorldMatrix;
+        Matrix4x4 localToWorld = m_content.localToWorldMatrix;
         int constraintCount = m_gridLayoutGroup.constraintCount;
         int dynamicCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
@@ -117,9 +123,9 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawDebugShowingGrids()
     {
-        int dataCount = m_modelContainer.DataCount;
-        Vector3 dragContentAnchorPostion = m_dragContent.anchoredPosition;
-        Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(m_dragContent, SomeUtils.UIOffsetType.TopLeft);
+        int dataCount = CurrentCount;
+        Vector3 dragContentAnchorPostion = m_content.anchoredPosition;
+        Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(m_content, SomeUtils.UIOffsetType.TopLeft);
         Vector2 itemSize = m_gridLayoutGroup.CellSize, spacing = m_gridLayoutGroup.Spacing;
 
         RectOffset padding = null;
@@ -157,7 +163,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         }
 
         // deal with content from left to right (simple case)
-        Matrix4x4 localToWorldMatrix = m_dragContent.localToWorldMatrix;
+        Matrix4x4 localToWorldMatrix = m_content.localToWorldMatrix;
         int dataIndex = 0;
         Vector3 rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f), itemTopLeftPosition = Vector3.zero;
         for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 [System.Serializable]
 public class BoundlessGridLayoutData
@@ -16,6 +17,8 @@ public class BoundlessGridLayoutData
         Horizontal = 0,
         Vertical = 1,
     }
+
+    public GridLayoutGroup.Corner startCorner;
 
     public Constraint constraint = Constraint.FixedColumnCount;
 
