@@ -12,12 +12,6 @@ public class BoundlessGridLayoutData
         FixedRowCount = 1,
     }
 
-    public enum StartAxis
-    {
-        Horizontal = 0,
-        Vertical = 1,
-    }
-
     public GridLayoutGroup.Corner startCorner;
 
     public Constraint constraint = Constraint.FixedColumnCount;
@@ -36,7 +30,7 @@ public class BoundlessGridLayoutData
 
     [Min(1)]
     public int constraintCount = default;
-    public StartAxis startAxis = StartAxis.Horizontal;
+    public GridLayoutGroup.Axis startAxis = GridLayoutGroup.Axis.Horizontal;
 
     // Padding is to expend/shrink the REAL content
     public RectOffset RectPadding = null;

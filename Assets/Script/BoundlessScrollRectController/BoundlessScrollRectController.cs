@@ -186,7 +186,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private void OnScrollRectValueChanged(Vector2 position)
     {
 #if UNITY_EDITOR
-        if (m_drawActualUIItemsB)
+        if (m_drawActualUIItems)
             DrawContentItem();
         else if (m_elementArray != null)
         {
@@ -265,7 +265,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
                     break;
 
                 itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (columnIndex + ropLeftItemIndex.y) * (itemSize.x + spacing.x);
-                if (BoundlessGridLayoutData.StartAxis.Horizontal == m_gridLayoutGroup.startAxis)
+                if (GridLayoutGroup.Axis.Horizontal == m_gridLayoutGroup.startAxis)
                     dataIndex = (rowIndex + ropLeftItemIndex.x) * rowDataCount + (columnIndex + ropLeftItemIndex.y);
                 else
                     dataIndex = (rowIndex + ropLeftItemIndex.x) + columnDataCount * (columnIndex + ropLeftItemIndex.y);

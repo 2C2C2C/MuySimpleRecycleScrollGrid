@@ -3942,6 +3942,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
+      propertyPath: m_drawGridsA
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
       propertyPath: m_drawGridsB
       value: 0
       objectReference: {fileID: 0}
@@ -3957,6 +3962,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
+      propertyPath: m_drawContentSizeA
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
       propertyPath: m_drawShowingGrids
       value: 0
       objectReference: {fileID: 0}
@@ -3967,8 +3977,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
+      propertyPath: m_drawShowingGridsA
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
       propertyPath: m_drawShowingGridsB
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -3978,12 +3993,17 @@ PrefabInstance:
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_gridLayoutGroup.startAxis
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_gridLayoutGroup.startCorner
-      value: 0
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.constraintCount
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 5438040486657257700, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -3998,7 +4018,7 @@ PrefabInstance:
     - target: {fileID: 5438040486657257702, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_dataCount
-      value: 500
+      value: 451
       objectReference: {fileID: 0}
     - target: {fileID: 5438040486657257703, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -4105,6 +4125,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5438040486668900134, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 672
+      objectReference: {fileID: 0}
     - target: {fileID: 5438040487167030761, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -4153,7 +4178,7 @@ PrefabInstance:
     - target: {fileID: 5438040487593130230, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_Horizontal
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 3005455522068300439, guid: d6f1b9b6a70add242987537f97fab023, type: 3}
