@@ -42,8 +42,10 @@ public partial class BoundlessScrollRectController : UIBehaviour
     [Space, Header("Grid Layout Setting"), SerializeField]
     private BoundlessGridLayoutData m_gridLayoutGroup = new BoundlessGridLayoutData();
 
-    IListElementUI[] m_elementArray = new IListElementUI[0];
-    IListViewUI m_listView;
+    private IListElementUI[] m_elementArray = new IListElementUI[0];
+    private IListViewUI m_listView;
+
+    private bool m_drawActualUIItems = true;
 
     public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
 
@@ -293,6 +295,65 @@ public partial class BoundlessScrollRectController : UIBehaviour
         }
 
         NotifyOnContentItemFinishDrawing();
+    }
+
+    private int CaculateDataIndex(Vector2Int rowColumnIndex, Vector2Int rowColumnSize, GridLayoutGroup.Axis startAxis, GridLayoutGroup.Corner startCorner)
+    {
+        // for row column index
+        // for temp row column indes
+        // x -> index on horizontal axis
+        // y -> index on vertical axis
+
+        // for row column size
+        // x -> element amount on horizontal axis
+        // y -> element amount on vertical axis
+
+        // tempIndex and rowColumn size are all start from topLeft
+        int result = 0;
+        if (startAxis == GridLayoutGroup.Axis.Horizontal)
+        {
+            switch (startCorner)
+            {
+                case GridLayoutGroup.Corner.UpperLeft:
+                    result = rowColumnIndex.y * rowColumnSize.x + rowColumnIndex.x;
+                    break;
+                case GridLayoutGroup.Corner.LowerLeft:
+                    result = (rowColumnSize.y - rowColumnIndex.y - 1) * rowColumnSize.x + rowColumnIndex.x;
+                    break;
+                case GridLayoutGroup.Corner.UpperRight:
+                    result = rowColumnIndex.y * rowColumnSize.x + rowColumnSize.x - rowColumnIndex.x - 1;
+                    break;
+                case GridLayoutGroup.Corner.LowerRight:
+                    result = (rowColumnSize.y - rowColumnIndex.y - 1) * rowColumnSize.x + rowColumnSize.x - rowColumnIndex.x - 1;
+                    break;
+                default:
+                    Debug.LogError("start corner type error", this.gameObject);
+                    break;
+            }
+        }
+        else //if (startAxis == GridLayoutGroup.Axis.Vertical)
+        {
+            switch (startCorner)
+            {
+                case GridLayoutGroup.Corner.UpperLeft:
+                    result = rowColumnIndex.x * rowColumnSize.y + rowColumnIndex.y;
+                    break;
+                case GridLayoutGroup.Corner.LowerLeft:
+                    result = rowColumnIndex.x * rowColumnSize.y + rowColumnSize.y - rowColumnIndex.y - 1;
+                    break;
+                case GridLayoutGroup.Corner.UpperRight:
+                    result = (rowColumnSize.x - rowColumnIndex.x - 1) * rowColumnSize.y + rowColumnIndex.y;
+                    break;
+                case GridLayoutGroup.Corner.LowerRight:
+                    result = (rowColumnSize.x - rowColumnIndex.x - 1) * rowColumnSize.y + rowColumnSize.y - rowColumnIndex.y - 1;
+                    break;
+                default:
+                    Debug.LogError("start corner type error", this.gameObject);
+                    break;
+            }
+        }
+
+        return result;
     }
 
     private void ClampVelocityToToStop()

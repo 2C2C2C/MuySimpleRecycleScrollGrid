@@ -1,18 +1,15 @@
 ﻿#if UNITY_EDITOR
-using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine;
 using UnityEngine.UI;
 
 public partial class BoundlessScrollRectController : UIBehaviour
 {
-    public bool m_drawActualUIItems = true;
-    public bool m_debugDrawStyleA = false;
-    public bool m_debugDrawStyleB = true;
-
-    [Space, Header("Debug draw style A")]
-    public bool m_drawContentSizeA = true;
-    public bool m_drawGridsA = true;
-    public bool m_drawShowingGridsA = true;
+    [Space, Header("Debug draw")]
+    public bool m_enableDebugDraw = true;
+    public bool m_drawContentSize = true;
+    public bool m_drawGrids = true;
+    public bool m_drawShowingGrids = true;
 
 #if UNITY_EDITOR
     protected override void Reset()
@@ -27,18 +24,17 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (!Application.isPlaying)
             return;
 
-        if (m_debugDrawStyleA) DebugDrawStyleA();
-        if (m_debugDrawStyleB) DebugDrawStyleB();
+        if (m_enableDebugDraw) DebugDrawStyle();
     }
 #endif
 
-    private void DebugDrawStyleA()
+    private void DebugDrawStyle()
     {
-        if (m_drawContentSizeA) DrawDebugContentSize();
+        if (m_drawContentSize) DrawDebugContentSize();
 
-        if (m_drawGridsA) DrawDebugGrids();
+        if (m_drawGrids) DebugDrawCotentGrid();
 
-        if (m_drawShowingGridsA) DrawDebugShowingGrids();
+        if (m_drawShowingGrids) DrawDebugShowingGrids();
     }
 
     private void DrawDebugContentSize()
@@ -46,18 +42,51 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (0 == CurrentCount)
             return;
 
+        Vector2 rawSize = Vector2.zero;
         RectOffset padding = m_gridLayoutGroup.RectPadding;
         Vector2 paddingValueRaw = new Vector2(padding.horizontal, padding.vertical);
-        Vector2 actualContentSize = m_actualContentSizeRaw;
+        Vector2 elementSize = m_gridLayoutGroup.CellSize;
+        Vector2 spacing = m_gridLayoutGroup.Spacing;
+
+        int rowCount = 0;
+        int columnCount = 0;
+        if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
+        {
+            columnCount = m_gridLayoutGroup.constraintCount;
+            rowCount = Mathf.CeilToInt(CurrentCount / (float)columnCount);
+        }
+        else if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedRowCount)
+        {
+            rowCount = m_gridLayoutGroup.constraintCount;
+            columnCount = Mathf.CeilToInt(CurrentCount / (float)rowCount);
+        }
+
+        rawSize = new Vector2(
+            columnCount * elementSize.x + (columnCount - 1) * spacing.x,
+            rowCount * elementSize.y + (rowCount - 1) * spacing.y);
+
+        switch (m_gridLayoutGroup.startCorner)
+        {
+            case GridLayoutGroup.Corner.UpperLeft:
+                break;
+            case GridLayoutGroup.Corner.UpperRight:
+                break;
+            case GridLayoutGroup.Corner.LowerLeft:
+                break;
+            case GridLayoutGroup.Corner.LowerRight:
+                break;
+            default:
+                break;
+        }
 
         Vector3 topLeftPoint = new Vector3(paddingValueRaw.x, -paddingValueRaw.y);
         Vector3 topRightPoint = topLeftPoint;
-        topRightPoint.x += actualContentSize.x;
+        topRightPoint.x += rawSize.x;
 
         Vector3 bottomLeftPoint = topLeftPoint;
         Vector3 BottomRightPoint = topRightPoint;
-        bottomLeftPoint.y -= actualContentSize.y;
-        BottomRightPoint.y -= actualContentSize.y;
+        bottomLeftPoint.y -= rawSize.y;
+        BottomRightPoint.y -= rawSize.y;
 
         Matrix4x4 localToWorld = m_content.localToWorldMatrix;
         topLeftPoint = localToWorld.MultiplyPoint(topLeftPoint);
@@ -71,11 +100,10 @@ public partial class BoundlessScrollRectController : UIBehaviour
         Debug.DrawLine(bottomLeftPoint, BottomRightPoint, Color.magenta);
     }
 
-    private void DrawDebugGrids()
+    private void DebugDrawCotentGrid()
     {
         int dataCount = CurrentCount;
-        if (0 == dataCount)
-            return;
+        if (0 == dataCount) return;
 
         Vector3 rowItemTopLeftPos = default;
         Vector3 columnStartItemTopLeftPos = Vector3.zero;
@@ -132,7 +160,6 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (null != m_gridLayoutGroup)
             padding = m_gridLayoutGroup.RectPadding;
 
-        // TODO need to know the moving direction, then adjust it to prevent wrong draw
         float xMove = contentMove.x < 0 ? (-contentMove.x - padding.horizontal) : 0;
         xMove = Mathf.Clamp(xMove, 0.0f, Mathf.Abs(xMove));
         float yMove = contentMove.y > 0 ? (contentMove.y - padding.vertical) : 0;
@@ -148,7 +175,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (yMove % (itemSize.y + spacing.y) - itemSize.y > spacing.y)
             tempRowIndex = Mathf.Clamp(tempRowIndex - 1, 0, tempRowIndex);
 
-        Vector2Int ropLeftItemIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
+        Vector2Int ropLeftElementIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
 
         int rowDataCount = 0, columnDataCount = 0;
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
@@ -162,28 +189,31 @@ public partial class BoundlessScrollRectController : UIBehaviour
             rowDataCount = Mathf.CeilToInt((float)dataCount / columnDataCount);
         }
 
+        // x -> element amount on horizontal axis
+        // y -> element amount on vertical axis
+        Vector2Int contentRowColumnSize = new Vector2Int(rowDataCount, columnDataCount);
+
         // deal with content from left to right (simple case)
         Matrix4x4 localToWorldMatrix = m_content.localToWorldMatrix;
         int dataIndex = 0;
         Vector3 rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f), itemTopLeftPosition = Vector3.zero;
-        for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
+        // rowIndex -> index on horizontal axis
+        // columnIndex -> index on vertical axis
+        for (int columnIndex = 0; columnIndex < m_viewItemCountInColumn; columnIndex++)
         {
-            if (rowIndex + ropLeftItemIndex.x == columnDataCount)
+            if (columnIndex + ropLeftElementIndex.x == columnDataCount)
                 break;
 
-            rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f) + Vector3.down * (rowIndex + ropLeftItemIndex.x) * (itemSize.y + spacing.y);
-            for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
+            rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f) + Vector3.down * (columnIndex + ropLeftElementIndex.x) * (itemSize.y + spacing.y);
+            for (int rowIndex = 0; rowIndex < m_viewItemCountInRow; rowIndex++)
             {
-                if (columnIndex + ropLeftItemIndex.y == rowDataCount)
+                if (rowIndex + ropLeftElementIndex.y == rowDataCount)
                     break;
 
-                itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (columnIndex + ropLeftItemIndex.y) * (itemSize.x + spacing.x);
+                Vector2Int elementIndex = new Vector2Int(rowIndex + ropLeftElementIndex.y, columnIndex + ropLeftElementIndex.x);
+                dataIndex = CaculateDataIndex(elementIndex, contentRowColumnSize, GridLayoutData.startAxis, GridLayoutData.startCorner);
 
-                if (GridLayoutGroup.Axis.Horizontal == m_gridLayoutGroup.startAxis)
-                    dataIndex = (rowIndex + ropLeftItemIndex.x) * rowDataCount + (columnIndex + ropLeftItemIndex.y);
-                else
-                    dataIndex = (rowIndex + ropLeftItemIndex.x) + columnDataCount * (columnIndex + ropLeftItemIndex.y);
-
+                itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (rowIndex + ropLeftElementIndex.y) * (itemSize.x + spacing.x);
                 if (dataIndex > -1 && dataIndex < dataCount)
                 {
                     // the item can show
@@ -223,6 +253,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         Debug.DrawLine(topLeftPoint, bottomRightPoint, color);
         Debug.DrawLine(topRightPoint, bottomLeftPoint, color);
     }
+
 }
 
 #endif
