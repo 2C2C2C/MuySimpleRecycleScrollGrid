@@ -60,12 +60,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     public void Setup(IListViewUI listView)
     {
         m_listView = listView;
-        int currentShowCount = CalculateCurrentViewportShowCount();
-        if (currentShowCount != m_viewItemCount)
-        {
-            m_viewItemCount = currentShowCount;
-            AdjustCachedItems();
-        }
+        AdjustCachedItems();
         ApplySizeOnElements();
         UpdateAcutalContentSizeRaw();
         // refresh
@@ -238,7 +233,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (yMove % (itemSize.y + spacing.y) - itemSize.y > spacing.y)
             tempRowIndex = Mathf.Clamp(tempRowIndex - 1, 0, tempRowIndex);
 
-        Vector2Int ropLeftItemIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
+        Vector2Int rowTopLeftItemIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
 
         int rowDataCount = 0, columnDataCount = 0;
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
@@ -252,26 +247,27 @@ public partial class BoundlessScrollRectController : UIBehaviour
             rowDataCount = Mathf.CeilToInt((float)dataCount / columnDataCount);
         }
 
+        // x -> element amount on horizontal axis
+        // y -> element amount on vertical axis
+        Vector2Int contentRowColumnSize = new Vector2Int(rowDataCount, columnDataCount);
+
         // deal with content from left to right (simple case)
         int dataIndex = 0, uiItemIndex = 0;
         Vector3 rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f), itemTopLeftPosition = Vector3.zero;
-        for (int rowIndex = 0; rowIndex < m_viewItemCountInColumn; rowIndex++)
+        for (int columnIndex = 0; columnIndex < m_viewItemCountInColumn; columnIndex++)
         {
-            if (rowIndex + ropLeftItemIndex.x == columnDataCount)
+            if (columnIndex + rowTopLeftItemIndex.x == columnDataCount)
                 break;
 
-            rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f) + Vector3.down * (rowIndex + ropLeftItemIndex.x) * (itemSize.y + spacing.y);
-            for (int columnIndex = 0; columnIndex < m_viewItemCountInRow; columnIndex++)
+            rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f) + Vector3.down * (columnIndex + rowTopLeftItemIndex.x) * (itemSize.y + spacing.y);
+            for (int rowIndex = 0; rowIndex < m_viewItemCountInRow; rowIndex++)
             {
-                if (columnIndex + ropLeftItemIndex.y == rowDataCount)
+                if (rowIndex + rowTopLeftItemIndex.y == rowDataCount)
                     break;
 
-                itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (columnIndex + ropLeftItemIndex.y) * (itemSize.x + spacing.x);
-                if (GridLayoutGroup.Axis.Horizontal == m_gridLayoutGroup.startAxis)
-                    dataIndex = (rowIndex + ropLeftItemIndex.x) * rowDataCount + (columnIndex + ropLeftItemIndex.y);
-                else
-                    dataIndex = (rowIndex + ropLeftItemIndex.x) + columnDataCount * (columnIndex + ropLeftItemIndex.y);
-
+                Vector2Int elementIndex = new Vector2Int(rowIndex + rowTopLeftItemIndex.y, columnIndex + rowTopLeftItemIndex.x);
+                dataIndex = CaculateDataIndex(elementIndex, contentRowColumnSize, GridLayoutData.startAxis, GridLayoutData.startCorner);
+                itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (rowIndex + rowTopLeftItemIndex.y) * (itemSize.x + spacing.x);
                 if (dataIndex > -1 && dataIndex < dataCount)
                 {
                     m_elementArray[uiItemIndex].ElementRectTransform.localPosition = itemTopLeftPosition;
@@ -368,8 +364,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private void AdjustElementArray(int size)
     {
         if (m_listView == null) return;
-        int index = 0;
-        int currentSize = m_viewItemCount;
+        int index = 0, currentSize = m_elementArray.Length;
         if (size > currentSize)
         {
             // directly add

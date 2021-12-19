@@ -11,7 +11,6 @@ public partial class BoundlessScrollRectController : UIBehaviour
     public bool m_drawGrids = true;
     public bool m_drawShowingGrids = true;
 
-#if UNITY_EDITOR
     protected override void Reset()
     {
         m_scrollRect = this.GetComponent<ScrollRect>();
@@ -26,7 +25,6 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
         if (m_enableDebugDraw) DebugDrawStyle();
     }
-#endif
 
     private void DebugDrawStyle()
     {
@@ -175,7 +173,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (yMove % (itemSize.y + spacing.y) - itemSize.y > spacing.y)
             tempRowIndex = Mathf.Clamp(tempRowIndex - 1, 0, tempRowIndex);
 
-        Vector2Int ropLeftElementIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
+        Vector2Int rowTopLeftElementIndex = new Vector2Int(tempRowIndex, tempColumnIndex);
 
         int rowDataCount = 0, columnDataCount = 0;
         if (BoundlessGridLayoutData.Constraint.FixedColumnCount == m_gridLayoutGroup.constraint)
@@ -201,19 +199,19 @@ public partial class BoundlessScrollRectController : UIBehaviour
         // columnIndex -> index on vertical axis
         for (int columnIndex = 0; columnIndex < m_viewItemCountInColumn; columnIndex++)
         {
-            if (columnIndex + ropLeftElementIndex.x == columnDataCount)
+            if (columnIndex + rowTopLeftElementIndex.x == columnDataCount)
                 break;
 
-            rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f) + Vector3.down * (columnIndex + ropLeftElementIndex.x) * (itemSize.y + spacing.y);
+            rowTopLeftPosition = new Vector3(padding.left, -padding.top, 0.0f) + Vector3.down * (columnIndex + rowTopLeftElementIndex.x) * (itemSize.y + spacing.y);
             for (int rowIndex = 0; rowIndex < m_viewItemCountInRow; rowIndex++)
             {
-                if (rowIndex + ropLeftElementIndex.y == rowDataCount)
+                if (rowIndex + rowTopLeftElementIndex.y == rowDataCount)
                     break;
 
-                Vector2Int elementIndex = new Vector2Int(rowIndex + ropLeftElementIndex.y, columnIndex + ropLeftElementIndex.x);
+                Vector2Int elementIndex = new Vector2Int(rowIndex + rowTopLeftElementIndex.y, columnIndex + rowTopLeftElementIndex.x);
                 dataIndex = CaculateDataIndex(elementIndex, contentRowColumnSize, GridLayoutData.startAxis, GridLayoutData.startCorner);
 
-                itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (rowIndex + ropLeftElementIndex.y) * (itemSize.x + spacing.x);
+                itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (rowIndex + rowTopLeftElementIndex.y) * (itemSize.x + spacing.x);
                 if (dataIndex > -1 && dataIndex < dataCount)
                 {
                     // the item can show
