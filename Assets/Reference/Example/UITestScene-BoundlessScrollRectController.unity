@@ -3938,7 +3938,7 @@ PrefabInstance:
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_drawGrids
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -3953,7 +3953,12 @@ PrefabInstance:
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_drawContentSize
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_enableDebugDraw
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -3968,7 +3973,7 @@ PrefabInstance:
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_drawShowingGrids
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -3998,7 +4003,7 @@ PrefabInstance:
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_gridLayoutGroup.startCorner
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}

@@ -45,6 +45,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private IListElementUI[] m_elementArray = new IListElementUI[0];
     private IListViewUI m_listView;
 
+    [SerializeField]
     private bool m_drawActualUIItems = true;
 
     public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
@@ -272,19 +273,15 @@ public partial class BoundlessScrollRectController : UIBehaviour
                 {
                     m_elementArray[uiItemIndex].ElementRectTransform.localPosition = itemTopLeftPosition;
                     m_elementArray[uiItemIndex].SetIndex(dataIndex);
+                    m_elementArray[uiItemIndex].Show();
                     uiItemIndex++;
-                }
-                else
-                {
-                    m_elementArray[uiItemIndex].SetIndex(-1);
-                    m_elementArray[uiItemIndex].Hide();
-                    m_elementArray[uiItemIndex].ElementRectTransform.position = Vector3.zero;
                 }
             }
         }
 
         while (uiItemIndex < m_elementArray.Length)
         {
+            m_elementArray[uiItemIndex].SetIndex(-1);
             m_elementArray[uiItemIndex].Hide();
             m_elementArray[uiItemIndex].ElementRectTransform.position = Vector3.zero;
             uiItemIndex++;

@@ -62,4 +62,9 @@ public class GuidItemUI : MonoBehaviour, IListElementUI
     {
         m_itemIndex = index;
     }
+
+    private void Awake()
+    {
+        m_rectTransform = this.transform as RectTransform;
+    }
 }
