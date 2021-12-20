@@ -3978,7 +3978,7 @@ PrefabInstance:
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_drawActualUIItems
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -3997,6 +3997,16 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
+      propertyPath: m_gridLayoutGroup.Spacing.x
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.Spacing.y
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
       propertyPath: m_gridLayoutGroup.startAxis
       value: 1
       objectReference: {fileID: 0}
@@ -4007,8 +4017,38 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
+      propertyPath: m_gridLayoutGroup.m_cellSize.x
+      value: 96
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.m_cellSize.y
+      value: 96
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
       propertyPath: m_gridLayoutGroup.constraintCount
       value: 13
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.RectPadding.m_Top
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.RectPadding.m_Left
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.RectPadding.m_Right
+      value: 16
+      objectReference: {fileID: 0}
+    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_gridLayoutGroup.RectPadding.m_Bottom
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: 5438040486657257700, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -4133,7 +4173,12 @@ PrefabInstance:
     - target: {fileID: 5438040486668900134, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 672
+      value: 1376
+      objectReference: {fileID: 0}
+    - target: {fileID: 5438040486668900134, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 648
       objectReference: {fileID: 0}
     - target: {fileID: 5438040487167030761, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
@@ -4179,6 +4224,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5438040487593130228, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 960
+      objectReference: {fileID: 0}
+    - target: {fileID: 5438040487593130228, guid: d6f1b9b6a70add242987537f97fab023,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 640
       objectReference: {fileID: 0}
     - target: {fileID: 5438040487593130230, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}

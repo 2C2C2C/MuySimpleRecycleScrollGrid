@@ -7,7 +7,7 @@ public class Tester : MonoBehaviour
     public int m_dataCount = 10;
     private GuidTempData[] m_dataArr = null;
 
-    public GuidItemListUI m_gridConrtoller = null;
+    public GuidElementListUI m_gridConrtoller = null;
 
     public string[] m_dataNames = null;
 
@@ -18,7 +18,7 @@ public class Tester : MonoBehaviour
         m_dataNames = new string[m_dataCount];
         for (int i = 0; i < m_dataCount; i++)
         {
-            m_dataArr[i] = new GuidTempData(i);
+            m_dataArr[i] = new GuidTempData();
             m_dataNames[i] = m_dataArr[i].ItemName;
         }
 

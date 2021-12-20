@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class GuidItemListUI : MonoBehaviour, IListViewUI
+public class GuidElementListUI : MonoBehaviour, IListViewUI
 {
     [SerializeField]
     private BoundlessScrollRectController m_scrollRectController;
     [SerializeField]
-    private GuidItemUI m_itemPrefab;
+    private GuidElementUI m_itemPrefab;
 
-    private List<GuidItemUI> m_elementList = new List<GuidItemUI>();
+    private List<GuidElementUI> m_elementList = new List<GuidElementUI>();
     private List<GuidTempData> m_dataList = new List<GuidTempData>();
 
     public IListElementUI this[int index] => throw new System.NotImplementedException();
@@ -19,7 +19,7 @@ public class GuidItemListUI : MonoBehaviour, IListViewUI
 
     public IListElementUI Add()
     {
-        GuidItemUI added = GuidItemUI.Instantiate(m_itemPrefab, m_scrollRectController.Content);
+        GuidElementUI added = GuidElementUI.Instantiate(m_itemPrefab, m_scrollRectController.Content);
         m_elementList.Add(added);
         return added;
     }
@@ -32,7 +32,7 @@ public class GuidItemListUI : MonoBehaviour, IListViewUI
             return;
         }
 
-        GuidItemUI toRemove = m_elementList[index];
+        GuidElementUI toRemove = m_elementList[index];
         m_elementList.RemoveAt(index);
         GameObject.Destroy(toRemove.gameObject);
     }
@@ -44,7 +44,7 @@ public class GuidItemListUI : MonoBehaviour, IListViewUI
         m_scrollRectController.Setup(this);
     }
 
-    private void TempSetup(GuidItemUI uiItem, GuidTempData data)
+    private void TempSetup(GuidElementUI uiItem, GuidTempData data)
     {
         uiItem.Setup(data);
     }
