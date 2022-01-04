@@ -10,7 +10,7 @@ using UnityEngine.UI;
 /// remove some nolonger used methods
 /// did some editor stuff (maybe I can directly use grid layout)
 /// </summary>
-[RequireComponent(typeof(ScrollRect))]
+[RequireComponent(typeof(ScrollRect)), ExecuteAlways]
 public partial class BoundlessScrollRectController : UIBehaviour
 {
     [SerializeField]
@@ -52,7 +52,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     public RectTransform Content => m_content;
 
-    private int CurrentCount => m_listView == null ? 0 : m_listView.Length;
+    private int CurrentCount => m_listView == null ? 0 : m_listView.Count;
 
     public event Action OnContentItemFinishDrawing;
     public event Action BeforedItemArrayResized;

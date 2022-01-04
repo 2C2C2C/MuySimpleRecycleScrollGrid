@@ -48,7 +48,7 @@ public class GuidElementUI : MonoBehaviour, IListElementUI
     public void SetIndex(int index)
     {
         m_itemIndex = index;
-        m_dataText.text = $"no.\n{ElementIndex}";
+        // m_dataText.text = $"no.\n{ElementIndex}";
     }
 
     private void Awake()

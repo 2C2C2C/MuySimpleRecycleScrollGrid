@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GuidElementListUI : MonoBehaviour, IListViewUI
@@ -11,9 +12,20 @@ public class GuidElementListUI : MonoBehaviour, IListViewUI
     private List<GuidElementUI> m_elementList = new List<GuidElementUI>();
     private List<GuidTempData> m_dataList = new List<GuidTempData>();
 
-    public IListElementUI this[int index] => throw new System.NotImplementedException();
+    public IListElementUI this[int index]
+    {
+        get
+        {
+            if (index < 0 || index >= m_elementList.Count)
+            {
+                Debug.LogError($"index out of range", this.gameObject);
+                return null;
+            }
+            return m_elementList[index];
+        }
+    }
 
-    public int Length => m_dataList.Count;
+    public int Count => m_dataList.Count;
 
     public IListElementUI ListElementPrefab => m_itemPrefab;
 
@@ -22,6 +34,15 @@ public class GuidElementListUI : MonoBehaviour, IListViewUI
         GuidElementUI added = GuidElementUI.Instantiate(m_itemPrefab, m_scrollRectController.Content);
         m_elementList.Add(added);
         return added;
+    }
+
+    public void Remove(IListElementUI instance)
+    {
+        for (int i = 0; i < this.Count; i++)
+            if (this[i] == instance)
+                Remove(i);
+
+        Debug.LogError($"cant find ListElement {instance}", this.gameObject);
     }
 
     public void Remove(int index)
@@ -47,6 +68,29 @@ public class GuidElementListUI : MonoBehaviour, IListViewUI
     private void TempSetup(GuidElementUI uiItem, GuidTempData data)
     {
         uiItem.Setup(data);
+    }
+
+
+    void OnContentItemFinishDrawing()
+    {
+        int elementDataIndex = 0;
+        for (int i = 0; i < m_elementList.Count; i++)
+        {
+            elementDataIndex = m_elementList[i].ElementIndex;
+            if (elementDataIndex < 0 || elementDataIndex >= m_dataList.Count)
+                continue;
+            m_elementList[i].Setup(m_dataList[elementDataIndex]);
+        }
+    }
+
+    private void OnEnable()
+    {
+        m_scrollRectController.OnContentItemFinishDrawing += OnContentItemFinishDrawing;
+    }
+
+    private void OnDisable()
+    {
+        m_scrollRectController.OnContentItemFinishDrawing -= OnContentItemFinishDrawing;
     }
 
 }
