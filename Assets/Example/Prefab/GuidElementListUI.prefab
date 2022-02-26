@@ -295,7 +295,7 @@ GameObject:
   - component: {fileID: 5438040486657257703}
   - component: {fileID: 5438040486657257702}
   m_Layer: 5
-  m_Name: GuidItemListUI
+  m_Name: GuidElementListUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -850,6 +850,7 @@ MonoBehaviour:
   m_scrollRect: {fileID: 5438040487593130230}
   m_viewport: {fileID: 5438040487183274192}
   m_content: {fileID: 5438040486668900134}
+  m_simulatedDataCount: 0
   m_gridLayoutGroup:
     startCorner: 0
     constraint: 0
@@ -864,11 +865,12 @@ MonoBehaviour:
     m_cellSize: {x: 48, y: 48}
     Spacing: {x: 4, y: 4}
     StopMagSqrVel: 50
+  m_listView: {fileID: 5438040487593130231}
+  m_drawActualUIItems: 1
+  m_enableDebugDraw: 1
   m_drawContentSize: 1
   m_drawGrids: 1
   m_drawShowingGrids: 1
-  m_drawActualUIItems: 1
-  m_useOldDebugDraw: 1
 --- !u!114 &5438040487593130231
 MonoBehaviour:
   m_ObjectHideFlags: 0

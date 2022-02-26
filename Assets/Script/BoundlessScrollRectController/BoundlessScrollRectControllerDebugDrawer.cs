@@ -37,7 +37,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawDebugContentSize()
     {
-        if (0 == CurrentCount)
+        if (0 == m_simulatedDataCount)
             return;
 
         Vector2 rawSize = Vector2.zero;
@@ -51,12 +51,12 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedColumnCount)
         {
             columnCount = m_gridLayoutGroup.constraintCount;
-            rowCount = Mathf.CeilToInt(CurrentCount / (float)columnCount);
+            rowCount = Mathf.CeilToInt(m_simulatedDataCount / (float)columnCount);
         }
         else if (m_gridLayoutGroup.constraint == BoundlessGridLayoutData.Constraint.FixedRowCount)
         {
             rowCount = m_gridLayoutGroup.constraintCount;
-            columnCount = Mathf.CeilToInt(CurrentCount / (float)rowCount);
+            columnCount = Mathf.CeilToInt(m_simulatedDataCount / (float)rowCount);
         }
 
         rawSize = new Vector2(
@@ -100,7 +100,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DebugDrawCotentGrid()
     {
-        int dataCount = CurrentCount;
+        int dataCount = m_simulatedDataCount;
         if (0 == dataCount) return;
 
         Vector3 rowItemTopLeftPos = default;
@@ -149,7 +149,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawDebugShowingGrids()
     {
-        int dataCount = CurrentCount;
+        int dataCount = m_simulatedDataCount;
         Vector3 dragContentAnchorPostion = m_content.anchoredPosition;
         Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(m_content, SomeUtils.UIOffsetType.TopLeft);
         Vector2 itemSize = m_gridLayoutGroup.CellSize, spacing = m_gridLayoutGroup.Spacing;

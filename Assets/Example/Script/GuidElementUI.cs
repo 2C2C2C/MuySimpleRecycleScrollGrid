@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 
+[ExecuteAlways]
 public class GuidElementUI : MonoBehaviour, IListElementUI
 {
     [SerializeField]
@@ -14,7 +15,7 @@ public class GuidElementUI : MonoBehaviour, IListElementUI
 
     public int ElementIndex => m_itemIndex;
 
-    public RectTransform ElementRectTransform => m_rectTransform;
+    public RectTransform ElementRectTransform => m_rectTransform ?? this.transform as RectTransform;
 
     Action<GuidTempData> m_onPointerEnter = null;
     Action<GuidTempData> m_onPointerLeave = null;

@@ -5,14 +5,18 @@ public class BoundlessScrollRectControllerEditor : Editor
 {
     public override void OnInspectorGUI()
     {
-        EditorGUI.BeginChangeCheck();
-        base.OnInspectorGUI();
-
-        bool hasChanged = EditorGUI.EndChangeCheck();
-        if (hasChanged)
+        if (EditorApplication.isPlaying)
         {
-            BoundlessScrollRectController controller = target as BoundlessScrollRectController;
-            controller.RefreshLayoutChanges();
+            EditorGUI.BeginChangeCheck();
+            base.OnInspectorGUI();
+            bool hasChanged = EditorGUI.EndChangeCheck();
+            if (hasChanged)
+            {
+                BoundlessScrollRectController controller = target as BoundlessScrollRectController;
+                controller.RefreshLayoutChanges();
+            }
         }
+        else
+            base.OnInspectorGUI();
     }
 }

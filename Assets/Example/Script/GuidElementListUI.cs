@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class GuidElementListUI : MonoBehaviour, IListViewUI
+public class GuidElementListUI : IListViewUI
 {
     [SerializeField]
     private BoundlessScrollRectController m_scrollRectController;
@@ -12,7 +11,7 @@ public class GuidElementListUI : MonoBehaviour, IListViewUI
     private List<GuidElementUI> m_elementList = new List<GuidElementUI>();
     private List<GuidTempData> m_dataList = new List<GuidTempData>();
 
-    public IListElementUI this[int index]
+    public override IListElementUI this[int index]
     {
         get
         {
@@ -25,27 +24,29 @@ public class GuidElementListUI : MonoBehaviour, IListViewUI
         }
     }
 
-    public int Count => m_dataList.Count;
+    public override int Count => m_elementList.Count;
 
     public IListElementUI ListElementPrefab => m_itemPrefab;
 
-    public IListElementUI Add()
+    public override IReadOnlyList<IListElementUI> ElementList => m_elementList;
+
+    public override IListElementUI Add()
     {
         GuidElementUI added = GuidElementUI.Instantiate(m_itemPrefab, m_scrollRectController.Content);
         m_elementList.Add(added);
         return added;
     }
 
-    public void Remove(IListElementUI instance)
+    public override void Remove(IListElementUI instance)
     {
         for (int i = 0; i < this.Count; i++)
             if (this[i] == instance)
-                Remove(i);
+                RemoveAt(i);
 
         Debug.LogError($"cant find ListElement {instance}", this.gameObject);
     }
 
-    public void Remove(int index)
+    public override void RemoveAt(int index)
     {
         if (index < 0 || index >= m_elementList.Count)
         {
@@ -62,14 +63,13 @@ public class GuidElementListUI : MonoBehaviour, IListViewUI
     {
         m_dataList.Clear();
         m_dataList.AddRange(dataList);
-        m_scrollRectController.Setup(this);
+        m_scrollRectController.Setup(this, dataList.Count);
     }
 
     private void TempSetup(GuidElementUI uiItem, GuidTempData data)
     {
         uiItem.Setup(data);
     }
-
 
     void OnContentItemFinishDrawing()
     {

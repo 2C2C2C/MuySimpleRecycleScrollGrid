@@ -1,16 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-/// Only support the situation that item start from top left
 /// TODO @Hiko
 /// how to give those item to the other controller to let them setup stuff
-/// remove some nolonger used methods
+/// solve data setup issue
 /// did some editor stuff (maybe I can directly use grid layout)
 /// </summary>
-[RequireComponent(typeof(ScrollRect)), ExecuteAlways]
+[RequireComponent(typeof(ScrollRect))] // [,ExecuteAlways]
 public partial class BoundlessScrollRectController : UIBehaviour
 {
     [SerializeField]
@@ -42,25 +42,42 @@ public partial class BoundlessScrollRectController : UIBehaviour
     [Space, Header("Grid Layout Setting"), SerializeField]
     private BoundlessGridLayoutData m_gridLayoutGroup = new BoundlessGridLayoutData();
 
-    private IListElementUI[] m_elementArray = new IListElementUI[0];
+    [SerializeField]
     private IListViewUI m_listView;
+    [SerializeField, ReadOnly]
+    /// <summary>
+    /// value should >= 0
+    /// </summary>
+    private int m_simulatedDataCount = 0;
+
+    static readonly IListElementUI[] s_emptyElementArray = new IListElementUI[0];
 
     [SerializeField]
     private bool m_drawActualUIItems = true;
-
-    public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
-
-    public RectTransform Content => m_content;
-
-    private int CurrentCount => m_listView == null ? 0 : m_listView.Count;
 
     public event Action OnContentItemFinishDrawing;
     public event Action BeforedItemArrayResized;
     public event Action OnItemArrayResized;
 
-    public void Setup(IListViewUI listView)
+    IReadOnlyList<IListElementUI> ElementList => m_listView != null ? m_listView.ElementList : s_emptyElementArray;
+    public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
+    public RectTransform Content => m_content;
+
+    public void SetSimulatedDataCount(int dataCount)
+    {
+        if (dataCount < 0) return;
+        m_simulatedDataCount = dataCount;
+        // refresh
+        OnScrollRectValueChanged(Vector2.zero);
+    }
+
+    public void Setup(IListViewUI listView, int dataCount)
     {
         m_listView = listView;
+        if (dataCount < 0)
+            m_simulatedDataCount = m_listView.Count;
+        else
+            m_simulatedDataCount = dataCount;
         AdjustCachedItems();
         ApplySizeOnElements();
         UpdateAcutalContentSizeRaw();
@@ -142,7 +159,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void UpdateAcutalContentSizeRaw()
     {
-        int dataCount = CurrentCount;
+        int dataCount = m_simulatedDataCount;
         RectOffset m_padding = m_gridLayoutGroup.RectPadding;
         Vector2 itemSize = m_gridLayoutGroup.CellSize;
         Vector2 spacing = m_gridLayoutGroup.Spacing;
@@ -184,14 +201,28 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private void OnScrollRectValueChanged(Vector2 position)
     {
 #if UNITY_EDITOR
+        // if (UnityEditor.EditorApplication.isPlaying)
+        // {
+        //     Debug.Log("editor edit mode get ScrollRectValueChanged");
+        // }
+        IReadOnlyList<IListElementUI> elementList = ElementList;
         if (m_drawActualUIItems)
+        {
+            if (m_listView == null)
+            {
+                Debug.LogWarning("there is no listview setup");
+                return;
+            }
+            else if (elementList.Count != m_viewItemCount)
+                AdjustCachedItems();
             DrawContentItem();
-        else if (m_elementArray != null)
+        }
+        else
         {
             // hide all Items
-            for (int i = 0; i < m_elementArray.Length; i++)
+            for (int i = 0; i < elementList.Count; i++)
             {
-                m_elementArray[i].Hide();
+                elementList[i].Hide();
             }
         }
 #else
@@ -201,7 +232,8 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawContentItem()
     {
-        int dataCount = CurrentCount;
+        IReadOnlyList<IListElementUI> elementList = ElementList;
+        int dataCount = m_simulatedDataCount;
         // TODO @Hiko use a general calculation
         bool test = m_content.anchorMin != Vector2.up || m_content.anchorMax != Vector2.up || m_content.pivot != Vector2.up;
         if (test)
@@ -271,19 +303,19 @@ public partial class BoundlessScrollRectController : UIBehaviour
                 itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (rowIndex + rowTopLeftItemIndex.y) * (itemSize.x + spacing.x);
                 if (dataIndex > -1 && dataIndex < dataCount)
                 {
-                    m_elementArray[uiItemIndex].ElementRectTransform.localPosition = itemTopLeftPosition;
-                    m_elementArray[uiItemIndex].SetIndex(dataIndex);
-                    m_elementArray[uiItemIndex].Show();
+                    elementList[uiItemIndex].ElementRectTransform.localPosition = itemTopLeftPosition;
+                    elementList[uiItemIndex].SetIndex(dataIndex);
+                    elementList[uiItemIndex].Show();
                     uiItemIndex++;
                 }
             }
         }
 
-        while (uiItemIndex < m_elementArray.Length)
+        while (uiItemIndex < elementList.Count)
         {
-            m_elementArray[uiItemIndex].SetIndex(-1);
-            m_elementArray[uiItemIndex].Hide();
-            m_elementArray[uiItemIndex].ElementRectTransform.position = Vector3.zero;
+            elementList[uiItemIndex].SetIndex(-1);
+            elementList[uiItemIndex].Hide();
+            elementList[uiItemIndex].ElementRectTransform.position = Vector3.zero;
             uiItemIndex++;
         }
 
@@ -361,35 +393,27 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private void AdjustElementArray(int size)
     {
         if (m_listView == null) return;
-        int index = 0, currentSize = m_elementArray.Length;
-        if (size > currentSize)
+        int currentElementCount = ElementList.Count;
+        while (size > currentElementCount)
         {
-            // directly add
-            Array.Resize<IListElementUI>(ref m_elementArray, size);
-            index = currentSize;
-            while (index < size)
-                m_elementArray[index++] = m_listView.Add();
+            m_listView.Add();
+            currentElementCount = ElementList.Count;
         }
-        else if (size < currentSize)
+        while (size < currentElementCount)
         {
-            index = currentSize - 1;
-            while (index >= size)
-            {
-                // TODO @Hiko
-                m_listView.Remove(index);
-                m_elementArray[index--] = null;
-                index--;
-            }
-            Array.Resize<IListElementUI>(ref m_elementArray, size);
+            m_listView.RemoveAt(currentElementCount - 1);
+            currentElementCount = ElementList.Count;
         }
     }
 
     private void ApplySizeOnElements()
     {
+        if (m_listView == null) return;
         // sync the size form grid data
         Vector2 itemAcutalSize = GridLayoutData.CellSize;
-        for (int i = 0; i < m_elementArray.Length; i++)
-            m_elementArray[i].ElementRectTransform.sizeDelta = itemAcutalSize;
+        IReadOnlyList<IListElementUI> elementList = ElementList;
+        for (int i = 0; i < elementList.Count; i++)
+            elementList[i].ElementRectTransform.sizeDelta = itemAcutalSize;
     }
 
     #region mono method
@@ -397,6 +421,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     protected override void OnEnable()
     {
         UpdateConstraintWithAutoFit();
+        AdjustCachedItems();
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
     }
 
@@ -408,13 +433,50 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private void Update()
     {
         ClampVelocityToToStop();
+#if UNITY_EDITOR
+        if (!Application.isPlaying) EditorUpdata();
+#endif
     }
 
 #if UNITY_EDITOR
+
+    private void EditorUpdata()
+    {
+        // TODO @Hiko for editor loop
+        // if (Content.hasChanged)
+        // {
+        //     // check change?
+        //     int currentChildCount = Content.childCount;
+        //     if (Content.childCount <= m_viewItemCount)
+        //     {
+        //         // safe
+        //         Debug.Log("get notify wtf safe");
+        //         if (m_elementArray.Length != currentChildCount)
+        //         {
+        //             // re-adjust
+        //             UpdateConstraintWithAutoFit();
+        //             UpdateAcutalContentSizeRaw();
+        //             m_elementArray = Content.GetComponentsInChildren<IListElementUI>();
+        //             // AdjustCachedItems();
+        //             ApplySizeOnElements();
+        //             OnScrollRectValueChanged(Vector2.zero);
+        //         }
+        //         DrawContentItem();
+        //     }
+        //     else
+        //     {
+        //         // may need to remove or adjust
+        //     }
+        // }
+    }
+
     protected override void OnValidate()
     {
         // something may got changed on inspector
-        // try refresh all?
+        // try fix editor run issues
+        // TODO @Hiko
+        return;
+        if (m_simulatedDataCount < 0) m_simulatedDataCount = 0;
         RefreshLayoutChanges();
     }
 #endif

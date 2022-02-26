@@ -1,13 +1,16 @@
-﻿public interface IListViewUI
+﻿using System.Collections.Generic;
+using UnityEngine;
+
+public abstract class IListViewUI : MonoBehaviour
 {
-    IListElementUI Add();
-    void Remove(IListElementUI instance);
-    void Remove(int index);
+    public abstract IListElementUI Add();
+    public abstract void Remove(IListElementUI instance);
+    public abstract void RemoveAt(int index);
     /// <summary>
     /// the actual UI element count
     /// </summary>
     /// <value></value>
-    int Count { get; }
-    IListElementUI this[int index] { get; }
-    IListElementUI ListElementPrefab { get; }
+    public abstract int Count { get; }
+    public abstract IListElementUI this[int index] { get; }
+    public abstract IReadOnlyList<IListElementUI> ElementList { get; }
 }
