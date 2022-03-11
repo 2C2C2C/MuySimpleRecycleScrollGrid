@@ -7,7 +7,7 @@ public class Tester : MonoBehaviour
     public int m_dataCount = 10;
     private GuidTempData[] m_dataArr = null;
 
-    public GuidElementListUI m_gridConrtoller = null;
+    public GuidElementListUI m_gridListUI = null;
 
     public string[] m_dataNames = null;
 
@@ -22,7 +22,7 @@ public class Tester : MonoBehaviour
             m_dataNames[i] = m_dataArr[i].ItemName;
         }
 
-        m_gridConrtoller.Setup(new List<GuidTempData>(m_dataArr));
+        m_gridListUI.Setup(new List<GuidTempData>(m_dataArr));
     }
 
     // Start is called before the first frame update

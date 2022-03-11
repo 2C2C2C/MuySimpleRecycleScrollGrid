@@ -1,67 +1,20 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class GuidElementListUI : IListViewUI
+public class GuidElementListUI : MonoBehaviour
 {
     [SerializeField]
     private BoundlessScrollRectController m_scrollRectController;
     [SerializeField]
-    private GuidElementUI m_itemPrefab;
+    private TempListView m_elementListView;
 
     private List<GuidTempData> m_dataList = new List<GuidTempData>();
-
-    public override IListElementUI this[int index]
-    {
-        get
-        {
-            if (index < 0 || index >= m_elementList.Count)
-            {
-                Debug.LogError($"index out of range", this.gameObject);
-                return null;
-            }
-            return m_elementList[index];
-        }
-    }
-
-    public override int Count => m_elementList.Count;
-    public IListElementUI ListElementPrefab => m_itemPrefab;
-    public override IReadOnlyList<IListElementUI> ElementList => m_elementList;
-    public override Transform ElementContainer => m_scrollRectController.Content;
-
-    public override IListElementUI Add()
-    {
-        GuidElementUI added = GuidElementUI.Instantiate(m_itemPrefab, m_scrollRectController.Content);
-        m_elementList.Add(added);
-        return added;
-    }
-
-    public override void Remove(IListElementUI instance)
-    {
-        for (int i = 0; i < this.Count; i++)
-            if (this[i] == instance)
-                RemoveAt(i);
-
-        Debug.LogError($"cant find ListElement {instance}", this.gameObject);
-    }
-
-    public override void RemoveAt(int index)
-    {
-        if (index < 0 || index >= m_elementList.Count)
-        {
-            Debug.LogError($"index_{index} out of range", this.gameObject);
-            return;
-        }
-
-        GuidElementUI toRemove = m_elementList[index] as GuidElementUI;
-        m_elementList.RemoveAt(index);
-        GameObject.Destroy(toRemove.gameObject);
-    }
 
     public void Setup(List<GuidTempData> dataList)
     {
         m_dataList.Clear();
         m_dataList.AddRange(dataList);
-        // m_scrollRectController.Setup(this, dataList.Count);
+        m_scrollRectController.Setup(m_elementListView, dataList.Count);
     }
 
     private void TempSetup(GuidElementUI uiItem, GuidTempData data)
@@ -73,14 +26,15 @@ public class GuidElementListUI : IListViewUI
     {
         int elementDataIndex = 0;
         GuidElementUI guidElementUI = null;
-        for (int i = 0; i < m_elementList.Count; i++)
+        for (int i = 0; i < m_elementListView.Count; i++)
         {
-            elementDataIndex = m_elementList[i].ElementIndex;
+            elementDataIndex = m_elementListView[i].ElementIndex;
             if (elementDataIndex < 0 || elementDataIndex >= m_dataList.Count)
                 continue;
 
-            guidElementUI = m_elementList[i] as GuidElementUI;
-            guidElementUI.Setup(m_dataList[elementDataIndex]);
+            // TODO @Hiko setup data
+            // guidElementUI = m_elementListView[i] as GuidElementUI;
+            // guidElementUI.Setup(m_dataList[elementDataIndex]);
         }
     }
 

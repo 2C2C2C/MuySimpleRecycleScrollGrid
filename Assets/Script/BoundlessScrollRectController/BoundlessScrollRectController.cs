@@ -51,7 +51,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     /// </summary>
     private int m_simulatedDataCount = 0;
 
-    static readonly IListElementUI[] s_emptyElementArray = new IListElementUI[0];
+    static readonly TempListElementUI[] s_emptyElementArray = new TempListElementUI[0];
 
     [SerializeField]
     private bool m_drawActualUIItems = true;
@@ -60,7 +60,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     public event Action BeforedItemArrayResized;
     public event Action OnItemArrayResized;
 
-    IReadOnlyList<IListElementUI> ElementList => m_listView != null ? m_listView.ElementList : s_emptyElementArray;
+    IReadOnlyList<TempListElementUI> ElementList => m_listView != null ? m_listView.ElementList : s_emptyElementArray;
     public BoundlessGridLayoutData GridLayoutData => m_gridLayoutGroup;
     public RectTransform Content => m_content;
 
@@ -206,7 +206,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         // {
         //     Debug.Log("editor edit mode get ScrollRectValueChanged");
         // }
-        IReadOnlyList<IListElementUI> elementList = ElementList;
+        IReadOnlyList<TempListElementUI> elementList = ElementList;
         if (m_drawActualUIItems)
         {
             if (m_listView == null)
@@ -233,7 +233,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void DrawContentItem()
     {
-        IReadOnlyList<IListElementUI> elementList = ElementList;
+        IReadOnlyList<TempListElementUI> elementList = ElementList;
         int dataCount = m_simulatedDataCount;
         // TODO @Hiko use a general calculation
         bool test = m_content.anchorMin != Vector2.up || m_content.anchorMax != Vector2.up || m_content.pivot != Vector2.up;
@@ -412,7 +412,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         if (m_listView == null) return;
         // sync the size form grid data
         Vector2 itemAcutalSize = GridLayoutData.CellSize;
-        IReadOnlyList<IListElementUI> elementList = ElementList;
+        IReadOnlyList<TempListElementUI> elementList = ElementList;
         for (int i = 0; i < elementList.Count; i++)
             elementList[i].ElementRectTransform.sizeDelta = itemAcutalSize;
     }
@@ -422,8 +422,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     protected override void OnEnable()
     {
         UpdateConstraintWithAutoFit();
-        if (Application.isPlaying)
-            AdjustCachedItems();
+        AdjustCachedItems();
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
     }
 
@@ -436,7 +435,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     {
         ClampVelocityToToStop();
 #if UNITY_EDITOR
-        if (!Application.isPlaying) EditorUpdata();
+        if (Application.isEditor && !Application.isPlaying) EditorUpdata();
 #endif
     }
 
@@ -445,12 +444,22 @@ public partial class BoundlessScrollRectController : UIBehaviour
     [Header("editor time test")]
     [SerializeField]
     int m_editorTimeSimulateDataCount = 5;
+    [SerializeField]
+    bool m_showEditorPreview = false;
     private void EditorUpdata()
     {
+        if (m_showEditorPreview)
+        {
+            m_simulatedDataCount = m_editorTimeSimulateDataCount;
+            OnScrollRectValueChanged(Vector2.zero);
+            m_showEditorPreview = false;
+        }
+        return;
+
         // TODO @Hiko for editor loop
         if (Content.hasChanged)
         {
-            Debug.Log("editor time tick");
+            // Debug.Log("editor time tick");
             m_simulatedDataCount = m_editorTimeSimulateDataCount;
             OnScrollRectValueChanged(Vector2.zero);
 
@@ -466,6 +475,8 @@ public partial class BoundlessScrollRectController : UIBehaviour
             if (scrollerBar != null)
                 normalizedHorizontalScrollValue = scrollerBar.direction == Scrollbar.Direction.LeftToRight ? scrollerBar.value :
                 scrollerBar.direction == Scrollbar.Direction.RightToLeft ? 1.0f - scrollerBar.value : 0.0f;
+
+            // from top left
         }
     }
 

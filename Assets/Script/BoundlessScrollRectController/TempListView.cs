@@ -11,23 +11,18 @@ public class TempListView : MonoBehaviour
     // check when prefab change
     // [OnValueChanged("OnPrefabChanged")]
     [SerializeField, Header("place holder, the listview should only contains one type of element")]
-    RectTransform m_elementPrefabRectTransform;
+    TempListElementUI m_elementPrefab;
     RectTransform Container => transform as RectTransform;
-    [SerializeField]
-    List<IListElementUI> m_actualUsedComponents = new List<IListElementUI>(0);
+    [SerializeField, ReadOnly]
+    List<TempListElementUI> m_actualUsedComponents = new List<TempListElementUI>(0);
 
     public int Count => m_actualUsedComponents.Count;
-    public IListElementUI this[int index] => m_actualUsedComponents[index];
-    public IReadOnlyList<IListElementUI> ElementList => m_actualUsedComponents;
+    public TempListElementUI this[int index] => m_actualUsedComponents[index];
+    public IReadOnlyList<TempListElementUI> ElementList => m_actualUsedComponents;
 
-    public void InitGetExistElements()
+    public TempListElementUI Add()
     {
-        // empty
-    }
-
-    public IListElementUI Add()
-    {
-        IListElementUI element = InternalAdd();
+        TempListElementUI element = InternalAdd();
         m_actualUsedComponents.Add(element);
         element.Show();
         return element;
@@ -35,7 +30,7 @@ public class TempListView : MonoBehaviour
 
     public void Clear()
     {
-        IListElementUI element = null;
+        TempListElementUI element = null;
         while (m_actualUsedComponents.Count > 0)
         {
             element = m_actualUsedComponents[m_actualUsedComponents.Count - 1];
@@ -44,7 +39,7 @@ public class TempListView : MonoBehaviour
         }
     }
 
-    public void Remove(IListElementUI instance)
+    public void Remove(TempListElementUI instance)
     {
         if (m_actualUsedComponents.Remove(instance))
         {
@@ -64,7 +59,7 @@ public class TempListView : MonoBehaviour
             return;
         }
 
-        IListElementUI toRemove = m_actualUsedComponents[index];
+        TempListElementUI toRemove = m_actualUsedComponents[index];
         m_actualUsedComponents.RemoveAt(index);
         InternalRemove(toRemove);
     }
@@ -76,7 +71,7 @@ public class TempListView : MonoBehaviour
             return;
         }
 
-        IListElementUI temp = m_actualUsedComponents[indexA];
+        TempListElementUI temp = m_actualUsedComponents[indexA];
         int transformIndexA = temp.ElementRectTransform.GetSiblingIndex();
         int transformIndexB = m_actualUsedComponents[indexB].ElementRectTransform.GetSiblingIndex();
         m_actualUsedComponents[indexA] = m_actualUsedComponents[indexB];
@@ -89,7 +84,7 @@ public class TempListView : MonoBehaviour
     /// 
     /// </summary>
     /// <returns>-1 means element is not in the list</returns>
-    public int IndexOf(IListElementUI instance)
+    public int IndexOf(TempListElementUI instance)
     {
         try
         {
@@ -101,18 +96,14 @@ public class TempListView : MonoBehaviour
         }
     }
 
-    protected virtual IListElementUI InternalAdd()
+    protected virtual TempListElementUI InternalAdd()
     {
-        RectTransform spawnObject = null;
         if (Application.isEditor && !Application.isPlaying)
-            spawnObject = (RectTransform)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefabRectTransform, Container);
-        else
-            spawnObject = Instantiate(m_elementPrefabRectTransform, Container);
-        IListElementUI addedElement = spawnObject.GetComponent<IListElementUI>();
-        return addedElement;
+            return UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefab, Container) as TempListElementUI;
+        return Instantiate(m_elementPrefab, Container);
     }
 
-    protected virtual void InternalRemove(IListElementUI element)
+    protected virtual void InternalRemove(TempListElementUI element)
     {
         element.Hide();
         if (Application.isEditor && !Application.isPlaying)
@@ -123,14 +114,15 @@ public class TempListView : MonoBehaviour
 
     private void Awake()
     {
-        FindPrefabInstances();
+        // FindPrefabInstances();
     }
 
 #if UNITY_EDITOR
 
     private void OnTransformChildrenChanged()
     {
-        FindPrefabInstances();
+        if (Application.isEditor && !Application.isPlaying)
+            FindPrefabInstances();
     }
 
     private void OnPrefabChanged()
@@ -142,12 +134,12 @@ public class TempListView : MonoBehaviour
             GameObject.DestroyImmediate(m_actualUsedComponents[i].ElementRectTransform.gameObject);
         }
 
-        if (m_elementPrefabRectTransform != null)
+        if (m_elementPrefab != null)
         {
             for (int i = 0; i < amount; i++)
             {
-                RectTransform rectTransform = (RectTransform)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefabRectTransform, Container);
-                m_actualUsedComponents[i] = (rectTransform.GetComponent<IListElementUI>());
+                RectTransform rectTransform = (RectTransform)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefab, Container);
+                m_actualUsedComponents[i] = (rectTransform.GetComponent<TempListElementUI>());
             }
         }
         else
@@ -162,13 +154,13 @@ public class TempListView : MonoBehaviour
     [ContextMenu("find prefab instances")]
     private void FindPrefabInstances()
     {
-        bool hasPrefab = !(m_elementPrefabRectTransform == null);
-        IListElementUI elementPrefab = m_elementPrefabRectTransform.GetComponent<IListElementUI>();
+        bool hasPrefab = !(m_elementPrefab == null);
+        TempListElementUI elementPrefab = m_elementPrefab.GetComponent<TempListElementUI>();
         m_actualUsedComponents.Clear();
         List<GameObject> toDeleteObjectList = new List<GameObject>();
         foreach (Transform child in Container)
         {
-            IListElementUI childElement = child.GetComponent<IListElementUI>();
+            TempListElementUI childElement = child.GetComponent<TempListElementUI>();
             if (childElement == null)
             {
                 toDeleteObjectList.Add(child.gameObject);
@@ -178,7 +170,7 @@ public class TempListView : MonoBehaviour
             if (hasPrefab)
             {
                 GameObject detectPrefabGo = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject);
-                IListElementUI detectPrefab = (detectPrefabGo == null) ? null : detectPrefabGo.GetComponent<IListElementUI>();
+                TempListElementUI detectPrefab = (detectPrefabGo == null) ? null : detectPrefabGo.GetComponent<TempListElementUI>();
                 if (elementPrefab == detectPrefab)
                 {
                     // same source prefab
@@ -194,7 +186,7 @@ public class TempListView : MonoBehaviour
             {
                 // find the first prefab
                 GameObject prefab = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(child.gameObject);
-                m_elementPrefabRectTransform = prefab.GetComponent<IListElementUI>().ElementRectTransform;
+                m_elementPrefab = prefab.GetComponent<TempListElementUI>();
                 m_actualUsedComponents.Add(childElement);
                 hasPrefab = true;
             }
@@ -202,7 +194,10 @@ public class TempListView : MonoBehaviour
 
         for (int i = 0; i < toDeleteObjectList.Count; i++)
         {
-            GameObject.DestroyImmediate(toDeleteObjectList[i]);
+            if (Application.isPlaying)
+                GameObject.Destroy(toDeleteObjectList[i]);
+            else
+                GameObject.DestroyImmediate(toDeleteObjectList[i]);
         }
     }
 
@@ -210,13 +205,13 @@ public class TempListView : MonoBehaviour
     private void EditorTimeAdd()
     {
         if (Application.isPlaying) return;
-        if (m_elementPrefabRectTransform == null)
+        if (m_elementPrefab == null)
         {
             Debug.LogError("listview is missing element prefab");
             return;
         }
-        RectTransform spawnObject = (RectTransform)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefabRectTransform, Container);
-        if (spawnObject.TryGetComponent<IListElementUI>(out IListElementUI element))
+        RectTransform spawnObject = (RectTransform)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefab, Container);
+        if (spawnObject.TryGetComponent<TempListElementUI>(out TempListElementUI element))
             m_actualUsedComponents.Add(element);
     }
 
@@ -225,7 +220,7 @@ public class TempListView : MonoBehaviour
     {
         if (Application.isPlaying) return;
         // remove pre objects
-        IListElementUI[] preObjects = Container.GetComponentsInChildren<IListElementUI>();
+        TempListElementUI[] preObjects = Container.GetComponentsInChildren<TempListElementUI>();
         for (int i = 0; i < preObjects.Length; i++)
         {
             GameObject.DestroyImmediate(preObjects[i].ElementRectTransform.gameObject);

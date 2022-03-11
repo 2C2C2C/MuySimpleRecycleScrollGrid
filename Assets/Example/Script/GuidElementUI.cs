@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 [ExecuteAlways]
-public class GuidElementUI : MonoBehaviour, IListElementUI
+public class GuidElementUI : MonoBehaviour, IElementSetup<GuidTempData>
 {
     [SerializeField]
     private UnityEngine.UI.Text m_dataText = null;
@@ -15,7 +15,7 @@ public class GuidElementUI : MonoBehaviour, IListElementUI
 
     public int ElementIndex => m_itemIndex;
 
-    public RectTransform ElementRectTransform => m_rectTransform ?? this.transform as RectTransform;
+    public RectTransform ElementRectTransform => (m_rectTransform != null ? m_rectTransform : m_rectTransform = transform as RectTransform);
 
     Action<GuidTempData> m_onPointerEnter = null;
     Action<GuidTempData> m_onPointerLeave = null;
@@ -56,4 +56,5 @@ public class GuidElementUI : MonoBehaviour, IListElementUI
     {
         m_rectTransform = this.transform as RectTransform;
     }
+
 }
