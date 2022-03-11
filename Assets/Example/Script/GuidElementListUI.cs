@@ -8,7 +8,6 @@ public class GuidElementListUI : IListViewUI
     [SerializeField]
     private GuidElementUI m_itemPrefab;
 
-    private List<GuidElementUI> m_elementList = new List<GuidElementUI>();
     private List<GuidTempData> m_dataList = new List<GuidTempData>();
 
     public override IListElementUI this[int index]
@@ -25,10 +24,9 @@ public class GuidElementListUI : IListViewUI
     }
 
     public override int Count => m_elementList.Count;
-
     public IListElementUI ListElementPrefab => m_itemPrefab;
-
     public override IReadOnlyList<IListElementUI> ElementList => m_elementList;
+    public override Transform ElementContainer => m_scrollRectController.Content;
 
     public override IListElementUI Add()
     {
@@ -54,7 +52,7 @@ public class GuidElementListUI : IListViewUI
             return;
         }
 
-        GuidElementUI toRemove = m_elementList[index];
+        GuidElementUI toRemove = m_elementList[index] as GuidElementUI;
         m_elementList.RemoveAt(index);
         GameObject.Destroy(toRemove.gameObject);
     }
@@ -63,7 +61,7 @@ public class GuidElementListUI : IListViewUI
     {
         m_dataList.Clear();
         m_dataList.AddRange(dataList);
-        m_scrollRectController.Setup(this, dataList.Count);
+        // m_scrollRectController.Setup(this, dataList.Count);
     }
 
     private void TempSetup(GuidElementUI uiItem, GuidTempData data)
@@ -74,12 +72,15 @@ public class GuidElementListUI : IListViewUI
     void OnContentItemFinishDrawing()
     {
         int elementDataIndex = 0;
+        GuidElementUI guidElementUI = null;
         for (int i = 0; i < m_elementList.Count; i++)
         {
             elementDataIndex = m_elementList[i].ElementIndex;
             if (elementDataIndex < 0 || elementDataIndex >= m_dataList.Count)
                 continue;
-            m_elementList[i].Setup(m_dataList[elementDataIndex]);
+
+            guidElementUI = m_elementList[i] as GuidElementUI;
+            guidElementUI.Setup(m_dataList[elementDataIndex]);
         }
     }
 

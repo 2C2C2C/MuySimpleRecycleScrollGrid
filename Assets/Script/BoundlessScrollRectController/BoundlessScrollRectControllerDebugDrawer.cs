@@ -20,9 +20,6 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
     private void OnDrawGizmos()
     {
-        if (!Application.isPlaying)
-            return;
-
         if (m_enableDebugDraw) DebugDrawStyle();
     }
 

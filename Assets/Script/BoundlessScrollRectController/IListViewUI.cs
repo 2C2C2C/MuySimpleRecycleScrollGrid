@@ -13,4 +13,22 @@ public abstract class IListViewUI : MonoBehaviour
     public abstract int Count { get; }
     public abstract IListElementUI this[int index] { get; }
     public abstract IReadOnlyList<IListElementUI> ElementList { get; }
+    public abstract Transform ElementContainer { get; }
+
+    protected List<IListElementUI> m_elementList = new List<IListElementUI>(0);
+
+    public void InitGetExistElements()
+    {
+        Transform container = ElementContainer;
+        int childCount = container.childCount;
+        List<IListElementUI> elementList = new List<IListElementUI>(childCount);
+
+        IListElementUI elementUI = null;
+        for (int i = 0; i < childCount; i++)
+        {
+            elementUI = container.GetChild(childCount).GetComponent<IListElementUI>();
+            if (elementUI != null) elementList.Add(elementUI);
+        }
+        m_elementList = elementList;
+    }
 }

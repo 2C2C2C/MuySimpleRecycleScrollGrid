@@ -10,7 +10,8 @@ using UnityEngine.UI;
 /// solve data setup issue
 /// did some editor stuff (maybe I can directly use grid layout)
 /// </summary>
-[RequireComponent(typeof(ScrollRect))] // [,ExecuteAlways]
+[RequireComponent(typeof(ScrollRect))]
+[ExecuteAlways]
 public partial class BoundlessScrollRectController : UIBehaviour
 {
     [SerializeField]
@@ -43,7 +44,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
     private BoundlessGridLayoutData m_gridLayoutGroup = new BoundlessGridLayoutData();
 
     [SerializeField]
-    private IListViewUI m_listView;
+    private TempListView m_listView;
     [SerializeField, ReadOnly]
     /// <summary>
     /// value should >= 0
@@ -71,7 +72,7 @@ public partial class BoundlessScrollRectController : UIBehaviour
         OnScrollRectValueChanged(Vector2.zero);
     }
 
-    public void Setup(IListViewUI listView, int dataCount)
+    public void Setup(TempListView listView, int dataCount)
     {
         m_listView = listView;
         if (dataCount < 0)
@@ -421,7 +422,8 @@ public partial class BoundlessScrollRectController : UIBehaviour
     protected override void OnEnable()
     {
         UpdateConstraintWithAutoFit();
-        AdjustCachedItems();
+        if (Application.isPlaying)
+            AdjustCachedItems();
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
     }
 
@@ -440,34 +442,31 @@ public partial class BoundlessScrollRectController : UIBehaviour
 
 #if UNITY_EDITOR
 
+    [Header("editor time test")]
+    [SerializeField]
+    int m_editorTimeSimulateDataCount = 5;
     private void EditorUpdata()
     {
         // TODO @Hiko for editor loop
-        // if (Content.hasChanged)
-        // {
-        //     // check change?
-        //     int currentChildCount = Content.childCount;
-        //     if (Content.childCount <= m_viewItemCount)
-        //     {
-        //         // safe
-        //         Debug.Log("get notify wtf safe");
-        //         if (m_elementArray.Length != currentChildCount)
-        //         {
-        //             // re-adjust
-        //             UpdateConstraintWithAutoFit();
-        //             UpdateAcutalContentSizeRaw();
-        //             m_elementArray = Content.GetComponentsInChildren<IListElementUI>();
-        //             // AdjustCachedItems();
-        //             ApplySizeOnElements();
-        //             OnScrollRectValueChanged(Vector2.zero);
-        //         }
-        //         DrawContentItem();
-        //     }
-        //     else
-        //     {
-        //         // may need to remove or adjust
-        //     }
-        // }
+        if (Content.hasChanged)
+        {
+            Debug.Log("editor time tick");
+            m_simulatedDataCount = m_editorTimeSimulateDataCount;
+            OnScrollRectValueChanged(Vector2.zero);
+
+            // get current position by scrolbar
+            Scrollbar scrollerBar = m_scrollRect.verticalScrollbar;
+            float normalizedVerticalScrollValue = 0.0f;
+            if (scrollerBar != null)
+                normalizedVerticalScrollValue = scrollerBar.direction == Scrollbar.Direction.TopToBottom ? scrollerBar.value :
+                scrollerBar.direction == Scrollbar.Direction.BottomToTop ? 1.0f - scrollerBar.value : 0.0f;
+
+            float normalizedHorizontalScrollValue = 0.0f;
+            scrollerBar = m_scrollRect.horizontalScrollbar;
+            if (scrollerBar != null)
+                normalizedHorizontalScrollValue = scrollerBar.direction == Scrollbar.Direction.LeftToRight ? scrollerBar.value :
+                scrollerBar.direction == Scrollbar.Direction.RightToLeft ? 1.0f - scrollerBar.value : 0.0f;
+        }
     }
 
     protected override void OnValidate()
