@@ -151,4 +151,20 @@ public static class SomeUtils
         return result;
     }
 
+    /// <summary>
+    /// target component should inherit from ISetupable
+    /// </summary>
+    /// <param name="component"></param>
+    /// <param name="data"></param>
+    /// <typeparam name="TData"></typeparam>
+    public static void ISetup<TComponent, TData>(this Component component, TData data) where TComponent : Component
+    {
+        if (component is ISetupable<TData> target)
+        {
+            target.Setup(data);
+            return;
+        }
+        UnityEngine.Debug.LogError($"component_{component.name} is not a setupable");
+    }
+
 }

@@ -3,17 +3,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 [ExecuteAlways]
-public class GuidElementUI : MonoBehaviour, IElementSetup<GuidTempData>
+public class GuidElementUI : MonoBehaviour, ISetupable<GuidTempData>
 {
     [SerializeField]
     private UnityEngine.UI.Text m_dataText = null;
 
-    private int m_itemIndex;
     private RectTransform m_rectTransform;
 
     public GuidTempData Data { get; private set; } = null;
-
-    public int ElementIndex => m_itemIndex;
 
     public RectTransform ElementRectTransform => (m_rectTransform != null ? m_rectTransform : m_rectTransform = transform as RectTransform);
 
@@ -22,8 +19,8 @@ public class GuidElementUI : MonoBehaviour, IElementSetup<GuidTempData>
 
     public void Setup(GuidTempData data)
     {
-        m_dataText.text = $"no.\n{ElementIndex}";
         Data = data;
+        m_dataText.text = $"no.\n{Data.ItemName}";
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -44,12 +41,6 @@ public class GuidElementUI : MonoBehaviour, IElementSetup<GuidTempData>
     public void Hide()
     {
         this.gameObject.SetActive(false);
-    }
-
-    public void SetIndex(int index)
-    {
-        m_itemIndex = index;
-        // m_dataText.text = $"no.\n{ElementIndex}";
     }
 
     private void Awake()

@@ -17,15 +17,9 @@ public class GuidElementListUI : MonoBehaviour
         m_scrollRectController.Setup(m_elementListView, dataList.Count);
     }
 
-    private void TempSetup(GuidElementUI uiItem, GuidTempData data)
-    {
-        uiItem.Setup(data);
-    }
-
     void OnContentItemFinishDrawing()
     {
         int elementDataIndex = 0;
-        GuidElementUI guidElementUI = null;
         for (int i = 0; i < m_elementListView.Count; i++)
         {
             elementDataIndex = m_elementListView[i].ElementIndex;
@@ -33,8 +27,7 @@ public class GuidElementListUI : MonoBehaviour
                 continue;
 
             // TODO @Hiko setup data
-            // guidElementUI = m_elementListView[i] as GuidElementUI;
-            // guidElementUI.Setup(m_dataList[elementDataIndex]);
+            m_elementListView[i].Setup<GuidTempData>(m_dataList[elementDataIndex]);
         }
     }
 

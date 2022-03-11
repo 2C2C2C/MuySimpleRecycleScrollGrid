@@ -105,6 +105,7 @@ public class TempListView : MonoBehaviour
 
     protected virtual void InternalRemove(TempListElementUI element)
     {
+        if (element == null) return;
         element.Hide();
         if (Application.isEditor && !Application.isPlaying)
             GameObject.DestroyImmediate(element.ElementRectTransform.gameObject);
@@ -210,9 +211,8 @@ public class TempListView : MonoBehaviour
             Debug.LogError("listview is missing element prefab");
             return;
         }
-        RectTransform spawnObject = (RectTransform)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefab, Container);
-        if (spawnObject.TryGetComponent<TempListElementUI>(out TempListElementUI element))
-            m_actualUsedComponents.Add(element);
+        TempListElementUI spawnObject = (TempListElementUI)UnityEditor.PrefabUtility.InstantiatePrefab(m_elementPrefab, Container);
+        m_actualUsedComponents.Add(spawnObject);
     }
 
     [ContextMenu("editor time clear")]

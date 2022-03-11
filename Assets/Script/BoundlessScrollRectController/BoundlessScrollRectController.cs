@@ -302,6 +302,10 @@ public partial class BoundlessScrollRectController : UIBehaviour
                 Vector2Int elementIndex = new Vector2Int(rowIndex + rowTopLeftItemIndex.y, columnIndex + rowTopLeftItemIndex.x);
                 dataIndex = CaculateDataIndex(elementIndex, contentRowColumnSize, GridLayoutData.startAxis, GridLayoutData.startCorner);
                 itemTopLeftPosition = rowTopLeftPosition + Vector3.right * (rowIndex + rowTopLeftItemIndex.y) * (itemSize.x + spacing.x);
+
+                // TODO @Hiko avoid overdraw
+                if (uiItemIndex > 0 && elementList[uiItemIndex - 1].ElementIndex == dataIndex)
+                    continue; // over draw case
                 if (dataIndex > -1 && dataIndex < dataCount)
                 {
                     elementList[uiItemIndex].ElementRectTransform.localPosition = itemTopLeftPosition;
@@ -422,7 +426,6 @@ public partial class BoundlessScrollRectController : UIBehaviour
     protected override void OnEnable()
     {
         UpdateConstraintWithAutoFit();
-        AdjustCachedItems();
         m_scrollRect.onValueChanged.AddListener(OnScrollRectValueChanged);
     }
 

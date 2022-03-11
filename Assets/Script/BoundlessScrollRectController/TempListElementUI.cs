@@ -2,14 +2,28 @@
 
 public class TempListElementUI : MonoBehaviour
 {
-    // [SerializeField]
-    // IElementSetup<T> m_dataReceiver;
-    [Header("must have")]
+    [Header("must have"), Tooltip("should inherit from ISetupable")]
     [SerializeField]
+    Component m_dataReceiver;
+    [SerializeField, Tooltip("better to manual drag it in")]
     RectTransform m_elementTransform;
+    [SerializeField, ReadOnly]
     private int m_index = -1;
     public int ElementIndex => m_index;
-    public RectTransform ElementRectTransform => m_elementTransform;
+    public RectTransform ElementRectTransform
+    {
+        get
+        {
+            if (m_elementTransform == null)
+                m_elementTransform = GetComponent<RectTransform>();
+            return m_elementTransform;
+        }
+    }
+    
+    public void Setup<TData>(TData data)
+    {
+        SomeUtils.ISetup<Component, TData>(m_dataReceiver, data);
+    }
 
     public void Show()
     {
@@ -28,15 +42,16 @@ public class TempListElementUI : MonoBehaviour
         m_index = index;
     }
 
-    public void SetupData<TData>(TData data)
+    private void Awake()
     {
-        // if (m_dataReceiver == null && !this.TryGetComponent<IElementSetup>(out m_dataReceiver))
-        //     return;
-        // m_dataReceiver.Setup<TData>(data);
+        if (m_elementTransform == null)
+            m_elementTransform = this.transform as RectTransform;
     }
 
-    void OnEnable()
+#if UNITY_EDITOR
+    private void Reset()
     {
-        // m_dataReceiver = this.GetComponent<IElementSetup>();
+        m_elementTransform = this.transform as RectTransform;
     }
+#endif
 }
