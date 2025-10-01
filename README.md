@@ -1,4 +1,4 @@
-# MuyScrollRect
+# MuySimpleRecycleScrollGrid
 
 A simple boundless scrollrect.
 The parent canvas need to scale with resolution.
