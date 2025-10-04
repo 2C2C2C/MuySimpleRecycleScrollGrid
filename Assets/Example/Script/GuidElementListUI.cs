@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using RecycleScrollGrid;
 using UnityEngine;
 
 public class GuidElementListUI : MonoBehaviour
 {
     [SerializeField]
-    private BoundlessScrollRectController m_scrollRectController;
+    private RecycleScrollGridController m_scrollRectController;
     [SerializeField]
     private TempListView m_elementListView;
 
@@ -19,15 +20,20 @@ public class GuidElementListUI : MonoBehaviour
 
     void OnContentItemFinishDrawing()
     {
-        int elementDataIndex = 0;
+        int elementDataIndex;
         for (int i = 0; i < m_elementListView.Count; i++)
         {
             elementDataIndex = m_elementListView[i].ElementIndex;
             if (elementDataIndex < 0 || elementDataIndex >= m_dataList.Count)
+            {
                 continue;
+            }
 
             // TODO @Hiko setup data
-            m_elementListView[i].Setup<GuidTempData>(m_dataList[elementDataIndex]);
+            if (m_elementListView[i].NeedRefreshData)
+            {
+                m_elementListView[i].Setup<GuidTempData>(m_dataList[elementDataIndex]);
+            }
         }
     }
 
