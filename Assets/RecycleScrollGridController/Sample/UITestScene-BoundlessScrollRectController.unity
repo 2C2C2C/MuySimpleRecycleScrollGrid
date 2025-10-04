@@ -15933,11 +15933,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 691512489}
     m_Modifications:
-    - target: {fileID: 4279281952223755839, guid: d6f1b9b6a70add242987537f97fab023,
-        type: 3}
-      propertyPath: _gridLayoutData.constraintCount
-      value: 9
-      objectReference: {fileID: 0}
     - target: {fileID: 5438040486657257700, guid: d6f1b9b6a70add242987537f97fab023,
         type: 3}
       propertyPath: m_Name

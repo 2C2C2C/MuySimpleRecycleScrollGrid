@@ -28,24 +28,26 @@ namespace RecycleScrollGrid
             }
         }
 
-        public void Setup<TData>(TData data)
+        public void SetElementSize(Vector2 size)
         {
-            SomeUtils.ISetup<Component, TData>(_dataReceiver, data);
+            RectTransform rectTransform = ElementRectTransform;
+            // TODO Directly change sizeDelta is not safe
+            rectTransform.sizeDelta = size;
         }
 
         public void SetObjectActive()
         {
-            if (!this.gameObject.activeSelf)
+            if (!gameObject.activeSelf)
             {
-                this.gameObject.SetActive(true);
+                gameObject.SetActive(true);
             }
         }
 
         public void SetObjectDeactive()
         {
-            if (this.gameObject.activeSelf)
+            if (gameObject.activeSelf)
             {
-                this.gameObject.SetActive(false);
+                gameObject.SetActive(false);
             }
         }
 

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Tester : MonoBehaviour
+public class RecycleScrollGridControllerSample : MonoBehaviour
 {
     [Range(4, 800)]
     public int m_dataCount = 10;
@@ -29,6 +29,5 @@ public class Tester : MonoBehaviour
     private void Start()
     {
         SetupData();
-        this.enabled = false;
     }
 }

@@ -137,7 +137,8 @@ namespace RecycleScrollGrid
                 fontStyle = FontStyle.Bold,
             };
 
-            Matrix4x4 localToWorld = _content.localToWorldMatrix;
+            RectTransform content = _scrollRect.content;
+            Matrix4x4 localToWorld = content.localToWorldMatrix;
             int groupCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
             Vector2 groupStartPos = startLocalPosition;
             int gridDataIndex = 0;
