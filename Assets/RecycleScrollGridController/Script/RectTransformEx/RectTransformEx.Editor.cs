@@ -1,19 +1,21 @@
 #if UNITY_EDITOR
 using UnityEditor;
-using UnityEngine;
 
-public static partial class RectTransformEx
+namespace UnityEngine.UI.Extend
 {
-    [MenuItem("CONTEXT/RectTransform/Convert size to anchor")]
-    public static void ConvertSize2Anchor(MenuCommand command)
+    public static partial class RectTransformEx
     {
-        RectTransform self = command.context as RectTransform;
-        if (self == null || self.parent == null)
+        [MenuItem("CONTEXT/RectTransform/Convert size to anchor")]
+        public static void ConvertSize2Anchor(MenuCommand command)
         {
-            return;
+            RectTransform self = command.context as RectTransform;
+            if (self == null || self.parent == null)
+            {
+                return;
+            }
+            Undo.RecordObject(self, "Set Anchors");
+            ConvertToAnchorMode(self);
         }
-        Undo.RecordObject(self, "Set Anchors");
-        ConvertToAnchorMode(self);
     }
 }
 #endif
