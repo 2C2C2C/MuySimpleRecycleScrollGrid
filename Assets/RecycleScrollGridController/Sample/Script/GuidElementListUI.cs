@@ -10,6 +10,7 @@ public class GuidElementListUI : MonoBehaviour, IListView
     private RectTransform _elementPrefab;
 
     private List<GuidTempData> m_dataList = new List<GuidTempData>();
+    private Dictionary<RectTransform, GuidElementUI> m_viewElementMap = new Dictionary<RectTransform, GuidElementUI>();
 
     public int DataElementCount => m_dataList.Count;
 
@@ -20,57 +21,44 @@ public class GuidElementListUI : MonoBehaviour, IListView
         _scrollRectController.Init(this);
     }
 
-    private void OnContentItemFinishDrawing()
-    {
-        // int elementDataIndex;
-        // for (int i = 0; i < m_elementListView.Count; i++)
-        // {
-        //     elementDataIndex = m_elementListView[i].ElementIndex;
-        //     if (elementDataIndex < 0 || elementDataIndex >= m_dataList.Count)
-        //     {
-        //         continue;
-        //     }
-
-        //     // TODO @Hiko setup data
-        //     if (m_elementListView[i].NeedRefreshData)
-        //     {
-        //         // m_elementListView[i].Setup<GuidTempData>(m_dataList[elementDataIndex]);
-        //     }
-        // }
-    }
-
-    private void OnEnable()
-    {
-        _scrollRectController.OnGridLayoutEnd += OnContentItemFinishDrawing;
-    }
-
-    private void OnDisable()
-    {
-        _scrollRectController.OnGridLayoutEnd -= OnContentItemFinishDrawing;
-    }
-
-
     public RectTransform AddElement(RectTransform parent)
     {
         RectTransform element = RectTransform.Instantiate(_elementPrefab, parent);
+        if (element.TryGetComponent<GuidElementUI>(out GuidElementUI viewElement))
+        {
+            m_viewElementMap.Add(element, viewElement);
+        }
         return element;
     }
 
     public void RemoveElement(RectTransform element)
     {
+        m_viewElementMap.Remove(element);
         GameObject.Destroy(element.gameObject);
         element = null;
     }
 
     public void InitElement(RectTransform element, int index)
     {
+        if (m_viewElementMap.TryGetValue(element, out GuidElementUI viewElement))
+        {
+            viewElement.Setup(m_dataList[index]);
+        }
     }
 
     public void UnInitElement(RectTransform element)
     {
+        if (m_viewElementMap.TryGetValue(element, out GuidElementUI viewElement))
+        {
+            viewElement.Clear();
+        }
     }
 
-    public void OnElementIndexChanged(RectTransform elementTransform, int prevIndex, int nextIndex)
+    public void OnElementIndexChanged(RectTransform element, int prevIndex, int nextIndex)
     {
+        if (m_viewElementMap.TryGetValue(element, out GuidElementUI viewElement))
+        {
+            viewElement.Setup(m_dataList[nextIndex]);
+        }
     }
 }

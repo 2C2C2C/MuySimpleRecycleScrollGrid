@@ -174,6 +174,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 899.99994, z: 0}
   m_localPosition: {x: 0, y: 0, z: 0}
   m_anhorPosition: {x: 0, y: 0, z: 0}
@@ -560,6 +561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 387.99994, z: 0}
   m_localPosition: {x: 208, y: -512, z: 0}
   m_anhorPosition: {x: 208, y: -512, z: 0}
@@ -651,6 +653,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 899.99994, z: 0}
   m_localPosition: {x: 208, y: 0, z: 0}
   m_anhorPosition: {x: 208, y: 0, z: 0}
@@ -992,6 +995,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 515.99994, z: 0}
   m_localPosition: {x: 0, y: -384, z: 0}
   m_anhorPosition: {x: 0, y: -384, z: 0}
@@ -1166,6 +1170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 643.99994, z: 0}
   m_localPosition: {x: 208, y: -256, z: 0}
   m_anhorPosition: {x: 208, y: -256, z: 0}
@@ -1257,6 +1262,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 387.99994, z: 0}
   m_localPosition: {x: 0, y: -512, z: 0}
   m_anhorPosition: {x: 0, y: -512, z: 0}
@@ -1473,6 +1479,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 515.99994, z: 0}
   m_localPosition: {x: 208, y: -384, z: 0}
   m_anhorPosition: {x: 208, y: -384, z: 0}
@@ -1564,6 +1571,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 131.99994, z: 0}
   m_localPosition: {x: 0, y: -768, z: 0}
   m_anhorPosition: {x: 0, y: -768, z: 0}
@@ -2094,6 +2102,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 771.99994, z: 0}
   m_localPosition: {x: 208, y: -128, z: 0}
   m_anhorPosition: {x: 208, y: -128, z: 0}
@@ -2316,6 +2325,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 259.99994, z: 0}
   m_localPosition: {x: 208, y: -640, z: 0}
   m_anhorPosition: {x: 208, y: -640, z: 0}
@@ -2407,6 +2417,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 528, y: 131.99994, z: 0}
   m_localPosition: {x: 208, y: -768, z: 0}
   m_anhorPosition: {x: 208, y: -768, z: 0}
@@ -2623,6 +2634,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 259.99994, z: 0}
   m_localPosition: {x: 416, y: -640, z: 0}
   m_anhorPosition: {x: 416, y: -640, z: 0}
@@ -2714,6 +2726,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 643.99994, z: 0}
   m_localPosition: {x: 416, y: -256, z: 0}
   m_anhorPosition: {x: 416, y: -256, z: 0}
@@ -3362,6 +3375,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 771.99994, z: 0}
   m_localPosition: {x: 416, y: -128, z: 0}
   m_anhorPosition: {x: 416, y: -128, z: 0}
@@ -3453,6 +3467,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 387.99994, z: 0}
   m_localPosition: {x: 416, y: -512, z: 0}
   m_anhorPosition: {x: 416, y: -512, z: 0}
@@ -3636,6 +3651,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 131.99994, z: 0}
   m_localPosition: {x: 416, y: -768, z: 0}
   m_anhorPosition: {x: 416, y: -768, z: 0}
@@ -3852,6 +3868,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 899.99994, z: 0}
   m_localPosition: {x: 416, y: 0, z: 0}
   m_anhorPosition: {x: 416, y: 0, z: 0}
@@ -3943,6 +3960,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 643.99994, z: 0}
   m_localPosition: {x: 0, y: -256, z: 0}
   m_anhorPosition: {x: 0, y: -256, z: 0}
@@ -4034,6 +4052,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 736, y: 515.99994, z: 0}
   m_localPosition: {x: 416, y: -384, z: 0}
   m_anhorPosition: {x: 416, y: -384, z: 0}
@@ -4200,6 +4219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 259.99994, z: 0}
   m_localPosition: {x: 0, y: -640, z: 0}
   m_anhorPosition: {x: 0, y: -640, z: 0}
@@ -4416,6 +4436,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 3.999939, z: 0}
   m_localPosition: {x: 0, y: -896, z: 0}
   m_anhorPosition: {x: 0, y: -896, z: 0}
@@ -4507,6 +4528,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 771.99994, z: 0}
   m_localPosition: {x: 0, y: -128, z: 0}
   m_anhorPosition: {x: 0, y: -128, z: 0}
@@ -7553,6 +7575,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c04f6f00267ecb34db3c578a303c3b0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_selfRectTransfrom: {fileID: 0}
   m_worldPosition: {x: 320, y: 899.99994, z: 0}
   m_localPosition: {x: -640, y: 359.99994, z: 0}
   m_anhorPosition: {x: 0, y: -0.000061035156, z: 0}

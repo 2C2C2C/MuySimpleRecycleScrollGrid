@@ -15,8 +15,6 @@ namespace RecycleScrollGrid
         public bool _drawContentSize = true;
         public bool _drawGrids = true;
 
-        public int SimulatedDataCount => m_simulatedDataCount;
-
         private void OnDrawGizmos()
         {
             if (_enableDebugDraw)
@@ -79,14 +77,6 @@ namespace RecycleScrollGrid
             }
 
             ScrollGridLayoutData gridLayoutData = _gridLayoutData;
-            // should know which axis get constrained
-            int constraintCount = gridLayoutData.constraintCount;
-            if (0 >= constraintCount)
-            {
-                Debug.LogError("Constraint count is zero or negative, please check the GridLayoutGroup component", gameObject);
-                return;
-            }
-
             RectTransform scrollContent = _scrollRect.content;
             Vector2 rawSize = CalculateContentSize(dataCount);
             Vector2 contentPivot = scrollContent.pivot;
@@ -142,6 +132,7 @@ namespace RecycleScrollGrid
 
             RectTransform content = _scrollRect.content;
             Matrix4x4 localToWorld = content.localToWorldMatrix;
+            int constraintCount = _gridLayoutData.constraintCount;
             int groupCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
             Vector2 groupStartPos = startLocalPosition;
             int gridDataIndex = 0;

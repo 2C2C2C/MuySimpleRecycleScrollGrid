@@ -824,11 +824,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d4d94fc59acfad4f9a9988e3dc789cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _enableDebugDraw: 1
+  _drawContentSize: 1
+  _drawGrids: 1
   _scrollRect: {fileID: 5438040487593130230}
   _gridContainer: {fileID: 5438040486668900134}
   _fallbackElementPrefab: {fileID: 6846283655454729985, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
     type: 3}
-  _drawActualUIGridElements: 0
+  _drawActualUIGridElements: 1
   _gridLayoutData:
     startAxis: 0
     startCorner: 3
@@ -845,9 +848,6 @@ MonoBehaviour:
   m_simulatedDataCount: 128
   m_editorTimeSimulateDataCount: 192
   m_showEditorPreview: 0
-  _enableDebugDraw: 1
-  _drawContentSize: 1
-  _drawGrids: 1
 --- !u!114 &1720394423
 MonoBehaviour:
   m_ObjectHideFlags: 0

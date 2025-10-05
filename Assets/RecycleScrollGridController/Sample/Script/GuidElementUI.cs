@@ -23,6 +23,12 @@ public class GuidElementUI : MonoBehaviour
         m_dataText.text = $"no.\n{Data.ItemName}";
     }
 
+    public void Clear()
+    {
+        Data = null;
+        m_dataText.text = $"EMPTY";
+    }
+
     public void OnPointerEnter(PointerEventData eventData)
     {
         m_onPointerEnter?.Invoke(Data);
@@ -31,16 +37,6 @@ public class GuidElementUI : MonoBehaviour
     public void OnPointerExit(PointerEventData eventData)
     {
         m_onPointerLeave?.Invoke(Data);
-    }
-
-    public void Show()
-    {
-        this.gameObject.SetActive(true);
-    }
-
-    public void Hide()
-    {
-        this.gameObject.SetActive(false);
     }
 
     private void Awake()
