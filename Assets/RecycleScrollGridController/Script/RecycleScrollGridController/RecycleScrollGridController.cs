@@ -202,20 +202,13 @@ namespace RecycleScrollGrid
 
         private void OnScrollRectValueChanged(Vector2 position)
         {
-#if UNITY_EDITOR
             IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
             if (_drawActualUIGridElements)
             {
-                if (m_listView == null)
-                {
-                    Debug.LogWarning("there is no listview setup");
-                    return;
-                }
-                else if (elementList.Count != m_viewElementCount)
+                if (elementList.Count != m_viewElementCount)
                 {
                     AdjustCachedItems();
                 }
-                // UpdateGrids();
                 UpdateGridPosition();
             }
             else
@@ -226,9 +219,6 @@ namespace RecycleScrollGrid
                     elementList[i].SetObjectDeactive();
                 }
             }
-#else
-            UpdateGridPosition();
-#endif
         }
 
         private void UpdateGridPosition()
