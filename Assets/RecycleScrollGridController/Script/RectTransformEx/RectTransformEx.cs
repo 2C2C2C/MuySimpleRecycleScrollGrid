@@ -148,6 +148,7 @@ namespace UnityEngine.UI.Extend
             Vector3 boundCenter = bounds.center;
             Vector3 extend = bounds.extents;
 
+            // We can get List from listpool in higher version of Unity
             List<Vector3> pointList = new List<Vector3>();
             // Get points from 6 directions
             pointList.Add(boundCenter + new Vector3(extend.x, 0, 0));
