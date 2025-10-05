@@ -385,7 +385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ead822277e5fd04799aa1b7f72c9790, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_dataCount: 192
+  m_dataCount: 255
   m_gridListUI: {fileID: 1720394423}
   m_dataNames: []
 --- !u!1 &5438040486668900135
@@ -795,7 +795,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 5438040486668900134}
-  m_Horizontal: 0
+  m_Horizontal: 1
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -834,9 +834,9 @@ MonoBehaviour:
   _drawActualUIGridElements: 1
   _gridLayoutData:
     startAxis: 0
-    startCorner: 3
+    startCorner: 0
     constraint: 0
-    constraintCount: 7
+    constraintCount: 12
     gridSize: {x: 120, y: 120}
     Spacing: {x: 8, y: 8}
     scrollStopVelocityMagSqr: 50
@@ -846,8 +846,6 @@ MonoBehaviour:
       m_Top: 4
       m_Bottom: 4
   m_simulatedDataCount: 128
-  m_editorTimeSimulateDataCount: 192
-  m_showEditorPreview: 0
 --- !u!114 &1720394423
 MonoBehaviour:
   m_ObjectHideFlags: 0

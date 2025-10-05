@@ -151,7 +151,7 @@ namespace RecycleScrollGrid
                     Rect gridRect = new Rect(rectMinPoint, gridSize);
                     bool isInterestedWithViewport = viewportRect.Overlaps(gridRect);
 
-                    bool isOutOfDataCount = gridDataIndex > dataCount;
+                    bool isOutOfDataCount = gridDataIndex >= dataCount;
                     Color gizmoColor = isOutOfDataCount ? Color.yellow * 0.5f : (isInterestedWithViewport ? Color.green : 0.75f * Color.green);
                     gridIndexLableStyle.normal.textColor = gizmoColor;
                     DrawGridGizmo(gridStartPos, gridSize, localToWorld, gizmoColor);

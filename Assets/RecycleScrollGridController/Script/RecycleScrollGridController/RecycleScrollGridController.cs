@@ -140,7 +140,7 @@ namespace RecycleScrollGrid
 
         public void RefreshLayoutChanges()
         {
-            UpdateConstraintWithAutoFit();
+            //UpdateConstraintWithAutoFit();
             ApplySizeToScrollContent();
             AdjustCachedItems();
             ApplySizeOnElements();
@@ -564,7 +564,7 @@ namespace RecycleScrollGrid
 
         protected override void OnEnable()
         {
-            UpdateConstraintWithAutoFit();
+            //UpdateConstraintWithAutoFit();
             if (null == m_onScrollRectValueChanged)
             {
                 m_onScrollRectValueChanged = new UnityAction<Vector2>(OnScrollRectValueChanged);
@@ -580,15 +580,9 @@ namespace RecycleScrollGrid
             }
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             ClampVelocityToToStop();
-#if UNITY_EDITOR
-            if (Application.isEditor && !Application.isPlaying)
-            {
-                EditorUpdata();
-            }
-#endif
         }
 
         protected override void OnDestroy()
@@ -599,49 +593,6 @@ namespace RecycleScrollGrid
                 m_gridElements.Clear();
             }
         }
-
-#if UNITY_EDITOR
-
-        [Header("editor time test")]
-        [SerializeField]
-        int m_editorTimeSimulateDataCount = 5;
-        [SerializeField]
-        bool m_showEditorPreview = false;
-        private void EditorUpdata()
-        {
-            if (m_showEditorPreview)
-            {
-                // m_simulatedDataCount = m_editorTimeSimulateDataCount;
-                OnScrollRectValueChanged(Vector2.zero);
-                m_showEditorPreview = false;
-            }
-            return;
-
-            //// TODO @Hiko for editor loop
-            //if (Content.hasChanged)
-            //{
-            //    // Debug.Log("editor time tick");
-            //    m_simulatedDataCount = m_editorTimeSimulateDataCount;
-            //    OnScrollRectValueChanged(Vector2.zero);
-
-            //    // get current position by scrolbar
-            //    Scrollbar scrollerBar = m_scrollRect.verticalScrollbar;
-            //    float normalizedVerticalScrollValue = 0.0f;
-            //    if (scrollerBar != null)
-            //        normalizedVerticalScrollValue = scrollerBar.direction == Scrollbar.Direction.TopToBottom ? scrollerBar.value :
-            //        scrollerBar.direction == Scrollbar.Direction.BottomToTop ? 1.0f - scrollerBar.value : 0.0f;
-
-            //    float normalizedHorizontalScrollValue = 0.0f;
-            //    scrollerBar = m_scrollRect.horizontalScrollbar;
-            //    if (scrollerBar != null)
-            //        normalizedHorizontalScrollValue = scrollerBar.direction == Scrollbar.Direction.LeftToRight ? scrollerBar.value :
-            //        scrollerBar.direction == Scrollbar.Direction.RightToLeft ? 1.0f - scrollerBar.value : 0.0f;
-
-            //    // from top left
-            //}
-        }
-
-#endif
 
         #endregion
     }
