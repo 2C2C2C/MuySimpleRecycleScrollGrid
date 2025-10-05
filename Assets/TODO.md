@@ -1,1 +1,0 @@
-// Convert a RectTransform's pivot point and size to screen space?
