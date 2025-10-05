@@ -25,7 +25,7 @@ namespace RecycleScrollGrid
         [Space, Header("Grid Layout Setting"), SerializeField]
         private ScrollGridLayoutData _gridLayoutData = new ScrollGridLayoutData();
 
-        [SerializeField, ReadOnly]
+        [SerializeField] // This value should be NonSerialized but better to show it in inspector
         /// <summary> The value should greater than 0 </summary>
         private int m_simulatedDataCount = 0;
 
@@ -216,7 +216,8 @@ namespace RecycleScrollGrid
                 content.pivot = Vector2.up;
             }
             Vector3 dragContentAnchorPostion = content.anchoredPosition;
-            Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(content, SomeUtils.UIOffsetType.TopLeft);
+            // Vector3 contentMove = dragContentAnchorPostion - SomeUtils.GetOffsetLocalPosition(content, SomeUtils.UIOffsetType.TopLeft);
+            Vector3 contentMove = default;
             Vector2 itemSize = _gridLayoutData.gridSize, spacing = _gridLayoutData.Spacing;
 
             RectOffset padding = null;

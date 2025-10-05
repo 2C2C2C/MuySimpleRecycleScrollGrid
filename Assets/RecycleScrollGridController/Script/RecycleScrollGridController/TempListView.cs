@@ -12,10 +12,10 @@ namespace RecycleScrollGrid
         // check when prefab change
         // [OnValueChanged("OnPrefabChanged")]
         [SerializeField, Header("place holder, the listview should only contains one type of element")]
-        RecycleScrollGridElement _elementPrefab;
+        private RecycleScrollGridElement _elementPrefab;
 
-        [SerializeField, ReadOnly]
-        List<RecycleScrollGridElement> _actualUsedComponents = new List<RecycleScrollGridElement>(0);
+        [SerializeField]
+        private List<RecycleScrollGridElement> _actualUsedComponents = new List<RecycleScrollGridElement>(0);
 
         RectTransform Container => transform as RectTransform;
         public int Count => _actualUsedComponents.Count;

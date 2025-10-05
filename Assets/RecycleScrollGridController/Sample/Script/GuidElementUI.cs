@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 [ExecuteAlways]
-public class GuidElementUI : MonoBehaviour, ISetupable<GuidTempData>
+public class GuidElementUI : MonoBehaviour
 {
     [SerializeField]
     private UnityEngine.UI.Text m_dataText = null;

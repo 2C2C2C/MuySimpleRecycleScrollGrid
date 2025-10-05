@@ -10,8 +10,8 @@ namespace RecycleScrollGrid
         [SerializeField, Tooltip("better to manual drag it in")]
         RectTransform _elementTransform;
 
-        [SerializeField, ReadOnly]
-        private int m_index = -1;
+        [SerializeField] 
+        private int m_index = -1; // This value should be NonSerialized but better to show it in inspector
 
         public int ElementIndex => m_index;
         public bool NeedRefreshData { get; private set; } = false;
