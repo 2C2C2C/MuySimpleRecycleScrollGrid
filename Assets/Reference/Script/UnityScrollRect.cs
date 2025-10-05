@@ -983,8 +983,8 @@ namespace UnityEngine.UI
         {
             if (Application.isPlaying)
             {
-                DebugDrawer.DrawBounds(m_ViewBounds, Color.yellow);
-                DebugDrawer.DrawBounds(m_ContentBounds, Color.red);
+                // DebugDrawer.DrawBounds(m_ViewBounds, Color.yellow);
+                // DebugDrawer.DrawBounds(m_ContentBounds, Color.red);
             }
         }
 
