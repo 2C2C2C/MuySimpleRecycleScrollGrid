@@ -137,6 +137,9 @@ namespace RecycleScrollGrid
                 fontStyle = FontStyle.Bold,
             };
 
+            Rect viewportRect = _scrollRect.viewport.rect;
+            Matrix4x4 worldToViewportLocal = _scrollRect.viewport.worldToLocalMatrix;
+
             RectTransform content = _scrollRect.content;
             Matrix4x4 localToWorld = content.localToWorldMatrix;
             int groupCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
@@ -151,8 +154,13 @@ namespace RecycleScrollGrid
                     Vector2 gridStartPos = gridGroupStartPos + (j * new Vector2(girdMoveDirection.x * gridSpacing.x, girdMoveDirection.y * gridSpacing.y));
                     gridStartPos += j * new Vector2(girdMoveDirection.x * gridSize.x, girdMoveDirection.y * gridSize.y);
 
+                    // HACK Have to covert the rect to viewport's local space
+                    Vector2 rectMinPoint = worldToViewportLocal.MultiplyPoint(localToWorld.MultiplyPoint(gridStartPos));
+                    Rect gridRect = new Rect(rectMinPoint, gridSize);
+                    bool isInterestedWithViewport = viewportRect.Overlaps(gridRect);
+
                     bool isOutOfDataCount = gridDataIndex > dataCount;
-                    Color gizmoColor = isOutOfDataCount ? Color.yellow * 0.5f : Color.green;
+                    Color gizmoColor = isOutOfDataCount ? Color.yellow * 0.5f : (isInterestedWithViewport ? Color.green : 0.75f * Color.green);
                     gridIndexLableStyle.normal.textColor = gizmoColor;
                     DrawGridGizmo(gridStartPos, gridSize, localToWorld, gizmoColor);
                     DrawGridIndexHandle(gridStartPos, gridSize, gridDataIndex, localToWorld, gridIndexLableStyle);

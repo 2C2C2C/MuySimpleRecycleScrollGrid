@@ -41,12 +41,12 @@ public class GuidElementListUI : MonoBehaviour, IListView
 
     private void OnEnable()
     {
-        _scrollRectController.OnContentItemFinishDrawing += OnContentItemFinishDrawing;
+        _scrollRectController.OnGridLayoutEnd += OnContentItemFinishDrawing;
     }
 
     private void OnDisable()
     {
-        _scrollRectController.OnContentItemFinishDrawing -= OnContentItemFinishDrawing;
+        _scrollRectController.OnGridLayoutEnd -= OnContentItemFinishDrawing;
     }
 
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -11,6 +12,40 @@ namespace RecycleScrollGrid
     [RequireComponent(typeof(ScrollRect))]
     public partial class RecycleScrollGridController : UIBehaviour
     {
+        private static Comparison<RecycleScrollGridElement> s_gridElementCompare;
+
+        public static Comparison<RecycleScrollGridElement> GridElementCompare
+        {
+            get
+            {
+                if (null == s_gridElementCompare)
+                {
+                    s_gridElementCompare = new Comparison<RecycleScrollGridElement>((x, y) =>
+                    {
+                        int xIndex = x.ElementIndex, yIndex = y.ElementIndex;
+                        if (xIndex == yIndex)
+                        {
+                            return 0;
+                        }
+
+                        // Minus value need to be on the back
+                        if (0 > xIndex && 0 <= yIndex)
+                        {
+                            return 1;
+                        }
+                        else if (0 <= xIndex && 0 > yIndex)
+                        {
+                            return -1;
+                        }
+
+                        return xIndex.CompareTo(yIndex);
+                    });
+                }
+                return s_gridElementCompare;
+            }
+        }
+
+
         [SerializeField]
         private ScrollRect _scrollRect = null;
         [SerializeField]
@@ -42,7 +77,7 @@ namespace RecycleScrollGrid
 
         private UnityAction<Vector2> m_onScrollRectValueChanged;
 
-        public event Action OnContentItemFinishDrawing;
+        public event Action OnGridLayoutEnd;
         public event Action BeforedGridElementsListResized;
         public event Action AfterGridElementListResized;
 
@@ -114,11 +149,6 @@ namespace RecycleScrollGrid
             OnScrollRectValueChanged(Vector2.zero);
         }
 
-        private void NotifyOnGridLayoutEndFinishDrawing()
-        {
-            OnContentItemFinishDrawing?.Invoke();
-        }
-
         [ContextMenu("Adjust Cached Items")]
         private int CalculateCurrentViewportShowCount()
         {
@@ -186,7 +216,7 @@ namespace RecycleScrollGrid
                 }
                 else if (elementList.Count != m_viewElementCount)
                     AdjustCachedItems();
-                DrawContentItem();
+                UpdateGrids();
             }
             else
             {
@@ -201,9 +231,8 @@ namespace RecycleScrollGrid
 #endif
         }
 
-        private void DrawContentItem()
+        private void UpdateGrids()
         {
-            return;
             RectTransform content = _scrollRect.content;
             IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
             int dataCount = m_simulatedDataCount;
@@ -523,21 +552,40 @@ namespace RecycleScrollGrid
 
         private void RemoveElements(int count)
         {
+            // Make sure non-used elements on the back
+            m_gridElements.Sort(GridElementCompare);
+            int elementCount = m_gridElements.Count;
             // Try remove non-used elements first
             if (null == m_listView)
             {
                 for (int i = 0; i < count; i++)
                 {
-                    // m_gridElements
+                    int elementIndex = elementCount - i - 1;
+                    GameObject.Destroy(m_gridElements[elementIndex].gameObject);
                 }
             }
             else
             {
-                // RecycleScrollGridElement element
-                // RectTransform target = element.ElementRectTransform;
-                // m_listView.UninitElement(target);
-                // m_listView.RemoveElement(target);
+                for (int i = 0; i < count; i++)
+                {
+                    int elementIndex = elementCount - i - 1;
+                    m_listView.RemoveElement(m_gridElements[elementIndex].ElementRectTransform);
+                }
             }
+
+            if (count == elementCount)
+            {
+                m_gridElements.Clear();
+            }
+            else
+            {
+                m_gridElements.RemoveRange(elementCount - count, count);
+            }
+        }
+
+        private void NotifyOnGridLayoutEndFinishDrawing()
+        {
+            OnGridLayoutEnd?.Invoke();
         }
 
         #region mono method
