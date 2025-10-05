@@ -581,6 +581,15 @@ namespace RecycleScrollGrid
 #endif
         }
 
+        protected override void OnDestroy()
+        {
+            if (0 < m_gridElements.Count)
+            {
+                RemoveElements(m_gridElements.Count);
+                m_gridElements.Clear();
+            }
+        }
+
 #if UNITY_EDITOR
 
         [Header("editor time test")]
