@@ -18,6 +18,8 @@ public class GuidElementListUI : MonoBehaviour, IListView
     {
         m_dataList.Clear();
         m_dataList.AddRange(dataList);
+        // TODO Find a better way to notify data change
+        _scrollRectController.Uninit();
         _scrollRectController.Init(this);
     }
 
