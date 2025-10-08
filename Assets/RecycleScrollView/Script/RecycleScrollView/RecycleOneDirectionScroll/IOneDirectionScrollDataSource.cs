@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace RecycleScrollView
 {
-    public interface ISingleDirectionListView
+    public interface IOneDirectionScrollDataSource
     {
         int DataElementCount { get; }
 

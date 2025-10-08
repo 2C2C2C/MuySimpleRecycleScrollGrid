@@ -7,7 +7,7 @@ using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
-    public partial class RecycleScrollGridController : UIBehaviour
+    public partial class RecycleScrollGrid : UIBehaviour
     {
         private const int INDEX_LABEL_FONT_SIZE = 16;
 

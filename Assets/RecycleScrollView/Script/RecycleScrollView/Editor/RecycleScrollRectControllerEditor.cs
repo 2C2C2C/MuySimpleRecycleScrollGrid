@@ -2,14 +2,14 @@
 
 namespace RecycleScrollView
 {
-    [CustomEditor(typeof(RecycleScrollGridController))]
+    [CustomEditor(typeof(RecycleScrollGrid))]
     public class RecycleScrollGridControllerEditor : Editor
     {
-        private RecycleScrollGridController m_target;
+        private RecycleScrollGrid m_target;
 
         public override void OnInspectorGUI()
         {
-            m_target = target as RecycleScrollGridController;
+            m_target = target as RecycleScrollGrid;
 
             if (EditorApplication.isPlaying)
             {
@@ -18,7 +18,7 @@ namespace RecycleScrollView
                 bool hasChanged = EditorGUI.EndChangeCheck();
                 if (hasChanged)
                 {
-                    RecycleScrollGridController controller = target as RecycleScrollGridController;
+                    RecycleScrollGrid controller = target as RecycleScrollGrid;
                     controller.RefreshLayoutChanges();
                 }
             }

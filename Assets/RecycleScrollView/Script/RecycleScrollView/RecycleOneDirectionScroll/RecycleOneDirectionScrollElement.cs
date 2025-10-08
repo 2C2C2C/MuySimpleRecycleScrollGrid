@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace RecycleScrollView
 {
     [RequireComponent(typeof(LayoutElement))]
-    public class RecycleSingleDirectionScrollElement : MonoBehaviour
+    public class RecycleOneDirectionScrollElement : MonoBehaviour
     {
         [SerializeField]
         private LayoutElement _layoutElement;

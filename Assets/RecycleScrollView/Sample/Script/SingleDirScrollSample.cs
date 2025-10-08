@@ -5,10 +5,10 @@ using UnityRandom = UnityEngine.Random;
 
 namespace RecycleScrollView.Sample
 {
-    public class SingleDirScrollSample : MonoBehaviour, ISingleDirectionListView
+    public class SingleDirScrollSample : MonoBehaviour, IOneDirectionScrollDataSource
     {
         [SerializeField]
-        private RecycleSingleDirectionScrollController _scrollController;
+        private RecycleOneDirectionScroll _scrollController;
         [SerializeField]
         private RectTransform _elementPrefab;
         [SerializeField]

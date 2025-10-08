@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -11,7 +10,7 @@ namespace RecycleScrollView
 {
     [ExecuteAlways]
     [RequireComponent(typeof(ScrollRect))]
-    public partial class RecycleScrollGridController : UIBehaviour
+    public partial class RecycleScrollGrid : UIBehaviour
     {
         private static Comparison<RecycleScrollGridElement> s_gridElementCompare;
 
@@ -67,11 +66,10 @@ namespace RecycleScrollView
         // The actual element count may show in the viewport
         // </summary>
         private int m_viewElementCount = -1;
-
         private int m_viewElementCountInRow = 0;
         private int m_viewElementCountInColumn = 0;
 
-        private IGridListView m_listView = null;
+        private IScrollGridDataSource m_listView = null;
         private List<RecycleScrollGridElement> m_gridElements;
 
         private UnityAction<Vector2> m_onScrollRectValueChanged;
@@ -86,7 +84,7 @@ namespace RecycleScrollView
         public ScrollGridLayoutData GridLayoutData => _gridLayoutData;
         public int SimulatedDataCount => m_simulatedDataCount;
 
-        public void Init(IGridListView listView)
+        public void Init(IScrollGridDataSource listView)
         {
             if (null == m_listView)
             {
@@ -140,6 +138,7 @@ namespace RecycleScrollView
 
         public void RefreshLayoutChanges()
         {
+            // TODO
             //UpdateConstraintWithAutoFit();
             ApplySizeToScrollContent();
             AdjustCachedItems();
@@ -219,6 +218,8 @@ namespace RecycleScrollView
                     elementList[i].SetObjectDeactive();
                 }
             }
+
+            ClampVelocityToToStop();
         }
 
         private void UpdateGridPosition()
@@ -568,11 +569,6 @@ namespace RecycleScrollView
             {
                 _scrollRect.onValueChanged.RemoveListener(m_onScrollRectValueChanged);
             }
-        }
-
-        private void LateUpdate()
-        {
-            ClampVelocityToToStop();
         }
 
         protected override void OnDestroy()

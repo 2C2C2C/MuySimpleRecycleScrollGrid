@@ -3,10 +3,10 @@ using UnityEngine;
 
 namespace RecycleScrollView.Sample
 {
-    public class GuidElementListUI : MonoBehaviour, IGridListView
+    public class GuidElementListUI : MonoBehaviour, IScrollGridDataSource
     {
         [SerializeField]
-        private RecycleScrollGridController _scrollRectController;
+        private RecycleScrollGrid _scrollRectController;
         [SerializeField]
         private RectTransform _elementPrefab;
 
