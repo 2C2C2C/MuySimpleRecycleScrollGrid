@@ -8,7 +8,13 @@ namespace RecycleScrollView
         public enum ScrollDirection
         {
             None = 0,
+            /// <summary>
+            /// Default arrangement is top to down
+            /// </summary>
             Horizontal = 1,
+            /// <summary>
+            /// Default arrangement is left to right
+            /// </summary>
             vertical = 2,
         }
 

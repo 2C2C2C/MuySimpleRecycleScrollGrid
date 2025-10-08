@@ -31,13 +31,13 @@ namespace RecycleScrollView
             }
 
             RecycleOneDirectionScrollElement headElement = m_currentUsingElements[0];
-            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(headElement, EDGE_TAIL, EDGE_HEAD);
+            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(headElement, EDGE_TAIL, EDGE_HEAD, false);
             if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement head2ndElement = m_currentUsingElements[1];
-                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, EDGE_HEAD, EDGE_HEAD);
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, EDGE_HEAD, EDGE_HEAD, false);
                     if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
@@ -57,7 +57,6 @@ namespace RecycleScrollView
         /// <returns>-1 Need add, 0 Enough, 1 Need remove</returns>
         private int CheckTailSideStatus()
         {
-            // return SIDE_STATUS_ENOUGH;
             if (null == m_dataSource)
             {
                 return SIDE_STATUS_ENOUGH;
@@ -77,13 +76,13 @@ namespace RecycleScrollView
             }
 
             RecycleOneDirectionScrollElement tailElement = m_currentUsingElements[elementCount - 1];
-            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tailElement, EDGE_HEAD, EDGE_TAIL);
+            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tailElement, EDGE_HEAD, EDGE_TAIL, true);
             if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement tail2ndElement = m_currentUsingElements[elementCount - 2];
-                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tail2ndElement, EDGE_HEAD, EDGE_TAIL);
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tail2ndElement, EDGE_HEAD, EDGE_TAIL, true);
                     if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
@@ -124,27 +123,47 @@ namespace RecycleScrollView
         /// <param name="normalizedElementEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <param name="normalizedViewportEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <returns></returns>
-        private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedElementEdgePosition, float normalizedViewportEdgePosition)
+        private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedElementEdgePosition, float normalizedViewportEdgePosition, bool checkDirHeadToTail)
         {
             RectTransform viewport = _scrollRect.viewport;
             Vector2 viewportHeadEdgeRectPosition = CalculateNormalizedRectPosition(normalizedViewportEdgePosition);
             Vector2 viewportEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, viewportHeadEdgeRectPosition);
 
-            Vector2 headElementEdgeRectPosition = CalculateNormalizedRectPosition(normalizedElementEdgePosition);
-            Vector2 headElementEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(element.ElementTransform, headElementEdgeRectPosition);
+            Vector2 elementEdgeRectPosition = CalculateNormalizedRectPosition(normalizedElementEdgePosition);
+            Vector2 elementEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(element.ElementTransform, elementEdgeRectPosition);
             bool isBeyoudEdge = false;
 
             if (IsVertical)
             {
-                isBeyoudEdge = _scrollParam.reverseArrangement ?
-                    headElementEdge.y < viewportEdge.y :
-                    headElementEdge.y > viewportEdge.y;
+                if (checkDirHeadToTail)
+                {
+                    isBeyoudEdge = _scrollParam.reverseArrangement ?
+                        elementEdge.y >= viewportEdge.y : // Direction is down to up
+                        elementEdge.y < viewportEdge.y; // Direction is up to down
+                }
+                else // Tail to Head
+                {
+                    isBeyoudEdge = _scrollParam.reverseArrangement ?
+                        elementEdge.y <= viewportEdge.y : // Direction is up to down
+                        elementEdge.y > viewportEdge.y; // Direction is down to up
+                }
+
             }
             else if (IsHorizontal)
             {
-                isBeyoudEdge = _scrollParam.reverseArrangement ?
-                    headElementEdge.x > viewportEdge.x :
-                    headElementEdge.x < viewportEdge.x;
+                if (checkDirHeadToTail)
+                {
+                    isBeyoudEdge = _scrollParam.reverseArrangement ?
+                        elementEdge.x >= viewportEdge.x : // Direction is right to left 
+                        elementEdge.x < viewportEdge.x; // Direction is left to right
+                }
+                else
+                {
+                    isBeyoudEdge = _scrollParam.reverseArrangement ?
+                        elementEdge.x >= viewportEdge.x : // Direction is left to right
+                        elementEdge.x < viewportEdge.x; // Direction is right to left 
+                }
+
             }
 
             return isBeyoudEdge;
@@ -312,7 +331,14 @@ namespace RecycleScrollView
                     if (1 <= frontElement.ElementIndex)
                     {
                         AddElementToHead(frontElement.ElementIndex - 1);
-                        addSize = m_currentUsingElements[0].ElementPreferredSize.y;
+                        if (IsHorizontal)
+                        {
+                            addSize = m_currentUsingElements[0].ElementPreferredSize.x;
+                        }
+                        else if (IsVertical)
+                        {
+                            addSize = m_currentUsingElements[0].ElementPreferredSize.y;
+                        }
                         break;
                     }
                     else
