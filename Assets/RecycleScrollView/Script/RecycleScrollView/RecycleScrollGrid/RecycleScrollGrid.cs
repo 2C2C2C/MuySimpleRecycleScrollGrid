@@ -104,7 +104,7 @@ namespace RecycleScrollView
             {
                 for (int i = 0, length = m_gridElements.Count; i < length; i++)
                 {
-                    RectTransform gridRectTransform = m_gridElements[i].ElementRectTransform;
+                    RectTransform gridRectTransform = m_gridElements[i].ElementTransform;
                     m_listView.UnInitElement(gridRectTransform);
                     m_listView.RemoveElement(gridRectTransform);
                 }
@@ -309,7 +309,7 @@ namespace RecycleScrollView
                     if (isInterestedWithViewport)
                     {
                         RecycleScrollGridElement gridElement = m_gridElements[usedElementIndex];
-                        gridElement.ElementRectTransform.localPosition = gridStartPos;
+                        gridElement.ElementTransform.localPosition = gridStartPos;
                         int prevIndex = gridElement.ElementIndex;
                         gridElement.SetIndex(gridDataIndex);
                         gridElement.SetObjectActive();
@@ -317,11 +317,11 @@ namespace RecycleScrollView
                         {
                             if (0 <= prevIndex) // Prev index valid
                             {
-                                m_listView.OnElementIndexChanged(gridElement.ElementRectTransform, prevIndex, gridDataIndex);
+                                m_listView.OnElementIndexChanged(gridElement.ElementTransform, prevIndex, gridDataIndex);
                             }
                             else
                             {
-                                m_listView.InitElement(gridElement.ElementRectTransform, gridDataIndex);
+                                m_listView.InitElement(gridElement.ElementTransform, gridDataIndex);
                             }
                         }
                         ++usedElementIndex;
@@ -338,7 +338,7 @@ namespace RecycleScrollView
                 gridElement.SetObjectDeactive();
                 if (hasValidListView && prevIndexValid)
                 {
-                    m_listView.UnInitElement(gridElement.ElementRectTransform);
+                    m_listView.UnInitElement(gridElement.ElementTransform);
                 }
             }
 
@@ -379,7 +379,7 @@ namespace RecycleScrollView
             IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
             for (int i = 0; i < elementList.Count; i++)
             {
-                elementList[i].ElementRectTransform.sizeDelta = itemAcutalSize;
+                elementList[i].ElementTransform.sizeDelta = itemAcutalSize;
             }
         }
 
@@ -527,7 +527,7 @@ namespace RecycleScrollView
                 for (int i = 0; i < count; i++)
                 {
                     int elementIndex = elementCount - i - 1;
-                    m_listView.RemoveElement(m_gridElements[elementIndex].ElementRectTransform);
+                    m_listView.RemoveElement(m_gridElements[elementIndex].ElementTransform);
                 }
             }
 

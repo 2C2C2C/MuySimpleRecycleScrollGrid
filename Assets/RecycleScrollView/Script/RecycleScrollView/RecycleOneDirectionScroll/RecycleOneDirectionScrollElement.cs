@@ -16,7 +16,6 @@ namespace RecycleScrollView
 
         public int ElementIndex => m_index;
 
-        public Vector2 currentSize { get; private set; }
         public RectTransform ElementTransform
         {
             get
@@ -29,10 +28,29 @@ namespace RecycleScrollView
             }
         }
 
+        public Vector2 ElementPreferredSize { get; private set; }
+
         public void SetIndex(int index)
         {
             m_index = index;
         }
+
+        public void SetObjectActive()
+        {
+            if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+        }
+
+        public void SetObjectDeactive()
+        {
+            if (gameObject.activeSelf)
+            {
+                gameObject.SetActive(false);
+            }
+        }
+
 
         [ContextMenu("ForceCalculateSize")]
         public void CalculatePreferredSize()
@@ -77,7 +95,7 @@ namespace RecycleScrollView
             }
 
             Vector2 size = new Vector2(width, height);
-            currentSize = size;
+            ElementPreferredSize = size;
             // Debug.LogError($"Element preferred size {size}");
         }
 

@@ -10,6 +10,9 @@ namespace RecycleScrollView
         private const int SIDE_STATUS_NEEDADD = -1;
         private const int SIDE_STATUS_NEEDREMOVE = 1;
 
+        private const float EDGE_HEAD = 0F;
+        private const float EDGE_TAIL = 1F;
+
         /// <summary>
         /// 
         /// </summary>
@@ -28,16 +31,14 @@ namespace RecycleScrollView
             }
 
             RecycleOneDirectionScrollElement headElement = m_currentUsingElements[0];
-            RectTransform viewport = _scrollRect.viewport;
-            Vector2 viewportTop = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, Vector2.up);
-            Vector2 headElementBottom = viewport.InverseTransformPoint(RectTransformEx.TransformNormalizedRectPositionToWorldPosition(headElement.ElementTransform, Vector2.zero));
-            if (headElementBottom.y > viewportTop.y) // Head element already above viewport top
+            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(headElement, EDGE_TAIL, EDGE_HEAD);
+            if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement head2ndElement = m_currentUsingElements[1];
-                    headElementBottom = viewport.InverseTransformPoint(RectTransformEx.TransformNormalizedRectPositionToWorldPosition(head2ndElement.ElementTransform, Vector2.zero));
-                    if (headElementBottom.y > viewportTop.y)
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, EDGE_HEAD, EDGE_HEAD);
+                    if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
                     }
@@ -46,13 +47,7 @@ namespace RecycleScrollView
             else
             {
                 return SIDE_STATUS_NEEDADD;
-                // Vector2 headElementTop = viewport.InverseTransformPoint(RectTransformEx.TransformNormalizedRectPositionToWorldPosition(headElement.ElementTransform, Vector2.up));
-                // if (headElementTop.y <= viewportTop.y)
-                // {
-                //     return SIDE_STATUS_NEEDADD;
-                // }
             }
-
             return SIDE_STATUS_ENOUGH;
         }
 
@@ -82,16 +77,14 @@ namespace RecycleScrollView
             }
 
             RecycleOneDirectionScrollElement tailElement = m_currentUsingElements[elementCount - 1];
-            RectTransform viewport = _scrollRect.viewport;
-            Vector2 viewportBottom = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, Vector2.zero);
-            Vector2 tailElementTop = viewport.InverseTransformPoint(RectTransformEx.TransformNormalizedRectPositionToWorldPosition(tailElement.ElementTransform, Vector2.up));
-            if (tailElementTop.y < viewportBottom.y) // Tail element already under viewport top
+            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tailElement, EDGE_HEAD, EDGE_TAIL);
+            if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement tail2ndElement = m_currentUsingElements[elementCount - 2];
-                    tailElementTop = viewport.InverseTransformPoint(RectTransformEx.TransformNormalizedRectPositionToWorldPosition(tail2ndElement.ElementTransform, Vector2.up));
-                    if (tailElementTop.y < viewportBottom.y)
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tail2ndElement, EDGE_HEAD, EDGE_TAIL);
+                    if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
                     }
@@ -100,13 +93,61 @@ namespace RecycleScrollView
             else
             {
                 return SIDE_STATUS_NEEDADD;
-                // Vector2 tailElementBottom = viewport.InverseTransformPoint(RectTransformEx.TransformNormalizedRectPositionToWorldPosition(tailElement.ElementTransform, Vector2.zero));
-                // if (tailElementBottom.y >= viewportBottom.y)
-                // {
-                //     return SIDE_STATUS_NEEDADD;
-                // }
             }
             return SIDE_STATUS_ENOUGH;
+        }
+
+        /// <param name="normalizedValue"> Head(0) ~ Tail(1) </param>
+        /// <returns></returns>
+        private Vector2 CalculateNormalizedRectPosition(float normalizedValue)
+        {
+            Vector2 result = Vector2.zero;
+            if (IsHorizontal)
+            {
+                result = _scrollParam.reverseArrangement ?
+                    new Vector2(Mathf.Lerp(1f, 0f, normalizedValue), 0.5f) :
+                    new Vector2(Mathf.Lerp(0f, 1f, normalizedValue), 0.5f);
+            }
+            if (IsVertical)
+            {
+                result = _scrollParam.reverseArrangement ?
+                    new Vector2(0.5f, Mathf.Lerp(0f, 1f, normalizedValue)) :
+                    new Vector2(0.5f, Mathf.Lerp(1f, 0f, normalizedValue));
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="element"></param>
+        /// <param name="normalizedElementEdgePosition"> Head(0) ~ Tail(1) </param>
+        /// <param name="normalizedViewportEdgePosition"> Head(0) ~ Tail(1) </param>
+        /// <returns></returns>
+        private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedElementEdgePosition, float normalizedViewportEdgePosition)
+        {
+            RectTransform viewport = _scrollRect.viewport;
+            Vector2 viewportHeadEdgeRectPosition = CalculateNormalizedRectPosition(normalizedViewportEdgePosition);
+            Vector2 viewportEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, viewportHeadEdgeRectPosition);
+
+            Vector2 headElementEdgeRectPosition = CalculateNormalizedRectPosition(normalizedElementEdgePosition);
+            Vector2 headElementEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(element.ElementTransform, headElementEdgeRectPosition);
+            bool isBeyoudEdge = false;
+
+            if (IsVertical)
+            {
+                isBeyoudEdge = _scrollParam.reverseArrangement ?
+                    headElementEdge.y < viewportEdge.y :
+                    headElementEdge.y > viewportEdge.y;
+            }
+            else if (IsHorizontal)
+            {
+                isBeyoudEdge = _scrollParam.reverseArrangement ?
+                    headElementEdge.x > viewportEdge.x :
+                    headElementEdge.x < viewportEdge.x;
+            }
+
+            return isBeyoudEdge;
         }
 
         private bool RemoveElementsIfNeed()
@@ -147,7 +188,7 @@ namespace RecycleScrollView
                     while (0 < frontRemoveElementCount && 0 < m_currentUsingElements.Count)
                     {
                         RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[0];
-                        frontTotalRemoveSize += toRemove.currentSize.y;
+                        frontTotalRemoveSize += toRemove.ElementPreferredSize.y;
                         RemoveElementFromHead();
                         --frontRemoveElementCount;
                         hasRemoveElements = true;
@@ -271,7 +312,7 @@ namespace RecycleScrollView
                     if (1 <= frontElement.ElementIndex)
                     {
                         AddElementToHead(frontElement.ElementIndex - 1);
-                        addSize = m_currentUsingElements[0].currentSize.y;
+                        addSize = m_currentUsingElements[0].ElementPreferredSize.y;
                         break;
                     }
                     else

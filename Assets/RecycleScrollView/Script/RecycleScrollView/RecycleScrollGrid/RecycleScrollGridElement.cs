@@ -16,7 +16,7 @@ namespace RecycleScrollView
         public int ElementIndex => m_index;
         public bool NeedRefreshData { get; private set; } = false;
 
-        public RectTransform ElementRectTransform
+        public RectTransform ElementTransform
         {
             get
             {
@@ -30,7 +30,7 @@ namespace RecycleScrollView
 
         public void SetElementSize(Vector2 size)
         {
-            RectTransform rectTransform = ElementRectTransform;
+            RectTransform rectTransform = ElementTransform;
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size.x);
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
         }

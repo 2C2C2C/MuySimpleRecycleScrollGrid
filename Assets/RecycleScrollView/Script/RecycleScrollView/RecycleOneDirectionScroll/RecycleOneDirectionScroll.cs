@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using ScrollDirection = RecycleScrollView.SingleDirectionScrollParam.ScrollDirection;
 
 namespace RecycleScrollView
 {
@@ -25,8 +26,8 @@ namespace RecycleScrollView
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
 
-        private bool m_isVertical = false;
-        private bool m_isHorizontal = false;
+        public bool IsVertical => ScrollDirection.vertical == _scrollParam.scrollDirection;
+        public bool IsHorizontal => ScrollDirection.Horizontal == _scrollParam.scrollDirection;
 
         private List<RecycleOneDirectionScrollElement> m_currentUsingElements = new List<RecycleOneDirectionScrollElement>();
         private IOneDirectionScrollDataSource m_dataSource;
@@ -54,18 +55,33 @@ namespace RecycleScrollView
                 RectTransform content = _scrollRect.content;
                 LayoutRebuilder.ForceRebuildLayoutImmediate(content);
                 _contentLayoutGroup.reverseArrangement = _scrollParam.reverseArrangement;
-                if (m_isVertical = _contentLayoutGroup is VerticalLayoutGroup)
+                if (IsVertical)
                 {
-                    content.pivot = _scrollParam.reverseArrangement ?
-                        new Vector2(0.5f, 0f) :
-                        new Vector2(0.5f, 1f);
+                    if (_contentLayoutGroup is VerticalLayoutGroup)
+                    {
+                        content.pivot = _scrollParam.reverseArrangement ?
+                            new Vector2(0.5f, 0f) :
+                            new Vector2(0.5f, 1f);
+                    }
+                    else
+                    {
+                        Debug.LogError($"Vertical scroll need a VerticalLayoutGroup on content");
+                    }
                 }
-                else if (m_isHorizontal = _contentLayoutGroup is HorizontalLayoutGroup)
+                if (IsHorizontal)
                 {
-                    content.pivot = _scrollParam.reverseArrangement ?
-                        new Vector2(1f, 0.5f) :
-                        new Vector2(0f, 0.5f);
+                    if (_contentLayoutGroup is HorizontalLayoutGroup)
+                    {
+                        content.pivot = _scrollParam.reverseArrangement ?
+                            new Vector2(1f, 0.5f) :
+                            new Vector2(0f, 0.5f);
+                    }
+                    else
+                    {
+                        Debug.LogError($"Horizontal scroll need a VerticalLayoutGroup on content");
+                    }
                 }
+
                 int dataCount = dataSource.DataElementCount;
                 int elementCount = 0;
                 if (0 < dataCount)
