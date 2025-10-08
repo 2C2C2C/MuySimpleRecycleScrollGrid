@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
@@ -10,20 +9,15 @@ using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
-    [RequireComponent(typeof(ScrollRect))]
+    [RequireComponent(typeof(UnityScrollRectExtended))]
     public class RecycleSingleDirectionScrollController : UIBehaviour
     {
         private const int SIDE_STATUS_ENOUGH = 0;
         private const int SIDE_STATUS_NEEDADD = -1;
         private const int SIDE_STATUS_NEEDREMOVE = 1;
 
-        private static MethodInfo s_updatePrevDataMethodHandle = null;
-        private static MethodInfo s_updateBoundsMethodHandle = null;
-        private static FieldInfo s_contentStartPositionHandle = null;
-        private static FieldInfo s_pointerStartLocalCursorHandle = null;
-
         [SerializeField]
-        private ScrollRect _scrollRect;
+        private UnityScrollRectExtended _scrollRect;
         [SerializeField]
         private RectTransform _fallbackElementPrefab;
 
@@ -41,7 +35,6 @@ namespace RecycleScrollView
         private float _velocityMaxClamp = 1000f;
 
         private List<RecycleSingleDirectionScrollElement> m_currentUsingElements = new List<RecycleSingleDirectionScrollElement>();
-
         private ISingleDirectionListView m_dataSource;
 
         private UnityAction<Vector2> m_onScrollPositionChanged;
@@ -288,10 +281,6 @@ namespace RecycleScrollView
                            (0 <= frontRemoveElementCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
                         {
                             ++frontRemoveElementCount;
-                            if (0 < frontRemoveElementCount)
-                            {
-                                break;
-                            }
                         }
                         else
                         {
@@ -340,10 +329,6 @@ namespace RecycleScrollView
                                (0 <= removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
                             {
                                 ++removeCount;
-                                if (0 < removeCount)
-                                {
-                                    break;
-                                }
                             }
                             else
                             {
@@ -459,13 +444,50 @@ namespace RecycleScrollView
 
         private void NotifyUpdatePrevData()
         {
-            if (null != s_updateBoundsMethodHandle)
+            // if (null != s_updateBoundsMethodHandle)
+            // {
+            //     s_updateBoundsMethodHandle.Invoke(_scrollRect, null);
+            //     if (null != s_updatePrevDataMethodHandle)
+            //     {
+            //         s_updatePrevDataMethodHandle.Invoke(_scrollRect, null);
+            //     }
+            // }
+        }
+
+        private void OnScrollPositionChanged(Vector2 positionDelta)
+        {
+            RectTransform content = _scrollRect.content;
+            Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
+            Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
+            bool isOutOfBounds = (0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition) &&
+                (SIDE_STATUS_ENOUGH == CheckBottomSideStatus() || SIDE_STATUS_ENOUGH == CheckTopSideStatus());
+
+            Vector2 velocity = _scrollRect.velocity;
+            bool hasAdjustedElements = false;
+            if (!isOutOfBounds)
             {
-                s_updateBoundsMethodHandle.Invoke(_scrollRect, null);
-                if (null != s_updatePrevDataMethodHandle)
-                {
-                    s_updatePrevDataMethodHandle.Invoke(_scrollRect, null);
-                }
+                hasAdjustedElements = AdjustElementsIfNeed();
+            }
+            if (_velocityStopThreshold * _velocityStopThreshold > velocity.sqrMagnitude)
+            {
+                _scrollRect.velocity = Vector2.zero;
+            }
+            else if (_velocityMaxClamp * _velocityMaxClamp < velocity.sqrMagnitude)
+            {
+                velocity = _velocityMaxClamp * velocity.normalized;
+                _scrollRect.velocity = velocity;
+            }
+            else if (hasAdjustedElements)
+            {
+                _scrollRect.velocity = velocity;
+            }
+
+            if (hasAdjustedElements || !isOutOfBounds)
+            {
+                // HACK I change 
+                Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
+                Debug.LogError($"{prevContentStartPos} change to {newStartPos}");
+                _scrollRect.ContentStartPos = newStartPos;
             }
         }
 
@@ -515,32 +537,6 @@ namespace RecycleScrollView
                 m_onScrollPositionChanged = new UnityAction<Vector2>(OnScrollPositionChanged);
             }
             _scrollRect.onValueChanged.AddListener(m_onScrollPositionChanged);
-
-            if (null == s_updatePrevDataMethodHandle)
-            {
-                Type scrollObjType = typeof(ScrollRect);
-                MethodInfo methodInfo = scrollObjType.GetMethod("UpdatePrevData", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (null != methodInfo)
-                {
-                    s_updatePrevDataMethodHandle = methodInfo;
-                }
-
-                methodInfo = scrollObjType.GetMethod("UpdateBounds", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (null != methodInfo)
-                {
-                    s_updateBoundsMethodHandle = methodInfo;
-                }
-
-                FieldInfo fieldInfo = null;
-                if (null == s_contentStartPositionHandle)
-                {
-                    fieldInfo = scrollObjType.GetField("m_ContentStartPosition", BindingFlags.NonPublic | BindingFlags.Instance);
-                    s_contentStartPositionHandle = fieldInfo;
-
-                    fieldInfo = scrollObjType.GetField("m_PointerStartLocalCursor", BindingFlags.NonPublic | BindingFlags.Instance);
-                    s_pointerStartLocalCursorHandle = fieldInfo;
-                }
-            }
         }
 
         protected override void OnDisable()
@@ -555,7 +551,7 @@ namespace RecycleScrollView
 
         protected override void Reset()
         {
-            TryGetComponent<ScrollRect>(out _scrollRect);
+            TryGetComponent<UnityScrollRectExtended>(out _scrollRect);
         }
 
 #endif
