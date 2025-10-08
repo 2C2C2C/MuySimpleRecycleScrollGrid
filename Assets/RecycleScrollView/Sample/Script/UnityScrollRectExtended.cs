@@ -15,5 +15,11 @@
                 m_ContentStartPosition = value;
             }
         }
+
+        public void CallUpdateBoundsAndPrevData()
+        {
+            UpdateBounds();
+            UpdatePrevData();
+        }
     }
 }

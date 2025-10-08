@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -444,14 +442,7 @@ namespace RecycleScrollView
 
         private void NotifyUpdatePrevData()
         {
-            // if (null != s_updateBoundsMethodHandle)
-            // {
-            //     s_updateBoundsMethodHandle.Invoke(_scrollRect, null);
-            //     if (null != s_updatePrevDataMethodHandle)
-            //     {
-            //         s_updatePrevDataMethodHandle.Invoke(_scrollRect, null);
-            //     }
-            // }
+            _scrollRect.CallUpdateBoundsAndPrevData();
         }
 
         private void OnScrollPositionChanged(Vector2 positionDelta)
@@ -459,15 +450,10 @@ namespace RecycleScrollView
             RectTransform content = _scrollRect.content;
             Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
             Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
-            bool isOutOfBounds = (0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition) &&
-                (SIDE_STATUS_ENOUGH == CheckBottomSideStatus() || SIDE_STATUS_ENOUGH == CheckTopSideStatus());
+            bool isOutOfBounds = 0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition;
 
             Vector2 velocity = _scrollRect.velocity;
-            bool hasAdjustedElements = false;
-            if (!isOutOfBounds)
-            {
-                hasAdjustedElements = AdjustElementsIfNeed();
-            }
+            bool hasAdjustedElements = isOutOfBounds || AdjustElementsIfNeed();
             if (_velocityStopThreshold * _velocityStopThreshold > velocity.sqrMagnitude)
             {
                 _scrollRect.velocity = Vector2.zero;
@@ -484,49 +470,10 @@ namespace RecycleScrollView
 
             if (hasAdjustedElements || !isOutOfBounds)
             {
-                // HACK I change 
+                // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
                 Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
-                Debug.LogError($"{prevContentStartPos} change to {newStartPos}");
                 _scrollRect.ContentStartPos = newStartPos;
-            }
-        }
-
-        private void OnScrollPositionChanged(Vector2 positionDelta)
-        {
-            RectTransform content = _scrollRect.content;
-            // RectTransform viewport = _scrollRect.viewport;
-            Vector2 prevContentStartPos = (Vector2)s_contentStartPositionHandle.GetValue(_scrollRect);
-            // Debug.LogError($"prev content start pos {prevContentStartPos}");
-            Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
-            bool tempEE = 0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition;
-            Debug.LogError(tempEE);
-
-            Vector2 velocity = _scrollRect.velocity;
-            bool hasAdjustedElements = false;
-            if (!tempEE)
-            {
-                hasAdjustedElements = AdjustElementsIfNeed();
-            }
-            if (_velocityStopThreshold * _velocityStopThreshold > velocity.sqrMagnitude)
-            {
-                _scrollRect.velocity = Vector2.zero;
-            }
-            else if (_velocityMaxClamp * _velocityMaxClamp < velocity.sqrMagnitude)
-            {
-                velocity = _velocityMaxClamp * velocity.normalized;
-                _scrollRect.velocity = velocity;
-            }
-            else if (hasAdjustedElements)
-            {
-                _scrollRect.velocity = velocity;
-            }
-
-            if (hasAdjustedElements && !tempEE)
-            {
-                // Debug.LogError($"change start pos {content.anchoredPosition}");
-                // Debug.LogError($"anchorPositionDelta {anchorPositionDelta}");
-                Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
-                s_contentStartPositionHandle.SetValue(_scrollRect, newStartPos); // TOO BAD
+                // Debug.LogError($"{prevContentStartPos} change to {newStartPos}");
             }
         }
 
