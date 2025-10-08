@@ -18,8 +18,8 @@ namespace RecycleScrollView
             vertical = 2,
         }
 
-        public float spacing;
         // TODO
+        // public float spacing;
         // public float frontPadding;
         // public float rearPadding;
 

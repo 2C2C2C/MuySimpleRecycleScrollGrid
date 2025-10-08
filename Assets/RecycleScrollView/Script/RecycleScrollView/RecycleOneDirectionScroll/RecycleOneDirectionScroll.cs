@@ -62,6 +62,9 @@ namespace RecycleScrollView
                         content.pivot = _scrollParam.reverseArrangement ?
                             new Vector2(0.5f, 0f) :
                             new Vector2(0.5f, 1f);
+                        _contentLayoutGroup.childAlignment = _scrollParam.reverseArrangement ?
+                            TextAnchor.LowerCenter :
+                            TextAnchor.UpperCenter;
                     }
                     else
                     {
@@ -142,8 +145,9 @@ namespace RecycleScrollView
             return hasRemoved || hasAdded;
         }
 
-        private void OnScrollPositionChanged(Vector2 positionDelta)
+        private void OnScrollPositionChanged(Vector2 noramlizedPosition)
         {
+            // Debug.LogError(noramlizedPosition);
             RectTransform content = _scrollRect.content;
             Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
             Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;

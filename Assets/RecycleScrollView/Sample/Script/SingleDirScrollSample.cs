@@ -53,17 +53,6 @@ namespace RecycleScrollView.Sample
         private void Start()
         {
             _scrollController.Init(this);
-
-            // for (int i = 0; i < 6; i++)
-            // {
-            //     RectTransform newElement = RectTransform.Instantiate(_elementPrefab, _content);
-            //     if (newElement.TryGetComponent<ChatTextElementUI>(out ChatTextElementUI chatTextElement))
-            //     {
-            //         chatTextElement.SetHeight(UnityRandom.Range(80, 560));
-            //         chatTextElement.SetText($"ee {i}");
-            //         chatTextElement.ForceCalculateSize();
-            //     }
-            // }
         }
 
         [ContextMenu("AddTopTest")]
