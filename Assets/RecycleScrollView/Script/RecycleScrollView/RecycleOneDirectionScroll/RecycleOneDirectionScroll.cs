@@ -26,6 +26,8 @@ namespace RecycleScrollView
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
 
+        private bool m_hasAdjustmentCurrentFrame = false;
+
         public bool IsVertical => ScrollDirection.vertical == _scrollParam.scrollDirection;
         public bool IsHorizontal => ScrollDirection.Horizontal == _scrollParam.scrollDirection;
 
@@ -145,16 +147,16 @@ namespace RecycleScrollView
             return hasRemoved || hasAdded;
         }
 
-        private void OnScrollPositionChanged(Vector2 noramlizedPosition)
+        private void InternalAdjustment()
         {
             // Debug.LogError(noramlizedPosition);
             RectTransform content = _scrollRect.content;
             Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
             Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
-            bool isOutOfBounds = 0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition;
-
             Vector2 velocity = _scrollRect.velocity;
-            bool hasAdjustedElements = isOutOfBounds || AdjustElementsIfNeed();
+
+            bool isOutOfBounds = 0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition;
+            bool hasAdjustedElements = AdjustElementsIfNeed();
             if (_velocityStopThreshold * _velocityStopThreshold > velocity.sqrMagnitude)
             {
                 _scrollRect.velocity = Vector2.zero;
@@ -164,7 +166,7 @@ namespace RecycleScrollView
                 velocity = _velocityMaxClamp * velocity.normalized;
                 _scrollRect.velocity = velocity;
             }
-            else if (hasAdjustedElements)
+            else if (hasAdjustedElements || isOutOfBounds)
             {
                 _scrollRect.velocity = velocity;
             }
@@ -174,8 +176,22 @@ namespace RecycleScrollView
                 // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
                 Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
                 _scrollRect.ContentStartPos = newStartPos;
-                // Debug.LogError($"{prevContentStartPos} change to {newStartPos}");
             }
+        }
+
+        private void OnScrollPositionChanged(Vector2 noramlizedPosition)
+        {
+            InternalAdjustment();
+            m_hasAdjustmentCurrentFrame = true;
+        }
+
+        private void LateUpdate()
+        {
+            if (!m_hasAdjustmentCurrentFrame)
+            {
+                InternalAdjustment();
+            }
+            m_hasAdjustmentCurrentFrame = false;
         }
 
         protected override void OnEnable()

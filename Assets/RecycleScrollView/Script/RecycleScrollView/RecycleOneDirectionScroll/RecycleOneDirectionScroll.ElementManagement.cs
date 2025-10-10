@@ -139,13 +139,13 @@ namespace RecycleScrollView
                 if (checkDirHeadToTail)
                 {
                     isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.y >= viewportEdge.y : // Direction is down to up
+                        elementEdge.y > viewportEdge.y : // Direction is down to up
                         elementEdge.y < viewportEdge.y; // Direction is up to down
                 }
                 else // Tail to Head
                 {
                     isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.y <= viewportEdge.y : // Direction is up to down
+                        elementEdge.y < viewportEdge.y : // Direction is up to down
                         elementEdge.y > viewportEdge.y; // Direction is down to up
                 }
 
@@ -161,7 +161,7 @@ namespace RecycleScrollView
                 else
                 {
                     isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.x >= viewportEdge.x : // Direction is left to right
+                        elementEdge.x > viewportEdge.x : // Direction is left to right
                         elementEdge.x < viewportEdge.x; // Direction is right to left 
                 }
 
@@ -280,6 +280,10 @@ namespace RecycleScrollView
                             {
                                 break;
                             }
+                        }
+                        else
+                        {
+                            break;
                         }
                     } while (-1 < removeCount);
 
