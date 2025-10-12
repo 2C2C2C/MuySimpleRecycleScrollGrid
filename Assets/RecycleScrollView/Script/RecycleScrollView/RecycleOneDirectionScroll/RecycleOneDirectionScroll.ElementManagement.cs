@@ -377,46 +377,50 @@ namespace RecycleScrollView
                 Vector2 headRectPos = CalculateNormalizedRectPosition(EDGE_HEAD);
                 Vector2 prevHeadPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, headRectPos);
                 prevHeadPos = viewport.InverseTransformPoint(prevHeadPos);
-                float addSize = 0f;
+                Vector2 viewportHeadPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, headRectPos);
+                Vector2 currentDelta = default;
+                currentDelta.y = Mathf.Abs(viewportHeadPos.y - prevHeadPos.y);
+                currentDelta.x = Mathf.Abs(currentDelta.x);
+                float totalAddSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus())
                 {
                     RecycleOneDirectionScrollElement frontElement = m_currentUsingElements[0];
                     if (1 <= frontElement.ElementIndex)
                     {
                         AddElementToHead(frontElement.ElementIndex - 1);
-                        if (IsHorizontal)
+                        if (IsVertical)
                         {
-                            addSize = m_currentUsingElements[0].ElementPreferredSize.x;
+                            totalAddSize += m_currentUsingElements[0].ElementPreferredSize.y;
                         }
-                        else if (IsVertical)
+                        else if (IsHorizontal)
                         {
-                            addSize = m_currentUsingElements[0].ElementPreferredSize.y;
+                            totalAddSize += m_currentUsingElements[0].ElementPreferredSize.x;
                         }
-                        break;
                     }
                     else
                     {
                         break;
                     }
+
+                    if ((IsVertical && totalAddSize > currentDelta.y) ||
+                             (IsHorizontal && totalAddSize > currentDelta.x))
+                    {
+                        break;
+                    }
                 }
 
-                if (0f < addSize)
+                if (0f < totalAddSize)
                 {
-                    Vector2 currentHeadPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, headRectPos);
-                    currentHeadPos = viewport.InverseTransformPoint(currentHeadPos);
                     if (IsVertical)
                     {
+                        // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
                         if (_scrollParam.reverseArrangement)
                         {
-                            prevHeadPos.y -= addSize;
-                            float normalizedDelta = (prevHeadPos.y - currentHeadPos.y) / (content.rect.height - viewport.rect.height);
-                            _scrollRect.verticalNormalizedPosition -= normalizedDelta;
+                            content.localPosition += Vector3.down * totalAddSize;
                         }
                         else
                         {
-                            prevHeadPos.y += addSize;
-                            float normalizedDelta = (currentHeadPos.y - prevHeadPos.y) / (content.rect.height - viewport.rect.height);
-                            _scrollRect.verticalNormalizedPosition -= normalizedDelta;
+                            content.localPosition += Vector3.up * totalAddSize;
                         }
                     }
                     else if (IsHorizontal)
@@ -438,10 +442,13 @@ namespace RecycleScrollView
             bool hasAddElements = false;
             if (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
             {
-                float addSize = 0f;
                 Vector2 tailRectPos = CalculateNormalizedRectPosition(EDGE_TAIL);
                 Vector2 prevTailPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPos);
                 prevTailPos = viewport.InverseTransformPoint(prevTailPos);
+                Vector2 viewportTailPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, tailRectPos);
+                Vector2 currentDelta = new Vector2(Mathf.Abs(viewportTailPos.x - prevTailPos.x), Mathf.Abs(viewportTailPos.y - prevTailPos.y));
+                currentDelta.y = Mathf.Abs(viewportTailPos.y - prevTailPos.y);
+                float totalAddSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
                     RecycleOneDirectionScrollElement rearElement = m_currentUsingElements[m_currentUsingElements.Count - 1];
@@ -450,38 +457,32 @@ namespace RecycleScrollView
                         AddElementToTail(rearElement.ElementIndex + 1);
                         if (IsVertical)
                         {
-                            addSize = m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.y;
+                            totalAddSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.y;
                         }
                         else if (IsHorizontal)
                         {
-                            addSize = m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.x;
+                            totalAddSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.x;
                         }
-                        break;
+
+                        if ((IsVertical && totalAddSize > currentDelta.y) ||
+                                 (IsHorizontal && totalAddSize > currentDelta.x))
+                        {
+                            break;
+                        }
                     }
                     else
                     {
                         break;
                     }
                 }
-                if (0f < addSize)
+
+                if (0f < totalAddSize)
                 {
                     Vector2 currentBottomPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPos);
                     currentBottomPos = viewport.InverseTransformPoint(currentBottomPos);
                     // HACK Calculate how much movement need to apply to put the element same position
                     if (IsVertical)
                     {
-                        // if (_scrollParam.reverseArrangement)
-                        // {
-                        //     prevTailPos.y += addSize;
-                        //     float normalizedDelta = (currentBottomPos.y - prevTailPos.y) / (content.rect.height - viewport.rect.height);
-                        //     _scrollRect.verticalNormalizedPosition += normalizedDelta;
-                        // }
-                        // else
-                        // {
-                        //     prevTailPos.y -= addSize;
-                        //     float normalizedDelta = (currentBottomPos.y - prevTailPos.y) / (content.rect.height - viewport.rect.height);
-                        //     _scrollRect.verticalNormalizedPosition -= normalizedDelta;
-                        // }
                     }
                     else if (IsHorizontal)
                     {

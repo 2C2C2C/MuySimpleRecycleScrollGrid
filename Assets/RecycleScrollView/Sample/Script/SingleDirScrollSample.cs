@@ -24,6 +24,9 @@ namespace RecycleScrollView.Sample
         [SerializeField]
         private float _heightMax = 320;
 
+        [SerializeField]
+        private int _jumpToTestIndex = 10;
+
         private Dictionary<int, float> m_sizeMap = new Dictionary<int, float>();
 
         public int DataElementCount => _dataCount;
@@ -77,8 +80,6 @@ namespace RecycleScrollView.Sample
                 contentSize = _content.rect.size;
                 // _content.anchoredPosition += Vector2.up * delta;
                 _scrollrect.verticalNormalizedPosition -= delta / (contentSize.y - _viewport.rect.height);
-
-                // _content.anchoredPosition += Vector2.up * size.y;
             }
         }
 
@@ -89,6 +90,18 @@ namespace RecycleScrollView.Sample
             float heightDelta = tempChild.rect.height;
             Destroy(tempChild.gameObject);
             _content.anchoredPosition -= Vector2.up * heightDelta;
+        }
+
+        [ContextMenu(nameof(JumpToTest))]
+        private void JumpToTest()
+        {
+            _scrollController.JumpToElementInstant(_jumpToTestIndex);
+        }
+
+        [ContextMenu(nameof(EETMP))]
+        private void EETMP()
+        {
+            _scrollController.EETMP(_jumpToTestIndex);
         }
 
     }

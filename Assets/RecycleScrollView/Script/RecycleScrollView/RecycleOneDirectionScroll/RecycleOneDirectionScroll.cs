@@ -101,6 +101,7 @@ namespace RecycleScrollView
                         break;
                     } while (elementCount < dataCount);
                 }
+                _scrollRect.CallUpdateBoundsAndPrevData();
             }
         }
 
@@ -124,6 +125,9 @@ namespace RecycleScrollView
                     Debug.LogError($"[RecycleScrollView] receive wrong element");
                 }
             }
+#if UNITY_EDITOR
+            newElement.name = $"{newElement.name} {dataIndex}";
+#endif
             return newElement;
         }
 
@@ -181,6 +185,7 @@ namespace RecycleScrollView
 
         private void OnScrollPositionChanged(Vector2 noramlizedPosition)
         {
+            // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
             m_hasAdjustmentCurrentFrame = true;
         }
@@ -189,7 +194,7 @@ namespace RecycleScrollView
         {
             if (!m_hasAdjustmentCurrentFrame)
             {
-                InternalAdjustment();
+                //InternalAdjustment();
             }
             m_hasAdjustmentCurrentFrame = false;
         }
