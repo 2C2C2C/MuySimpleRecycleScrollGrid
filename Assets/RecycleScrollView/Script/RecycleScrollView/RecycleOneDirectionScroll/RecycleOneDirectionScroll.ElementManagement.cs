@@ -221,11 +221,8 @@ namespace RecycleScrollView
                         hasRemoveElements = true;
                     }
 
-                    if (0f < removeSize)
+                    if (0f < removeSize) // HACK Calculate how much movement need to apply to put the element same position
                     {
-                        Vector2 currentFrontPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, headRectPosition);
-                        currentFrontPos = viewport.InverseTransformPoint(currentFrontPos);
-                        // HACK Calculate how much movement need to apply to put the element same position
                         if (IsVertical)
                         {
                             // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
@@ -313,18 +310,7 @@ namespace RecycleScrollView
 
                     if (0f < rearTotalRemoveSize)
                     {
-                        Vector2 currentRearPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPosition);
-                        currentRearPos = viewport.InverseTransformPoint(currentRearPos);
-                        // HACK Calculate how much movement need to apply to put the element same position
-                        if (IsVertical)
-                        {
-                            // TODO
-                        }
-                        else if (IsHorizontal)
-                        {
-                            // TODO
-                        }
-                        LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+                        // HACK Since I force the pivot of content, no need to adjust position at this case
                     }
                 }
             }
@@ -406,26 +392,16 @@ namespace RecycleScrollView
                     if (IsVertical)
                     {
                         // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
-                        if (_scrollParam.reverseArrangement)
-                        {
-                            content.localPosition += Vector3.down * addSize;
-                        }
-                        else
-                        {
-                            content.localPosition += Vector3.up * addSize;
-                        }
+                        content.localPosition += _scrollParam.reverseArrangement ?
+                            Vector3.down * addSize :
+                            Vector3.up * addSize;
                     }
                     else if (IsHorizontal)
                     {
                         // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
-                        if (_scrollParam.reverseArrangement)
-                        {
-                            content.localPosition += Vector3.right * addSize;
-                        }
-                        else
-                        {
-                            content.localPosition += Vector3.left * addSize;
-                        }
+                        content.localPosition += _scrollParam.reverseArrangement ?
+                            Vector3.right * addSize :
+                            Vector3.left * addSize;
                     }
                     LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     hasAddElements = true;
@@ -477,18 +453,7 @@ namespace RecycleScrollView
 
                 if (0f < totalAddSize)
                 {
-                    // Vector2 currentBottomPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPos);
-                    // currentBottomPos = viewport.InverseTransformPoint(currentBottomPos);
-                    // HACK Calculate how much movement need to apply to put the element same position
-                    if (IsVertical)
-                    {
-                        // No need
-                    }
-                    else if (IsHorizontal)
-                    {
-                        // TODO
-                    }
-                    LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+                    // HACK Since I force the pivot of content, no need to adjust position at this case
                     hasAddElements = true;
                 }
             }

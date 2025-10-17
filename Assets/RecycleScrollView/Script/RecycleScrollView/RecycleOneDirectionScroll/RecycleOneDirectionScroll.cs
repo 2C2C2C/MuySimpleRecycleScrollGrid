@@ -26,6 +26,8 @@ namespace RecycleScrollView
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
 
+        private bool m_hasAdjustCiurrentElements = false;
+
         public bool IsVertical => ScrollDirection.vertical == _scrollParam.scrollDirection;
         public bool IsHorizontal => ScrollDirection.Horizontal == _scrollParam.scrollDirection;
 
@@ -185,6 +187,21 @@ namespace RecycleScrollView
         {
             // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
+        }
+
+        private void LateUpdate()
+        {
+            if (!m_hasAdjustCiurrentElements)
+            {
+                InternalAdjustment();
+            }
+            m_hasAdjustCiurrentElements = false;
+
+            if (--m_nextFrameSetActive < 0)
+            {
+                _scrollRect.enabled = true;
+                m_nextFrameSetActive = 0;
+            }
         }
 
         protected override void OnEnable()

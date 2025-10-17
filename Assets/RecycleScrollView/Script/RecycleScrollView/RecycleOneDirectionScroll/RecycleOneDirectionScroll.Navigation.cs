@@ -6,6 +6,9 @@ namespace RecycleScrollView
 {
     public partial class RecycleOneDirectionScroll
     {
+        /// <summary> HACK IDK why but do jumpto for horizontal scroll will result a weird offset in next/current frame, so I need to skil 2 frames </summary>
+        const int JUMPTO_SKIP_FRAME_COUNT = 2;
+
         [System.Serializable]
         public struct ScrollViewNavigationParams
         {
@@ -15,6 +18,9 @@ namespace RecycleScrollView
 
         [SerializeField]
         private ScrollViewNavigationParams _defaultNavigationParams;
+
+        /// <summary> HACK IDK why but do jumpto for horizontal scroll will result a weird offset in next/current frame, so I need to skil 2 frames </summary>
+        private int m_nextFrameSetActive = 0;
 
         public void JumpToElementInstant(int dataIndex)
         {
@@ -33,71 +39,41 @@ namespace RecycleScrollView
             _scrollRect.enabled = false;
             RectTransform viewport = _scrollRect.viewport;
             RectTransform content = _scrollRect.content;
-            RecycleOneDirectionScrollElement add = InternalCreateElement(dataIndex);
-            add.SetIndex(dataIndex);
-            add.CalculatePreferredSize();
-            m_currentUsingElements.Add(add);
+            RecycleOneDirectionScrollElement targetElement = InternalCreateElement(dataIndex);
+            targetElement.SetIndex(dataIndex);
+            targetElement.CalculatePreferredSize();
+            m_currentUsingElements.Add(targetElement);
 
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
             // HACK Since the pivot of content must be fixed, we need to adjust the position of content to make the target element at the correct position
             if (IsVertical)
             {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(content);
                 Vector2 verticalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(0.5f, _defaultNavigationParams.normalizedPositionInViewPort));
-                if (_scrollParam.reverseArrangement)
-                {
-                    Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(add.ElementTransform, new Vector2(0.5f, _defaultNavigationParams.normalizedElementPositionAdjustment));
-                    elementPosition = viewport.InverseTransformPoint(elementPosition);
-                    // Content pivot is (0.5, 0)
-                    float delta = verticalPostion.y - elementPosition.y;
-                    Vector3 localPosition = content.localPosition;
-                    localPosition.y += delta;
-                    content.localPosition = localPosition;
-                }
-                else
-                {
-                    Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(add.ElementTransform, new Vector2(0.5f, 1f - _defaultNavigationParams.normalizedElementPositionAdjustment));
-                    elementPosition = viewport.InverseTransformPoint(elementPosition);
-                    // Content pivot is (0.5, 1)
-                    float delta = verticalPostion.y - elementPosition.y;
-                    Vector3 localPosition = content.localPosition;
-                    localPosition.y += delta;
-                    content.localPosition = localPosition;
-                }
+                // Content pivot is (0.5, 0) (true _scrollParam.reverseArrangement) ; Content pivot is (0.5, 1) (false _scrollParam.reverseArrangement)
+                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(0.5f, 1f - _defaultNavigationParams.normalizedElementPositionAdjustment));
+                elementPosition = viewport.InverseTransformPoint(elementPosition);
+                float delta = verticalPostion.y - elementPosition.y;
+                Vector3 localPosition = content.localPosition;
+                localPosition.y += delta;
+                content.localPosition = localPosition;
             }
             else if (IsHorizontal)
             {
-                // TODO
-                // Vector2 horizontalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(_defaultNavigationParams.normalizedPositionInViewPort, 0.5f));
-                // horizontalPostion.x += targetElementSize.x * _defaultNavigationParams.normalizedElementPositionAdjustment;
-                // content.anchoredPosition = new Vector2(horizontalPostion.x, content.anchoredPosition.y);
+                // TODO IDK why but it doesnt work when normalized viewport position less than 0.5f
+                Vector2 horizontalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(_defaultNavigationParams.normalizedPositionInViewPort, 0.5f));
+                // Content pivot is (0, 0.5) (false _scrollParam.reverseArrangement) ; Content pivot is (1, 0.5) (true _scrollParam.reverseArrangement)
+                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(_defaultNavigationParams.normalizedElementPositionAdjustment, 0.5f));
+                elementPosition = viewport.InverseTransformPoint(elementPosition);
+                float delta = horizontalPostion.x - elementPosition.x;
+                Vector3 localPosition = content.localPosition;
+                localPosition.x += delta;
+                content.localPosition = localPosition;
             }
+
             AddElemensIfNeed();
-            _scrollRect.enabled = true;
+            _scrollRect.CallUpdateBoundsAndPrevData();
+            m_nextFrameSetActive = JUMPTO_SKIP_FRAME_COUNT;
             _scrollRect.StopMovement();
-        }
-
-
-        public void EETMP(int dataIndex)
-        {
-            for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
-            {
-                var element = m_currentUsingElements[i];
-                if (element.ElementIndex == dataIndex)
-                {
-                    RectTransform viewport = _scrollRect.viewport;
-                    Vector2 verticalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(0.5f, _defaultNavigationParams.normalizedPositionInViewPort));
-                    Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(element.ElementTransform, new Vector2(0.5f, _defaultNavigationParams.normalizedElementPositionAdjustment));
-                    elementPosition = viewport.InverseTransformPoint(elementPosition);
-
-                    RectTransform content = _scrollRect.content;
-                    float delta = verticalPostion.y - elementPosition.y;
-                    Vector3 prevAnchorPosition = content.anchoredPosition;
-                    prevAnchorPosition.y += delta;
-                    content.anchoredPosition = prevAnchorPosition;
-
-                    return;
-                }
-            }
         }
 
 #if UNITY_EDITOR
@@ -129,8 +105,7 @@ namespace RecycleScrollView
                 // Draw ref element position
                 Vector2 elementLocalPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(0.5f, _defaultNavigationParams.normalizedPositionInViewPort));
                 elementLocalPos.x -= refElementSize.x * 0.5f;
-                elementLocalPos.y -= refElementSize.y;
-                elementLocalPos.y += refElementSize.y * _defaultNavigationParams.normalizedElementPositionAdjustment;
+                elementLocalPos.y += refElementSize.y * (_defaultNavigationParams.normalizedElementPositionAdjustment - 1f);
                 GizmoDrawRect(elementLocalPos, refElementSize, viewport.localToWorldMatrix, Color.yellow);
             }
             else if (IsHorizontal)
@@ -143,9 +118,8 @@ namespace RecycleScrollView
                 Gizmos.DrawLine(viewPortLocalBottomWorld, viewPortLocalTopWorld);
                 // Draw ref element position
                 Vector2 elementLocalPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(_defaultNavigationParams.normalizedPositionInViewPort, 0.5f));
-                elementLocalPos.x -= 0.5f * refElementSize.x;
                 elementLocalPos.y -= 0.5f * refElementSize.y;
-                elementLocalPos.x += refElementSize.x * _defaultNavigationParams.normalizedElementPositionAdjustment;
+                elementLocalPos.x -= refElementSize.x * _defaultNavigationParams.normalizedElementPositionAdjustment;
                 GizmoDrawRect(elementLocalPos, refElementSize, viewport.localToWorldMatrix, Color.yellow);
             }
 

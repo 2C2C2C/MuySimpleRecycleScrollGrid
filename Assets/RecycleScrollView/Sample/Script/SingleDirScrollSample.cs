@@ -116,11 +116,5 @@ namespace RecycleScrollView.Sample
             _scrollController.JumpToElementInstant(_jumpToTestIndex);
         }
 
-        [ContextMenu(nameof(EETMP))]
-        private void EETMP()
-        {
-            _scrollController.EETMP(_jumpToTestIndex);
-        }
-
     }
 }
