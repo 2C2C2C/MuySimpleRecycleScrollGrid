@@ -20,9 +20,9 @@ namespace RecycleScrollView.Sample
         [SerializeField]
         private int _dataCount = 50;
         [SerializeField]
-        private float _heightMin = 80;
+        private float _sizeMin = 80;
         [SerializeField]
-        private float _heightMax = 320;
+        private float _sizeMax = 320;
 
         [SerializeField]
         private int _jumpToTestIndex = 10;
@@ -38,10 +38,17 @@ namespace RecycleScrollView.Sample
             {
                 if (!m_sizeMap.TryGetValue(index, out float tempSize))
                 {
-                    tempSize = UnityRandom.Range(_heightMin, _heightMax);
+                    tempSize = UnityRandom.Range(_sizeMin, _sizeMax);
                     m_sizeMap[index] = tempSize;
                 }
-                chatTextElement.SetHeight(tempSize);
+                if (_scrollController.IsHorizontal)
+                {
+                    chatTextElement.SetWidth(tempSize);
+                }
+                else if (_scrollController.IsVertical)
+                {
+                    chatTextElement.SetHeight(tempSize);
+                }
                 chatTextElement.SetText($"ee {index}");
                 chatTextElement.ForceCalculateSize();
             }
@@ -75,11 +82,22 @@ namespace RecycleScrollView.Sample
                 Vector2 size = newElement.rect.size;
                 float delta = heightee;
                 Vector2 contentSize = _content.rect.size;
-                contentSize.y += delta;
-                Debug.LogError($"2 {_scrollrect.verticalNormalizedPosition} {size}");
-                contentSize = _content.rect.size;
-                // _content.anchoredPosition += Vector2.up * delta;
-                _scrollrect.verticalNormalizedPosition -= delta / (contentSize.y - _viewport.rect.height);
+                if (_scrollController.IsHorizontal)
+                {
+                    contentSize.x += delta;
+                    Debug.LogError($"2 {_scrollrect.verticalNormalizedPosition} {size}");
+                    contentSize = _content.rect.size;
+                    // _content.anchoredPosition += Vector2.up * delta;
+                    _scrollrect.verticalNormalizedPosition -= delta / (contentSize.x - _viewport.rect.height);
+                }
+                else if (_scrollController.IsVertical)
+                {
+                    contentSize.y += delta;
+                    Debug.LogError($"2 {_scrollrect.verticalNormalizedPosition} {size}");
+                    contentSize = _content.rect.size;
+                    // _content.anchoredPosition += Vector2.up * delta;
+                    _scrollrect.verticalNormalizedPosition -= delta / (contentSize.y - _viewport.rect.height);
+                }
             }
         }
 

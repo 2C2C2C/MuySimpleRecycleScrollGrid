@@ -126,8 +126,8 @@ namespace RecycleScrollView
         private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedElementEdgePosition, float normalizedViewportEdgePosition, bool checkDirHeadToTail)
         {
             RectTransform viewport = _scrollRect.viewport;
-            Vector2 viewportHeadEdgeRectPosition = CalculateNormalizedRectPosition(normalizedViewportEdgePosition);
-            Vector2 viewportEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, viewportHeadEdgeRectPosition);
+            Vector2 viewportEdgeRectPosition = CalculateNormalizedRectPosition(normalizedViewportEdgePosition);
+            Vector2 viewportEdge = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, viewportEdgeRectPosition);
 
             Vector2 elementEdgeRectPosition = CalculateNormalizedRectPosition(normalizedElementEdgePosition);
             Vector2 elementEdge = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(element.ElementTransform, elementEdgeRectPosition);
@@ -155,8 +155,8 @@ namespace RecycleScrollView
                 if (checkDirHeadToTail)
                 {
                     isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.x >= viewportEdge.x : // Direction is right to left 
-                        elementEdge.x < viewportEdge.x; // Direction is left to right
+                        elementEdge.x < viewportEdge.x : // Direction is right to left 
+                        elementEdge.x > viewportEdge.x; // Direction is left to right
                 }
                 else
                 {
@@ -164,7 +164,6 @@ namespace RecycleScrollView
                         elementEdge.x > viewportEdge.x : // Direction is left to right
                         elementEdge.x < viewportEdge.x; // Direction is right to left 
                 }
-
             }
 
             return isBeyoudEdge;
@@ -172,12 +171,12 @@ namespace RecycleScrollView
 
         private bool RemoveElementsIfNeed()
         {
-            bool hasRemoveHeadElements = RemoveHeadElementsIfNeed();
-            bool hasRemoveTailElements = RemoveTailElementsIfNeed();
+            bool hasRemoveHeadElements = RemoveElementsFromHeadIfNeed();
+            bool hasRemoveTailElements = RemoveElementsFromTailIfNeed();
             return hasRemoveHeadElements || hasRemoveTailElements;
         }
 
-        private bool RemoveHeadElementsIfNeed()
+        private bool RemoveElementsFromHeadIfNeed()
         {
             RectTransform viewport = _scrollRect.viewport;
             RectTransform content = _scrollRect.content;
@@ -229,22 +228,27 @@ namespace RecycleScrollView
                         // HACK Calculate how much movement need to apply to put the element same position
                         if (IsVertical)
                         {
+                            // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
                             if (_scrollParam.reverseArrangement)
                             {
-                                prevFrontPos.y += removeSize;
-                                float normalizedDelta = (prevFrontPos.y - currentFrontPos.y) / (content.rect.height - viewport.rect.height);
-                                _scrollRect.verticalNormalizedPosition -= normalizedDelta;
+                                content.localPosition += Vector3.up * removeSize;
                             }
                             else
                             {
-                                prevFrontPos.y -= removeSize;
-                                float normalizedDelta = (currentFrontPos.y - prevFrontPos.y) / (content.rect.height - viewport.rect.height);
-                                _scrollRect.verticalNormalizedPosition += normalizedDelta;
+                                content.localPosition += Vector3.down * removeSize;
                             }
                         }
                         else if (IsHorizontal)
                         {
-                            // TODO
+                            // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
+                            if (_scrollParam.reverseArrangement)
+                            {
+                                content.localPosition += Vector3.left * removeSize;
+                            }
+                            else
+                            {
+                                content.localPosition += Vector3.right * removeSize;
+                            }
                         }
                         LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     }
@@ -253,7 +257,7 @@ namespace RecycleScrollView
             return hasRemoveElements;
         }
 
-        private bool RemoveTailElementsIfNeed()
+        private bool RemoveElementsFromTailIfNeed()
         {
             RectTransform viewport = _scrollRect.viewport;
             RectTransform content = _scrollRect.content;
@@ -314,24 +318,12 @@ namespace RecycleScrollView
                         // HACK Calculate how much movement need to apply to put the element same position
                         if (IsVertical)
                         {
-                            // if (_scrollParam.reverseArrangement)
-                            // {
-                            //     prevRearPos.y -= rearTotalRemoveSize;
-                            //     float normalizedDelta = (currentRearPos.y - prevRearPos.y) / (content.rect.height - viewport.rect.height);
-                            //     _scrollRect.verticalNormalizedPosition += normalizedDelta;
-                            // }
-                            // else
-                            // {
-                            //     prevRearPos.y += rearTotalRemoveSize;
-                            //     float normalizedDelta = (currentRearPos.y - prevRearPos.y) / (content.rect.height - viewport.rect.height);
-                            //     _scrollRect.verticalNormalizedPosition -= normalizedDelta;
-                            // }
+                            // TODO
                         }
                         else if (IsHorizontal)
                         {
                             // TODO
                         }
-
                         LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     }
                 }
@@ -362,12 +354,12 @@ namespace RecycleScrollView
 
         private bool AddElemensIfNeed()
         {
-            bool hasAddToHead = AddHeadElementsIfNeed();
-            bool hasAddToTail = AddTailElementsIfNeed();
+            bool hasAddToHead = AddElementsToHeadIfNeed();
+            bool hasAddToTail = AddElementsToTailIfNeed();
             return hasAddToHead || hasAddToTail;
         }
 
-        private bool AddHeadElementsIfNeed()
+        private bool AddElementsToHeadIfNeed()
         {
             RectTransform content = _scrollRect.content;
             RectTransform viewport = _scrollRect.viewport;
@@ -381,7 +373,7 @@ namespace RecycleScrollView
                 Vector2 currentDelta = default;
                 currentDelta.y = Mathf.Abs(viewportHeadPos.y - prevHeadPos.y);
                 currentDelta.x = Mathf.Abs(currentDelta.x);
-                float totalAddSize = 0f;
+                float addSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus())
                 {
                     RecycleOneDirectionScrollElement frontElement = m_currentUsingElements[0];
@@ -390,11 +382,11 @@ namespace RecycleScrollView
                         AddElementToHead(frontElement.ElementIndex - 1);
                         if (IsVertical)
                         {
-                            totalAddSize += m_currentUsingElements[0].ElementPreferredSize.y;
+                            addSize += m_currentUsingElements[0].ElementPreferredSize.y;
                         }
                         else if (IsHorizontal)
                         {
-                            totalAddSize += m_currentUsingElements[0].ElementPreferredSize.x;
+                            addSize += m_currentUsingElements[0].ElementPreferredSize.x;
                         }
                     }
                     else
@@ -402,32 +394,39 @@ namespace RecycleScrollView
                         break;
                     }
 
-                    if ((IsVertical && totalAddSize > currentDelta.y) ||
-                             (IsHorizontal && totalAddSize > currentDelta.x))
+                    if ((IsVertical && addSize > currentDelta.y) ||
+                             (IsHorizontal && addSize > currentDelta.x))
                     {
                         break;
                     }
                 }
 
-                if (0f < totalAddSize)
+                if (0f < addSize)
                 {
                     if (IsVertical)
                     {
                         // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
                         if (_scrollParam.reverseArrangement)
                         {
-                            content.localPosition += Vector3.down * totalAddSize;
+                            content.localPosition += Vector3.down * addSize;
                         }
                         else
                         {
-                            content.localPosition += Vector3.up * totalAddSize;
+                            content.localPosition += Vector3.up * addSize;
                         }
                     }
                     else if (IsHorizontal)
                     {
-                        // TODO
+                        // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
+                        if (_scrollParam.reverseArrangement)
+                        {
+                            content.localPosition += Vector3.right * addSize;
+                        }
+                        else
+                        {
+                            content.localPosition += Vector3.left * addSize;
+                        }
                     }
-
                     LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     hasAddElements = true;
                 }
@@ -435,7 +434,7 @@ namespace RecycleScrollView
             return hasAddElements;
         }
 
-        private bool AddTailElementsIfNeed()
+        private bool AddElementsToTailIfNeed()
         {
             RectTransform content = _scrollRect.content;
             RectTransform viewport = _scrollRect.viewport;
@@ -478,17 +477,17 @@ namespace RecycleScrollView
 
                 if (0f < totalAddSize)
                 {
-                    Vector2 currentBottomPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPos);
-                    currentBottomPos = viewport.InverseTransformPoint(currentBottomPos);
+                    // Vector2 currentBottomPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPos);
+                    // currentBottomPos = viewport.InverseTransformPoint(currentBottomPos);
                     // HACK Calculate how much movement need to apply to put the element same position
                     if (IsVertical)
                     {
+                        // No need
                     }
                     else if (IsHorizontal)
                     {
                         // TODO
                     }
-
                     LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     hasAddElements = true;
                 }

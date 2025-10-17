@@ -36,6 +36,11 @@ namespace RecycleScrollView.Sample
             _layoutElement.preferredHeight = height;
         }
 
+        public void SetWidth(float height)
+        {
+            _layoutElement.preferredWidth = height;
+        }
+
         private void HandleSelfFittingAlongAxis(int axis)
         {
             RectTransform rectTransform = transform as RectTransform;

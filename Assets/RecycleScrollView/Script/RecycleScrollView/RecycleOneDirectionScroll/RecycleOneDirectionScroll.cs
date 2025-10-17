@@ -26,8 +26,6 @@ namespace RecycleScrollView
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
 
-        private bool m_hasAdjustmentCurrentFrame = false;
-
         public bool IsVertical => ScrollDirection.vertical == _scrollParam.scrollDirection;
         public bool IsHorizontal => ScrollDirection.Horizontal == _scrollParam.scrollDirection;
 
@@ -153,7 +151,7 @@ namespace RecycleScrollView
 
         private void InternalAdjustment()
         {
-            // Debug.LogError(noramlizedPosition);
+            // Debug.LogError(_scrollRect.normalizedPosition);
             RectTransform content = _scrollRect.content;
             Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
             Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
@@ -187,16 +185,6 @@ namespace RecycleScrollView
         {
             // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
-            m_hasAdjustmentCurrentFrame = true;
-        }
-
-        private void LateUpdate()
-        {
-            if (!m_hasAdjustmentCurrentFrame)
-            {
-                //InternalAdjustment();
-            }
-            m_hasAdjustmentCurrentFrame = false;
         }
 
         protected override void OnEnable()
