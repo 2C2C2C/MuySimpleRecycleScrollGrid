@@ -59,7 +59,6 @@ namespace RecycleScrollView
             }
             else if (IsHorizontal)
             {
-                // TODO IDK why but it doesnt work when normalized viewport position less than 0.5f
                 Vector2 horizontalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(_defaultNavigationParams.normalizedPositionInViewPort, 0.5f));
                 // Content pivot is (0, 0.5) (false _scrollParam.reverseArrangement) ; Content pivot is (1, 0.5) (true _scrollParam.reverseArrangement)
                 Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(_defaultNavigationParams.normalizedElementPositionAdjustment, 0.5f));

@@ -1,6 +1,8 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UI.Extend;
+using ScrollDirection = RecycleScrollView.SingleDirectionScrollParam.ScrollDirection;
 
 namespace RecycleScrollView
 {
@@ -30,14 +32,34 @@ namespace RecycleScrollView
                 return SIDE_STATUS_ENOUGH; // HACK
             }
 
+            ScrollDirection checkDirection;
+            switch (_scrollParam.scrollDirection)
+            {
+                case ScrollDirection.Horizontal_LeftToRight:
+                    checkDirection = ScrollDirection.Horizontal_RightToLeft;
+                    break;
+                case ScrollDirection.Horizontal_RightToLeft:
+                    checkDirection = ScrollDirection.Horizontal_LeftToRight;
+                    break;
+
+                case ScrollDirection.Vertical_UpToDown:
+                    checkDirection = ScrollDirection.Vertical_DownToUp;
+                    break;
+                case ScrollDirection.Vertical_DownToUp:
+                    checkDirection = ScrollDirection.Vertical_UpToDown;
+                    break;
+                default:
+                    checkDirection = ScrollDirection.None;
+                    break;
+            }
             RecycleOneDirectionScrollElement headElement = m_currentUsingElements[0];
-            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(headElement, EDGE_TAIL, EDGE_HEAD, false);
+            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(headElement, normalizedViewportEdgePosition: EDGE_HEAD, normalizedElementEdgePosition: EDGE_TAIL, checkDirection);
             if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement head2ndElement = m_currentUsingElements[1];
-                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, EDGE_HEAD, EDGE_HEAD, false);
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, normalizedViewportEdgePosition: EDGE_HEAD, normalizedElementEdgePosition: EDGE_HEAD, checkDirection);
                     if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
@@ -75,14 +97,15 @@ namespace RecycleScrollView
                 }
             }
 
+            ScrollDirection checkDirection = _scrollParam.scrollDirection;
             RecycleOneDirectionScrollElement tailElement = m_currentUsingElements[elementCount - 1];
-            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tailElement, EDGE_HEAD, EDGE_TAIL, true);
+            bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tailElement, normalizedViewportEdgePosition: EDGE_TAIL, normalizedElementEdgePosition: EDGE_HEAD, checkDirection);
             if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement tail2ndElement = m_currentUsingElements[elementCount - 2];
-                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tail2ndElement, EDGE_HEAD, EDGE_TAIL, true);
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tail2ndElement, normalizedViewportEdgePosition: EDGE_TAIL, normalizedElementEdgePosition: EDGE_HEAD, checkDirection);
                     if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
@@ -101,17 +124,22 @@ namespace RecycleScrollView
         private Vector2 CalculateNormalizedRectPosition(float normalizedValue)
         {
             Vector2 result = Vector2.zero;
-            if (IsHorizontal)
+            switch (_scrollParam.scrollDirection)
             {
-                result = _scrollParam.reverseArrangement ?
-                    new Vector2(Mathf.Lerp(1f, 0f, normalizedValue), 0.5f) : // Direction is right to left
-                    new Vector2(Mathf.Lerp(0f, 1f, normalizedValue), 0.5f); // Direction is left to right
-            }
-            if (IsVertical)
-            {
-                result = _scrollParam.reverseArrangement ?
-                    new Vector2(0.5f, Mathf.Lerp(0f, 1f, normalizedValue)) : // Direction is down to up
-                    new Vector2(0.5f, Mathf.Lerp(1f, 0f, normalizedValue)); // Direction is up to down
+                case ScrollDirection.Horizontal_LeftToRight:
+                    result = new Vector2(Mathf.Lerp(0f, 1f, normalizedValue), 0.5f);
+                    break;
+                case ScrollDirection.Horizontal_RightToLeft:
+                    result = new Vector2(Mathf.Lerp(1f, 0f, normalizedValue), 0.5f);
+                    break;
+                case ScrollDirection.Vertical_UpToDown:
+                    result = new Vector2(0.5f, Mathf.Lerp(1f, 0f, normalizedValue));
+                    break;
+                case ScrollDirection.Vertical_DownToUp:
+                    result = new Vector2(0.5f, Mathf.Lerp(0f, 1f, normalizedValue));
+                    break;
+                default:
+                    break;
             }
             return result;
         }
@@ -123,7 +151,7 @@ namespace RecycleScrollView
         /// <param name="normalizedElementEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <param name="normalizedViewportEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <returns></returns>
-        private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedElementEdgePosition, float normalizedViewportEdgePosition, bool checkDirHeadToTail)
+        private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedViewportEdgePosition, float normalizedElementEdgePosition, ScrollDirection checkDirection)
         {
             RectTransform viewport = _scrollRect.viewport;
             Vector2 viewportEdgeRectPosition = CalculateNormalizedRectPosition(normalizedViewportEdgePosition);
@@ -132,40 +160,28 @@ namespace RecycleScrollView
             Vector2 elementEdgeRectPosition = CalculateNormalizedRectPosition(normalizedElementEdgePosition);
             Vector2 elementEdge = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(element.ElementTransform, elementEdgeRectPosition);
             elementEdge = viewport.InverseTransformPoint(elementEdge);
+
             bool isBeyoudEdge = false;
-
-            if (IsVertical)
+            switch (checkDirection)
             {
-                if (checkDirHeadToTail)
-                {
-                    isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.y > viewportEdge.y : // Direction is down to up
-                        elementEdge.y < viewportEdge.y; // Direction is up to down
-                }
-                else // Tail to Head
-                {
-                    isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.y < viewportEdge.y : // Direction is up to down
-                        elementEdge.y > viewportEdge.y; // Direction is down to up
-                }
+                // Horizontal
+                case ScrollDirection.Horizontal_LeftToRight:
+                    isBeyoudEdge = elementEdge.x > viewportEdge.x;
+                    break;
+                case ScrollDirection.Horizontal_RightToLeft:
+                    isBeyoudEdge = elementEdge.x < viewportEdge.x;
+                    break;
 
+                // Vertical
+                case ScrollDirection.Vertical_UpToDown:
+                    isBeyoudEdge = elementEdge.y < viewportEdge.y;
+                    break;
+                case ScrollDirection.Vertical_DownToUp:
+                    isBeyoudEdge = elementEdge.y > viewportEdge.y;
+                    break;
+                default:
+                    break;
             }
-            else if (IsHorizontal)
-            {
-                if (checkDirHeadToTail)
-                {
-                    isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.x < viewportEdge.x : // Direction is right to left 
-                        elementEdge.x > viewportEdge.x; // Direction is left to right
-                }
-                else
-                {
-                    isBeyoudEdge = _scrollParam.reverseArrangement ?
-                        elementEdge.x > viewportEdge.x : // Direction is left to right
-                        elementEdge.x < viewportEdge.x; // Direction is right to left 
-                }
-            }
-
             return isBeyoudEdge;
         }
 
@@ -190,6 +206,7 @@ namespace RecycleScrollView
                     do
                     {
                         RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[frontRemoveElementCount + 1];
+                        // TODO This check is different with CheckHeadSideStatus(), need unify
                         if ((0 > frontRemoveElementCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
                            (0 <= frontRemoveElementCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
                         {
@@ -201,9 +218,6 @@ namespace RecycleScrollView
                         }
                     } while (-1 < frontRemoveElementCount);
 
-                    Vector2 headRectPosition = CalculateNormalizedRectPosition(EDGE_HEAD);
-                    Vector2 prevFrontPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, headRectPosition);
-                    prevFrontPos = viewport.InverseTransformPoint(prevFrontPos);
                     float removeSize = 0f;
                     while (0 < frontRemoveElementCount && 0 < m_currentUsingElements.Count)
                     {
@@ -221,31 +235,27 @@ namespace RecycleScrollView
                         hasRemoveElements = true;
                     }
 
-                    if (0f < removeSize) // HACK Calculate how much movement need to apply to put the element same position
+                    if (0f < removeSize) // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
                     {
-                        if (IsVertical)
+                        switch (_scrollParam.scrollDirection)
                         {
-                            // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
-                            if (_scrollParam.reverseArrangement)
-                            {
-                                content.localPosition += Vector3.up * removeSize;
-                            }
-                            else
-                            {
+                            // Vertical
+                            case ScrollDirection.Vertical_UpToDown:
                                 content.localPosition += Vector3.down * removeSize;
-                            }
-                        }
-                        else if (IsHorizontal)
-                        {
-                            // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
-                            if (_scrollParam.reverseArrangement)
-                            {
-                                content.localPosition += Vector3.left * removeSize;
-                            }
-                            else
-                            {
+                                break;
+                            case ScrollDirection.Vertical_DownToUp:
+                                content.localPosition += Vector3.up * removeSize;
+                                break;
+
+                            // Horizontal
+                            case ScrollDirection.Horizontal_LeftToRight:
                                 content.localPosition += Vector3.right * removeSize;
-                            }
+                                break;
+                            case ScrollDirection.Horizontal_RightToLeft:
+                                content.localPosition += Vector3.left * removeSize;
+                                break;
+                            default:
+                                break;
                         }
                         LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     }
@@ -257,7 +267,6 @@ namespace RecycleScrollView
         private bool RemoveElementsFromTailIfNeed()
         {
             RectTransform viewport = _scrollRect.viewport;
-            RectTransform content = _scrollRect.content;
             bool hasRemoveElements = false;
             int prevElementCount = m_currentUsingElements.Count;
             if (0 < prevElementCount)
@@ -272,6 +281,7 @@ namespace RecycleScrollView
                         if (0 < index)
                         {
                             RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[index];
+                            // TODO This check is different with CheckTailSideStatus(), need unify
                             if ((0 > removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
                                (0 <= removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
                             {
@@ -288,9 +298,6 @@ namespace RecycleScrollView
                         }
                     } while (-1 < removeCount);
 
-                    Vector2 tailRectPosition = CalculateNormalizedRectPosition(EDGE_TAIL);
-                    Vector2 prevRearPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, tailRectPosition);
-                    prevRearPos = viewport.InverseTransformPoint(prevRearPos);
                     float rearTotalRemoveSize = 0f;
                     while (0 < removeCount && 0 < m_currentUsingElements.Count)
                     {
@@ -362,10 +369,10 @@ namespace RecycleScrollView
                 float addSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus())
                 {
-                    RecycleOneDirectionScrollElement frontElement = m_currentUsingElements[0];
-                    if (1 <= frontElement.ElementIndex)
+                    int canAddIndex = CalculateAvaialbeNextHeadElementIndex();
+                    if (-1 != canAddIndex)
                     {
-                        AddElementToHead(frontElement.ElementIndex - 1);
+                        AddElementToHead(canAddIndex);
                         if (IsVertical)
                         {
                             addSize += m_currentUsingElements[0].ElementPreferredSize.y;
@@ -389,19 +396,26 @@ namespace RecycleScrollView
 
                 if (0f < addSize)
                 {
-                    if (IsVertical)
+                    // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
+                    switch (_scrollParam.scrollDirection)
                     {
-                        // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
-                        content.localPosition += _scrollParam.reverseArrangement ?
-                            Vector3.down * addSize :
-                            Vector3.up * addSize;
-                    }
-                    else if (IsHorizontal)
-                    {
-                        // HACK Becuz I use a fixed pivot for content, so I can directly adjust local position
-                        content.localPosition += _scrollParam.reverseArrangement ?
-                            Vector3.right * addSize :
-                            Vector3.left * addSize;
+                        // Vertical
+                        case ScrollDirection.Vertical_UpToDown:
+                            content.localPosition += Vector3.up * addSize;
+                            break;
+                        case ScrollDirection.Vertical_DownToUp:
+                            content.localPosition += Vector3.down * addSize;
+                            break;
+
+                        // Horizontal
+                        case ScrollDirection.Horizontal_LeftToRight:
+                            content.localPosition += Vector3.left * addSize;
+                            break;
+                        case ScrollDirection.Horizontal_RightToLeft:
+                            content.localPosition += Vector3.right * addSize;
+                            break;
+                        default:
+                            break;
                     }
                     LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
                     hasAddElements = true;
@@ -426,10 +440,10 @@ namespace RecycleScrollView
                 float totalAddSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
-                    RecycleOneDirectionScrollElement rearElement = m_currentUsingElements[m_currentUsingElements.Count - 1];
-                    if (m_dataSource.DataElementCount - 1 > rearElement.ElementIndex)
+                    int canAddIndex = CalculateAvaialbeNextTailElementIndex();
+                    if (-1 != canAddIndex)
                     {
-                        AddElementToTail(rearElement.ElementIndex + 1);
+                        AddElementToTail(canAddIndex);
                         if (IsVertical)
                         {
                             totalAddSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.y;
@@ -458,6 +472,54 @@ namespace RecycleScrollView
                 }
             }
             return hasAddElements;
+        }
+
+        /// <summary> The data index of the element for adding head </summary>
+        /// <returns> -1 Means can not find valid index </returns>
+        private int CalculateAvaialbeNextHeadElementIndex()
+        {
+            if (null == m_dataSource)
+            {
+                return -1;
+            }
+
+            if (0 == m_currentUsingElements.Count)
+            {
+                return _scrollParam.reverseArrangement ? m_dataSource.DataElementCount - 1 : 0;
+            }
+
+            int index = m_currentUsingElements[0].ElementIndex;
+            bool isReachedLimit = _scrollParam.reverseArrangement ? index >= m_dataSource.DataElementCount - 1 : index <= 0;
+            if (isReachedLimit)
+            {
+                return -1;
+            }
+            int dataIndex = _scrollParam.reverseArrangement ? (index + 1) : (index - 1);
+            return dataIndex;
+        }
+
+        /// <summary> The data index of the element for adding tail </summary>
+        /// <returns> -1 Means can not find valid index </returns>
+        private int CalculateAvaialbeNextTailElementIndex()
+        {
+            if (null == m_dataSource)
+            {
+                return -1;
+            }
+
+            if (0 == m_currentUsingElements.Count)
+            {
+                return _scrollParam.reverseArrangement ? m_dataSource.DataElementCount - 1 : 0;
+            }
+
+            int index = m_currentUsingElements[m_currentUsingElements.Count - 1].ElementIndex;
+            bool isReachedLimit = _scrollParam.reverseArrangement ? index <= 0 : index >= m_dataSource.DataElementCount - 1;
+            if (isReachedLimit)
+            {
+                return -1;
+            }
+            int dataIndex = _scrollParam.reverseArrangement ? (index - 1) : (index + 1);
+            return dataIndex;
         }
 
         private void AddElementToHead(int dataIndex)

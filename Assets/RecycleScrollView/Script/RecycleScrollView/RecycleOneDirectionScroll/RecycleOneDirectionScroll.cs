@@ -28,8 +28,8 @@ namespace RecycleScrollView
 
         private bool m_hasAdjustCiurrentElements = false;
 
-        public bool IsVertical => ScrollDirection.vertical == _scrollParam.scrollDirection;
-        public bool IsHorizontal => ScrollDirection.Horizontal == _scrollParam.scrollDirection;
+        public bool IsVertical => _scrollParam.IsVertical;
+        public bool IsHorizontal => _scrollParam.IsHorizontal;
 
         private List<RecycleOneDirectionScrollElement> m_currentUsingElements = new List<RecycleOneDirectionScrollElement>();
         private IOneDirectionScrollDataSource m_dataSource;
@@ -54,54 +54,69 @@ namespace RecycleScrollView
             if (null == m_dataSource)
             {
                 m_dataSource = dataSource;
-                RectTransform content = _scrollRect.content;
-                LayoutRebuilder.ForceRebuildLayoutImmediate(content);
-                _contentLayoutGroup.reverseArrangement = _scrollParam.reverseArrangement;
-                if (IsVertical)
+                ApplyLayoutSetting();
+                while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
-                    if (_contentLayoutGroup is VerticalLayoutGroup)
+                    if (!AddElementsToTailIfNeed())
                     {
-                        content.pivot = _scrollParam.reverseArrangement ?
-                            new Vector2(0.5f, 0f) :
-                            new Vector2(0.5f, 1f);
-                        _contentLayoutGroup.childAlignment = _scrollParam.reverseArrangement ?
-                            TextAnchor.LowerCenter :
-                            TextAnchor.UpperCenter;
-                    }
-                    else
-                    {
-                        Debug.LogError($"Vertical scroll need a VerticalLayoutGroup on content");
-                    }
-                }
-                if (IsHorizontal)
-                {
-                    if (_contentLayoutGroup is HorizontalLayoutGroup)
-                    {
-                        content.pivot = _scrollParam.reverseArrangement ?
-                            new Vector2(1f, 0.5f) :
-                            new Vector2(0f, 0.5f);
-                    }
-                    else
-                    {
-                        Debug.LogError($"Horizontal scroll need a VerticalLayoutGroup on content");
-                    }
-                }
-
-                int dataCount = dataSource.DataElementCount;
-                int elementCount = 0;
-                if (0 < dataCount)
-                {
-                    do
-                    {
-                        if (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
-                        {
-                            AddElementToTail(elementCount++);
-                            continue;
-                        }
                         break;
-                    } while (elementCount < dataCount);
+                    }
                 }
                 _scrollRect.CallUpdateBoundsAndPrevData();
+            }
+        }
+
+        private void ApplyLayoutSetting()
+        {
+            RectTransform content = _scrollRect.content;
+            _scrollRect.vertical = IsVertical;
+            _scrollRect.horizontal = IsHorizontal;
+            if (IsVertical)
+            {
+                _scrollRect.horizontal = false;
+                if (_contentLayoutGroup is VerticalLayoutGroup)
+                {
+                    switch (_scrollParam.scrollDirection)
+                    {
+                        case ScrollDirection.Vertical_UpToDown:
+                            content.pivot = new Vector2(0.5f, 1f);
+                            _contentLayoutGroup.childAlignment = TextAnchor.UpperCenter;
+                            _contentLayoutGroup.reverseArrangement = false;
+                            break;
+                        case ScrollDirection.Vertical_DownToUp:
+                            content.pivot = new Vector2(0.5f, 0f);
+                            _contentLayoutGroup.childAlignment = TextAnchor.LowerCenter;
+                            _contentLayoutGroup.reverseArrangement = true;
+                            break;
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Vertical scroll need a VerticalLayoutGroup on content");
+                }
+            }
+            else if (IsHorizontal)
+            {
+                if (_contentLayoutGroup is HorizontalLayoutGroup)
+                {
+                    switch (_scrollParam.scrollDirection)
+                    {
+                        case ScrollDirection.Horizontal_LeftToRight:
+                            content.pivot = new Vector2(0f, 0.5f);
+                            _contentLayoutGroup.childAlignment = TextAnchor.MiddleLeft;
+                            _contentLayoutGroup.reverseArrangement = false;
+                            break;
+                        case ScrollDirection.Horizontal_RightToLeft:
+                            content.pivot = new Vector2(1f, 0.5f);
+                            _contentLayoutGroup.childAlignment = TextAnchor.MiddleRight;
+                            _contentLayoutGroup.reverseArrangement = true;
+                            break;
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Horizontal scroll need a HorizontalLayoutGroup on content");
+                }
             }
         }
 
@@ -147,12 +162,17 @@ namespace RecycleScrollView
         {
             bool hasRemoved = RemoveElementsIfNeed();
             bool hasAdded = AddElemensIfNeed();
-
-            return hasRemoved || hasAdded;
+            bool hasAdjusted = hasRemoved || hasAdded;
+            if (hasAdjusted)
+            {
+                _scrollRect.CallUpdateBoundsAndPrevData();
+            }
+            return hasAdjusted;
         }
 
         private void InternalAdjustment()
         {
+            // Debug.LogError(_scrollRect.velocity);
             // Debug.LogError(_scrollRect.normalizedPosition);
             RectTransform content = _scrollRect.content;
             Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
@@ -175,12 +195,13 @@ namespace RecycleScrollView
                 _scrollRect.velocity = velocity;
             }
 
-            if (hasAdjustedElements || !isOutOfBounds)
+            if (hasAdjustedElements)
             {
                 // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
                 Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
                 _scrollRect.ContentStartPos = newStartPos;
             }
+            m_hasAdjustCiurrentElements = hasAdjustedElements;
         }
 
         private void OnScrollPositionChanged(Vector2 noramlizedPosition)
@@ -197,8 +218,9 @@ namespace RecycleScrollView
             }
             m_hasAdjustCiurrentElements = false;
 
-            if (--m_nextFrameSetActive < 0)
+            if (0 > m_nextFrameSetActive)
             {
+                --m_nextFrameSetActive;
                 _scrollRect.enabled = true;
                 m_nextFrameSetActive = 0;
             }
@@ -226,6 +248,11 @@ namespace RecycleScrollView
         protected override void Reset()
         {
             TryGetComponent<UnityScrollRectExtended>(out _scrollRect);
+        }
+
+        protected override void OnValidate()
+        {
+            ApplyLayoutSetting();
         }
 
 #endif
