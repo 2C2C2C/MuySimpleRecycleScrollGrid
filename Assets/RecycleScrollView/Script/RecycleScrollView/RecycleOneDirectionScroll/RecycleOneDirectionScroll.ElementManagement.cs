@@ -192,24 +192,24 @@ namespace RecycleScrollView
             {
                 if (SIDE_STATUS_NEEDREMOVE == CheckHeadSideStatus())
                 {
-                    int frontRemoveElementCount = -1;
+                    int removeCount = -1;
                     do
                     {
-                        RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[frontRemoveElementCount + 1];
+                        RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[removeCount + 1];
                         // TODO This check is different with CheckHeadSideStatus(), need unify
-                        if ((0 > frontRemoveElementCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
-                           (0 <= frontRemoveElementCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
+                        if ((0 > removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
+                           (0 <= removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
                         {
-                            ++frontRemoveElementCount;
+                            ++removeCount;
                         }
                         else
                         {
                             break;
                         }
-                    } while (-1 < frontRemoveElementCount);
+                    } while (-1 < removeCount);
 
                     float removeSize = 0f;
-                    while (0 < frontRemoveElementCount && 0 < m_currentUsingElements.Count)
+                    while (0 < removeCount && 0 < m_currentUsingElements.Count)
                     {
                         RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[0];
                         if (IsVertical)
@@ -221,7 +221,7 @@ namespace RecycleScrollView
                             removeSize += toRemove.ElementPreferredSize.x;
                         }
                         RemoveElementFromHead();
-                        --frontRemoveElementCount;
+                        --removeCount;
                         hasRemoveElements = true;
                     }
 
@@ -288,24 +288,24 @@ namespace RecycleScrollView
                         }
                     } while (-1 < removeCount);
 
-                    float rearTotalRemoveSize = 0f;
+                    float removeSize = 0f;
                     while (0 < removeCount && 0 < m_currentUsingElements.Count)
                     {
                         RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[m_currentUsingElements.Count - 1];
                         if (IsVertical)
                         {
-                            rearTotalRemoveSize += toRemove.ElementPreferredSize.y;
+                            removeSize += toRemove.ElementPreferredSize.y;
                         }
                         else if (IsHorizontal)
                         {
-                            rearTotalRemoveSize += toRemove.ElementPreferredSize.x;
+                            removeSize += toRemove.ElementPreferredSize.x;
                         }
                         RemoveElementFromTail();
                         --removeCount;
                         hasRemoveElements = true;
                     }
 
-                    if (0f < rearTotalRemoveSize)
+                    if (0f < removeSize)
                     {
                         // HACK Since I force the pivot of content, no need to adjust position at this case
                     }
@@ -321,7 +321,7 @@ namespace RecycleScrollView
             m_currentUsingElements.RemoveAt(0);
             InternalRemoveElement(element);
             LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
-            // Debug.LogError($"Remove on top data{dataIndex}");
+            // Debug.LogError($"Remove on top data{dataIndex} Time {Time.time}");
         }
 
         private void RemoveElementFromTail()
@@ -332,7 +332,7 @@ namespace RecycleScrollView
             m_currentUsingElements.RemoveAt(elementIndex);
             InternalRemoveElement(element);
             LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
-            // Debug.LogError($"Remove on bottom data{dataIndex}");
+            // Debug.LogError($"Remove on bottom data{dataIndex} Time {Time.time}");
         }
 
         private bool AddElemensIfNeed()
@@ -353,9 +353,7 @@ namespace RecycleScrollView
                 Vector2 prevHeadPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, headRectPos);
                 prevHeadPos = viewport.InverseTransformPoint(prevHeadPos);
                 Vector2 viewportHeadPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, headRectPos);
-                Vector2 currentDelta = default;
-                currentDelta.y = Mathf.Abs(viewportHeadPos.y - prevHeadPos.y);
-                currentDelta.x = Mathf.Abs(currentDelta.x);
+                Vector2 currentDelta = new Vector2(Mathf.Abs(viewportHeadPos.x - prevHeadPos.x), Mathf.Abs(viewportHeadPos.y - prevHeadPos.y));
                 float addSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus())
                 {
@@ -426,8 +424,7 @@ namespace RecycleScrollView
                 prevTailPos = viewport.InverseTransformPoint(prevTailPos);
                 Vector2 viewportTailPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, tailRectPos);
                 Vector2 currentDelta = new Vector2(Mathf.Abs(viewportTailPos.x - prevTailPos.x), Mathf.Abs(viewportTailPos.y - prevTailPos.y));
-                currentDelta.y = Mathf.Abs(viewportTailPos.y - prevTailPos.y);
-                float totalAddSize = 0f;
+                float addSize = 0f;
                 while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
                     int canAddIndex = CalculateAvaialbeNextTailElementIndex();
@@ -436,15 +433,15 @@ namespace RecycleScrollView
                         AddElementToTail(canAddIndex);
                         if (IsVertical)
                         {
-                            totalAddSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.y;
+                            addSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.y;
                         }
                         else if (IsHorizontal)
                         {
-                            totalAddSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.x;
+                            addSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.x;
                         }
 
-                        if ((IsVertical && totalAddSize > currentDelta.y) ||
-                                 (IsHorizontal && totalAddSize > currentDelta.x))
+                        if ((IsVertical && addSize > currentDelta.y) ||
+                                 (IsHorizontal && addSize > currentDelta.x))
                         {
                             break;
                         }
@@ -455,7 +452,7 @@ namespace RecycleScrollView
                     }
                 }
 
-                if (0f < totalAddSize)
+                if (0f < addSize)
                 {
                     // HACK Since I force the pivot of content, no need to adjust position at this case
                     hasAddElements = true;
@@ -520,7 +517,7 @@ namespace RecycleScrollView
             newElement.transform.SetAsFirstSibling();
             newElement.SetIndex(dataIndex);
             LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
-            // Debug.LogError($"Add on top data{dataIndex}");
+            // Debug.LogError($"Add on top data{dataIndex} Time {Time.time}");
         }
 
         private void AddElementToTail(int dataIndex)
@@ -531,7 +528,7 @@ namespace RecycleScrollView
             newElement.transform.SetAsLastSibling();
             newElement.SetIndex(dataIndex);
             LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
-            // Debug.LogError($"Add on bottom data{dataIndex}");
+            // Debug.LogError($"Add on bottom data{dataIndex} Time {Time.time}");
         }
 
     }

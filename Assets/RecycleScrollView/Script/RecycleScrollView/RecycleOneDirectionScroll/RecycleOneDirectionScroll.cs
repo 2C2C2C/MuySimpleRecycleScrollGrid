@@ -21,12 +21,11 @@ namespace RecycleScrollView
         [SerializeField]
         private SingleDirectionScrollParam _scrollParam;
 
+        [Header("Other settings")]
         [SerializeField]
         private float _velocityStopThreshold = 7f;
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
-
-        private bool m_hasAdjustCiurrentElements = false;
 
         public bool IsVertical => _scrollParam.IsVertical;
         public bool IsHorizontal => _scrollParam.IsHorizontal;
@@ -206,29 +205,12 @@ namespace RecycleScrollView
                 Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
                 _scrollRect.ContentStartPos = newStartPos;
             }
-            m_hasAdjustCiurrentElements = hasAdjustedElements;
         }
 
         private void OnScrollPositionChanged(Vector2 noramlizedPosition)
         {
             // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
-        }
-
-        private void LateUpdate()
-        {
-            if (!m_hasAdjustCiurrentElements)
-            {
-                InternalAdjustment();
-            }
-            m_hasAdjustCiurrentElements = false;
-
-            if (0 > m_nextFrameSetActive)
-            {
-                --m_nextFrameSetActive;
-                _scrollRect.enabled = true;
-                m_nextFrameSetActive = 0;
-            }
         }
 
         protected override void OnEnable()
