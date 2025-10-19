@@ -57,6 +57,7 @@ namespace RecycleScrollView.Sample
 
         public void ReturnElement(RectTransform element)
         {
+            element.SetParent(null);
             GameObject.Destroy(element.gameObject);
         }
 

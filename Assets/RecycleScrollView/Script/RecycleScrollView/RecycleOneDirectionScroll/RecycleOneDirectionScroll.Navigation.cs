@@ -6,9 +6,6 @@ namespace RecycleScrollView
 {
     public partial class RecycleOneDirectionScroll
     {
-        /// <summary> HACK IDK why but do jumpto for horizontal scroll will result a weird offset in next/current frame, so I need to skil 2 frames </summary>
-        const int JUMPTO_SKIP_FRAME_COUNT = 2;
-
         [System.Serializable]
         public struct ScrollViewNavigationParams
         {
@@ -18,9 +15,6 @@ namespace RecycleScrollView
 
         [SerializeField]
         private ScrollViewNavigationParams _defaultNavigationParams;
-
-        /// <summary> HACK IDK why but do jumpto for horizontal scroll will result a weird offset in next/current frame, so I need to skil 2 frames </summary>
-        private int m_nextFrameSetActive = 0;
 
         public void JumpToElementInstant(int dataIndex)
         {
@@ -33,18 +27,17 @@ namespace RecycleScrollView
             {
                 InternalRemoveElement(m_currentUsingElements[i]);
             }
+            RectTransform content = _scrollRect.content;
             m_currentUsingElements.Clear();
 
             _scrollRect.StopMovement();
-            _scrollRect.enabled = false;
             RectTransform viewport = _scrollRect.viewport;
-            RectTransform content = _scrollRect.content;
             RecycleOneDirectionScrollElement targetElement = InternalCreateElement(dataIndex);
             targetElement.SetIndex(dataIndex);
             targetElement.CalculatePreferredSize();
             m_currentUsingElements.Add(targetElement);
-
             LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+
             // HACK Since the pivot of content must be fixed, we need to adjust the position of content to make the target element at the correct position
             if (IsVertical)
             {
@@ -68,11 +61,18 @@ namespace RecycleScrollView
                 localPosition.x += delta;
                 content.localPosition = localPosition;
             }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
 
             AddElemensIfNeed();
             _scrollRect.CallUpdateBoundsAndPrevData();
-            m_nextFrameSetActive = JUMPTO_SKIP_FRAME_COUNT;
             _scrollRect.StopMovement();
+        }
+
+
+        public float CalculateCurrentNormalizedPosition()
+        {
+            // TODO
+            return 0f;
         }
 
 #if UNITY_EDITOR
@@ -121,7 +121,6 @@ namespace RecycleScrollView
                 elementLocalPos.x -= refElementSize.x * _defaultNavigationParams.normalizedElementPositionAdjustment;
                 GizmoDrawRect(elementLocalPos, refElementSize, viewport.localToWorldMatrix, Color.yellow);
             }
-
             Gizmos.color = prevColor;
         }
 

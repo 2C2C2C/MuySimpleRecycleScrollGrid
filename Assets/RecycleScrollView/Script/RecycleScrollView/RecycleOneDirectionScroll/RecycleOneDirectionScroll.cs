@@ -14,19 +14,18 @@ namespace RecycleScrollView
         private UnityScrollRectExtended _scrollRect;
         [SerializeField]
         private HorizontalOrVerticalLayoutGroup _contentLayoutGroup;
-        [SerializeField]
+        [SerializeField] // TODO Remove it later
         private RectTransform _fallbackElementPrefab;
 
         // Simple layout param
         [SerializeField]
         private SingleDirectionScrollParam _scrollParam;
 
+        [Header("Other settings")]
         [SerializeField]
         private float _velocityStopThreshold = 7f;
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
-
-        private bool m_hasAdjustCiurrentElements = false;
 
         public bool IsVertical => _scrollParam.IsVertical;
         public bool IsHorizontal => _scrollParam.IsHorizontal;
@@ -66,11 +65,17 @@ namespace RecycleScrollView
             }
         }
 
+        public void ForceAdjustElements()
+        {
+            AdjustElementsIfNeed();
+        }
+
         private void ApplyLayoutSetting()
         {
             RectTransform content = _scrollRect.content;
             _scrollRect.vertical = IsVertical;
             _scrollRect.horizontal = IsHorizontal;
+            _contentLayoutGroup.spacing = _scrollParam.spacing;
             if (IsVertical)
             {
                 _scrollRect.horizontal = false;
@@ -201,29 +206,12 @@ namespace RecycleScrollView
                 Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
                 _scrollRect.ContentStartPos = newStartPos;
             }
-            m_hasAdjustCiurrentElements = hasAdjustedElements;
         }
 
         private void OnScrollPositionChanged(Vector2 noramlizedPosition)
         {
             // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
-        }
-
-        private void LateUpdate()
-        {
-            if (!m_hasAdjustCiurrentElements)
-            {
-                InternalAdjustment();
-            }
-            m_hasAdjustCiurrentElements = false;
-
-            if (0 > m_nextFrameSetActive)
-            {
-                --m_nextFrameSetActive;
-                _scrollRect.enabled = true;
-                m_nextFrameSetActive = 0;
-            }
         }
 
         protected override void OnEnable()
@@ -247,7 +235,10 @@ namespace RecycleScrollView
 
         protected override void Reset()
         {
-            TryGetComponent<UnityScrollRectExtended>(out _scrollRect);
+            if (TryGetComponent<UnityScrollRectExtended>(out _scrollRect))
+            {
+                _scrollRect.content.TryGetComponent<HorizontalOrVerticalLayoutGroup>(out _contentLayoutGroup);
+            }
         }
 
         protected override void OnValidate()
