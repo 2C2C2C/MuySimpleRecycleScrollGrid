@@ -214,11 +214,11 @@ namespace RecycleScrollView
                         RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[0];
                         if (IsVertical)
                         {
-                            removeSize += toRemove.ElementPreferredSize.y;
+                            removeSize += toRemove.ElementPreferredSize.y + _scrollParam.spacing;
                         }
                         else if (IsHorizontal)
                         {
-                            removeSize += toRemove.ElementPreferredSize.x;
+                            removeSize += toRemove.ElementPreferredSize.x + _scrollParam.spacing;
                         }
                         RemoveElementFromHead();
                         --removeCount;
@@ -301,7 +301,11 @@ namespace RecycleScrollView
                             removeSize += toRemove.ElementPreferredSize.x;
                         }
                         RemoveElementFromTail();
-                        --removeCount;
+
+                        if (1 < removeCount--)
+                        {
+                            removeSize += _scrollParam.spacing;
+                        }
                         hasRemoveElements = true;
                     }
 
@@ -363,11 +367,11 @@ namespace RecycleScrollView
                         AddElementToHead(canAddIndex);
                         if (IsVertical)
                         {
-                            addSize += m_currentUsingElements[0].ElementPreferredSize.y;
+                            addSize += m_currentUsingElements[0].ElementPreferredSize.y + _scrollParam.spacing;
                         }
                         else if (IsHorizontal)
                         {
-                            addSize += m_currentUsingElements[0].ElementPreferredSize.x;
+                            addSize += m_currentUsingElements[0].ElementPreferredSize.x + _scrollParam.spacing;
                         }
                     }
                     else
@@ -425,6 +429,7 @@ namespace RecycleScrollView
                 Vector2 viewportTailPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, tailRectPos);
                 Vector2 currentDelta = new Vector2(Mathf.Abs(viewportTailPos.x - prevTailPos.x), Mathf.Abs(viewportTailPos.y - prevTailPos.y));
                 float addSize = 0f;
+                int addCount = 0;
                 while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
                     int canAddIndex = CalculateAvaialbeNextTailElementIndex();
@@ -438,6 +443,11 @@ namespace RecycleScrollView
                         else if (IsHorizontal)
                         {
                             addSize += m_currentUsingElements[m_currentUsingElements.Count - 1].ElementPreferredSize.x;
+                        }
+
+                        if (1 < addCount++)
+                        {
+                            addSize += _scrollParam.spacing;
                         }
 
                         if ((IsVertical && addSize > currentDelta.y) ||

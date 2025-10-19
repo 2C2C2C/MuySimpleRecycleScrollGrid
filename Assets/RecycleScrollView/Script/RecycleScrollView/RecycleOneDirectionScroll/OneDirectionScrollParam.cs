@@ -35,8 +35,9 @@ namespace RecycleScrollView
         // Reverse data elements into UI elment
         public bool reverseArrangement;
 
+        public float spacing;
+
         // TODO
-        // public float spacing;
         // public float frontPadding;
         // public float rearPadding;
 

@@ -75,6 +75,7 @@ namespace RecycleScrollView
             RectTransform content = _scrollRect.content;
             _scrollRect.vertical = IsVertical;
             _scrollRect.horizontal = IsHorizontal;
+            _contentLayoutGroup.spacing = _scrollParam.spacing;
             if (IsVertical)
             {
                 _scrollRect.horizontal = false;
