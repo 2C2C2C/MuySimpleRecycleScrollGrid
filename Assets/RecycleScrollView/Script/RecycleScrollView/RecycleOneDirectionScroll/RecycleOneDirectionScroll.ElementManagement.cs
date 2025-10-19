@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UI.Extend;
@@ -15,10 +14,7 @@ namespace RecycleScrollView
         private const float EDGE_HEAD = 0F;
         private const float EDGE_TAIL = 1F;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns>-1 Need add, 0 Enough, 1 Need remove</returns>
+        /// <returns> -1 Need add, 0 Enough, 1 Need remove</returns>
         private int CheckHeadSideStatus()
         {
             if (null == m_dataSource)
@@ -73,9 +69,6 @@ namespace RecycleScrollView
             return SIDE_STATUS_ENOUGH;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         /// <returns>-1 Need add, 0 Enough, 1 Need remove</returns>
         private int CheckTailSideStatus()
         {
@@ -144,9 +137,6 @@ namespace RecycleScrollView
             return result;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="element"></param>
         /// <param name="normalizedElementEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <param name="normalizedViewportEdgePosition"> Head(0) ~ Tail(1) </param>

@@ -7,7 +7,7 @@ namespace RecycleScrollView
     public partial class RecycleOneDirectionScroll
     {
         /// <summary> HACK IDK why but do jumpto for horizontal scroll will result a weird offset in next/current frame, so I need to skil 2 frames </summary>
-        const int JUMPTO_SKIP_FRAME_COUNT = 2;
+        const int JUMPTO_SKIP_FRAME_COUNT = 1;
 
         [System.Serializable]
         public struct ScrollViewNavigationParams
@@ -67,12 +67,28 @@ namespace RecycleScrollView
                 Vector3 localPosition = content.localPosition;
                 localPosition.x += delta;
                 content.localPosition = localPosition;
+
             }
 
             AddElemensIfNeed();
             _scrollRect.CallUpdateBoundsAndPrevData();
-            m_nextFrameSetActive = JUMPTO_SKIP_FRAME_COUNT;
+            if (IsVertical)
+            {
+                _scrollRect.enabled = true;
+            }
+            else if (IsHorizontal)
+            {
+                /// <summary> HACK IDK why but do jumpto for horizontal scroll will result a weird offset in next/current frame, so I need to skil 2 frames </summary>
+                m_nextFrameSetActive = JUMPTO_SKIP_FRAME_COUNT;
+            }
             _scrollRect.StopMovement();
+        }
+
+
+        public float CalculateCurrentNormalizedPosition()
+        {
+            // TODO
+            return 0f;
         }
 
 #if UNITY_EDITOR

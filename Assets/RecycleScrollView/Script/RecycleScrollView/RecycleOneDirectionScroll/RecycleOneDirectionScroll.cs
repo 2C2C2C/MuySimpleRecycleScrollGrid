@@ -14,7 +14,7 @@ namespace RecycleScrollView
         private UnityScrollRectExtended _scrollRect;
         [SerializeField]
         private HorizontalOrVerticalLayoutGroup _contentLayoutGroup;
-        [SerializeField]
+        [SerializeField] // TODO Remove it later
         private RectTransform _fallbackElementPrefab;
 
         // Simple layout param
@@ -64,6 +64,11 @@ namespace RecycleScrollView
                 }
                 _scrollRect.CallUpdateBoundsAndPrevData();
             }
+        }
+
+        public void ForceAdjustElements()
+        {
+            AdjustElementsIfNeed();
         }
 
         private void ApplyLayoutSetting()
@@ -247,7 +252,10 @@ namespace RecycleScrollView
 
         protected override void Reset()
         {
-            TryGetComponent<UnityScrollRectExtended>(out _scrollRect);
+            if (TryGetComponent<UnityScrollRectExtended>(out _scrollRect))
+            {
+                _scrollRect.content.TryGetComponent<HorizontalOrVerticalLayoutGroup>(out _contentLayoutGroup);
+            }
         }
 
         protected override void OnValidate()
