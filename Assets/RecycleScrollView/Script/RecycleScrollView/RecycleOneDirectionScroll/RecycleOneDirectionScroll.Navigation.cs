@@ -18,32 +18,32 @@ namespace RecycleScrollView
 
         public void JumpToElementInstant(int dataIndex)
         {
+            JumpToElementInstant(dataIndex, _defaultNavigationParams);
+        }
+
+        public void JumpToElementInstant(int dataIndex, ScrollViewNavigationParams navigationParams)
+        {
             if (null == m_dataSource || dataIndex < 0 || dataIndex >= m_dataSource.DataElementCount)
             {
                 return;
             }
 
-            for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
-            {
-                InternalRemoveElement(m_currentUsingElements[i]);
-            }
-            RectTransform content = _scrollRect.content;
-            m_currentUsingElements.Clear();
-
+            RemoveCurrentElements();
             _scrollRect.StopMovement();
+            RectTransform content = _scrollRect.content;
             RectTransform viewport = _scrollRect.viewport;
             RecycleOneDirectionScrollElement targetElement = InternalCreateElement(dataIndex);
             targetElement.SetIndex(dataIndex);
             targetElement.CalculatePreferredSize();
             m_currentUsingElements.Add(targetElement);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+            ForceRebuildContentLayout();
 
             // HACK Since the pivot of content must be fixed, we need to adjust the position of content to make the target element at the correct position
             if (IsVertical)
             {
-                Vector2 verticalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(0.5f, _defaultNavigationParams.normalizedPositionInViewPort));
+                Vector2 verticalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(0.5f, navigationParams.normalizedPositionInViewPort));
                 // Content pivot is (0.5, 0) (true _scrollParam.reverseArrangement) ; Content pivot is (0.5, 1) (false _scrollParam.reverseArrangement)
-                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(0.5f, 1f - _defaultNavigationParams.normalizedElementPositionAdjustment));
+                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(0.5f, 1f - navigationParams.normalizedElementPositionAdjustment));
                 elementPosition = viewport.InverseTransformPoint(elementPosition);
                 float delta = verticalPostion.y - elementPosition.y;
                 Vector3 localPosition = content.localPosition;
@@ -52,22 +52,21 @@ namespace RecycleScrollView
             }
             else if (IsHorizontal)
             {
-                Vector2 horizontalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(_defaultNavigationParams.normalizedPositionInViewPort, 0.5f));
+                Vector2 horizontalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(navigationParams.normalizedPositionInViewPort, 0.5f));
                 // Content pivot is (0, 0.5) (false _scrollParam.reverseArrangement) ; Content pivot is (1, 0.5) (true _scrollParam.reverseArrangement)
-                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(_defaultNavigationParams.normalizedElementPositionAdjustment, 0.5f));
+                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(navigationParams.normalizedElementPositionAdjustment, 0.5f));
                 elementPosition = viewport.InverseTransformPoint(elementPosition);
                 float delta = horizontalPostion.x - elementPosition.x;
                 Vector3 localPosition = content.localPosition;
                 localPosition.x += delta;
                 content.localPosition = localPosition;
             }
-            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+            ForceRebuildContentLayout();
 
             AddElemensIfNeed();
             _scrollRect.CallUpdateBoundsAndPrevData();
             _scrollRect.StopMovement();
         }
-
 
         public float CalculateCurrentNormalizedPosition()
         {

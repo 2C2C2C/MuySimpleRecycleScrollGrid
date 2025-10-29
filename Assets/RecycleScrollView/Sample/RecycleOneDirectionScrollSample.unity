@@ -275,7 +275,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &202185316
 RectTransform:
   m_ObjectHideFlags: 0
@@ -408,8 +408,8 @@ MonoBehaviour:
   _content: {fileID: 1512229856}
   _viewport: {fileID: 1833296618}
   _dataCount: 192
-  _sizeMin: 80
-  _sizeMax: 320
+  _sizeMin: 96
+  _sizeMax: 512
   _jumpToTestIndex: 54
 --- !u!1 &465986553
 GameObject:
@@ -531,7 +531,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0.000061035156}
-  m_SizeDelta: {x: 0, y: -0.0046403636}
+  m_SizeDelta: {x: -1080, y: -0.0046403636}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &525200857
 MonoBehaviour:
@@ -736,7 +736,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &936998922
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1254,7 +1254,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 7
-  m_Spacing: 0
+  m_Spacing: 12
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
@@ -1337,7 +1337,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: -0.0005187988}
-  m_SizeDelta: {x: 0, y: -960}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &1512229857
 MonoBehaviour:
@@ -1631,8 +1631,8 @@ MonoBehaviour:
   _viewport: {fileID: 34806927}
   _dataCount: 192
   _sizeMin: 80
-  _sizeMax: 320
-  _jumpToTestIndex: 123
+  _sizeMax: 108
+  _jumpToTestIndex: 107
 --- !u!114 &2111627557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1655,7 +1655,7 @@ MonoBehaviour:
   _scrollParam:
     scrollDirection: 4
     reverseArrangement: 0
-    spacing: 0
+    spacing: 12
   _velocityStopThreshold: 7
   _velocityMaxClamp: 1000
 --- !u!114 &2111627558

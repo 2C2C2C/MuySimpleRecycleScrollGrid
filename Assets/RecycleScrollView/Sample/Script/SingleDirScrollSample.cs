@@ -117,5 +117,8 @@ namespace RecycleScrollView.Sample
             _scrollController.JumpToElementInstant(_jumpToTestIndex);
         }
 
+        public void RequestIndexChange(RectTransform element, int prevIndex, int nextIndex)
+        {
+        }
     }
 }

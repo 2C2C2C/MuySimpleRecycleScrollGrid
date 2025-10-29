@@ -37,7 +37,7 @@ namespace RecycleScrollView
 
         public float spacing;
 
-        // TODO
+        // TODO 
         // public float frontPadding;
         // public float rearPadding;
 

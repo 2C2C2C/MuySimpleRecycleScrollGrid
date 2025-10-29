@@ -27,13 +27,27 @@ namespace RecycleScrollView
         [SerializeField]
         private float _velocityMaxClamp = 1000f;
 
+        private bool m_hasAdjustElementsCurrentFrame = false;
+
         public bool IsVertical => _scrollParam.IsVertical;
         public bool IsHorizontal => _scrollParam.IsHorizontal;
+        public bool IsReverseArrangement => _scrollParam.reverseArrangement;
 
         private List<RecycleOneDirectionScrollElement> m_currentUsingElements = new List<RecycleOneDirectionScrollElement>();
         private IOneDirectionScrollDataSource m_dataSource;
 
+        public IReadOnlyList<RecycleOneDirectionScrollElement> CurrentUsingElements => m_currentUsingElements;
         private UnityAction<Vector2> m_onScrollPositionChanged;
+
+        public void ForceRebuildContentLayout()
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+        }
+
+        public void MarkSelfForLayoutRebuild()
+        {
+            LayoutRebuilder.MarkLayoutForRebuild(_scrollRect.content);
+        }
 
         public void UnInit()
         {
@@ -65,9 +79,66 @@ namespace RecycleScrollView
             }
         }
 
+        public void RemoveCurrentElements()
+        {
+            for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
+            {
+                InternalRemoveElement(m_currentUsingElements[i]);
+            }
+            m_currentUsingElements.Clear();
+        }
+
+        public int GetCurrentShowingElementIndexLowerBound()
+        {
+            int elementCount = m_currentUsingElements.Count;
+            int result = -1;
+            if (0 < elementCount)
+            {
+                result = _scrollParam.reverseArrangement ?
+                    m_currentUsingElements[elementCount - 1].ElementIndex :
+                    m_currentUsingElements[0].ElementIndex;
+            }
+            return result;
+        }
+
+        public int GetCurrentShowingElementIndexUpperBound()
+        {
+            int elementCount = m_currentUsingElements.Count;
+            int result = -1;
+            if (0 < elementCount)
+            {
+                result = _scrollParam.reverseArrangement ?
+                    m_currentUsingElements[0].ElementIndex :
+                    m_currentUsingElements[elementCount - 1].ElementIndex;
+            }
+            return result;
+        }
+
+        public void NotifyElementSizeChange(int index, bool forceRebuild)
+        {
+            int indexLowerBound = GetCurrentShowingElementIndexLowerBound();
+            int indexUpperBound = GetCurrentShowingElementIndexUpperBound();
+            if (indexLowerBound <= index && index <= indexUpperBound)
+            {
+                for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
+                {
+                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    if (index == element.ElementIndex)
+                    {
+                        element.CalculatePreferredSize();
+                        if (forceRebuild)
+                        {
+                            MarkSelfForLayoutRebuild();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         public void ForceAdjustElements()
         {
-            AdjustElementsIfNeed();
+            InternalAdjustment();
         }
 
         private void ApplyLayoutSetting()
@@ -97,7 +168,7 @@ namespace RecycleScrollView
                 }
                 else
                 {
-                    Debug.LogError($"Vertical scroll need a VerticalLayoutGroup on content");
+                    Debug.LogError($"[RecycleScrollView] Vertical scroll need a VerticalLayoutGroup on content");
                 }
             }
             else if (IsHorizontal)
@@ -120,7 +191,7 @@ namespace RecycleScrollView
                 }
                 else
                 {
-                    Debug.LogError($"Horizontal scroll need a HorizontalLayoutGroup on content");
+                    Debug.LogError($"[RecycleScrollView] Horizontal scroll need a HorizontalLayoutGroup on content");
                 }
             }
         }
@@ -148,6 +219,7 @@ namespace RecycleScrollView
 #if UNITY_EDITOR
             newElement.name = $"{newElement.name} {dataIndex}";
 #endif
+            newElement.CalculatePreferredSize();
             return newElement;
         }
 
@@ -205,6 +277,7 @@ namespace RecycleScrollView
                 // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
                 Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
                 _scrollRect.ContentStartPos = newStartPos;
+                m_hasAdjustElementsCurrentFrame = true;
             }
         }
 
@@ -212,6 +285,15 @@ namespace RecycleScrollView
         {
             // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
+        }
+
+        private void LateUpdate()
+        {
+            if (!m_hasAdjustElementsCurrentFrame)
+            {
+                InternalAdjustment();
+            }
+            m_hasAdjustElementsCurrentFrame = false;
         }
 
         protected override void OnEnable()

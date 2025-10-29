@@ -8,6 +8,10 @@ namespace RecycleScrollView
     {
         [SerializeField]
         private LayoutElement _layoutElement;
+        [SerializeField]
+        private bool _directlyUseSizeFromLayoutElement;
+        [SerializeField]
+        private LayoutElementSizeSetter _elementSizeSetter;
 
         [SerializeField]
         private int m_index = -1; // This value should be NonSerialized but better to show it in inspector
@@ -35,73 +39,40 @@ namespace RecycleScrollView
             m_index = index;
         }
 
-        public void SetObjectActive()
-        {
-            if (!gameObject.activeSelf)
-            {
-                gameObject.SetActive(true);
-            }
-        }
-
-        public void SetObjectDeactive()
-        {
-            if (gameObject.activeSelf)
-            {
-                gameObject.SetActive(false);
-            }
-        }
-
-
         [ContextMenu("ForceCalculateSize")]
         public void CalculatePreferredSize()
         {
-            RectTransform self = transform as RectTransform;
-            float width, height;
-
-            // Width
-            if (1f <= _layoutElement.flexibleWidth)
+            // HACK
+            if (TryGetComponent<HorizontalOrVerticalLayoutGroup>(out _))
             {
-                width = LayoutUtility.GetPreferredSize(self, 1);
-            }
-            else if (0f < _layoutElement.preferredWidth)
-            {
-                width = _layoutElement.preferredWidth;
-            }
-            else if (0f < _layoutElement.minWidth)
-            {
-                width = _layoutElement.minWidth;
-            }
-            else
-            {
-                width = self.rect.width;
+                LayoutRebuilder.ForceRebuildLayoutImmediate(ElementTransform);
             }
 
-            // Height
-            if (1f <= _layoutElement.flexibleHeight)
+            float width = 0f, height = 0f;
+            if (_directlyUseSizeFromLayoutElement)
             {
-                height = LayoutUtility.GetPreferredSize(self, 1);
-            }
-            else if (0f < _layoutElement.preferredHeight)
-            {
-                height = _layoutElement.preferredHeight;
-            }
-            else if (0f < _layoutElement.minHeight)
-            {
-                height = _layoutElement.minHeight;
-            }
-            else
-            {
-                height = self.rect.height;
+                width = 1f <= _layoutElement.flexibleWidth ? ElementTransform.rect.width : _layoutElement.preferredWidth;
+                height = 1f <= _layoutElement.flexibleHeight ? ElementTransform.rect.height : _layoutElement.preferredHeight;
+                ElementPreferredSize = new Vector2(width, height);
+                return;
             }
 
-            Vector2 size = new Vector2(width, height);
-            ElementPreferredSize = size;
-            // Debug.LogError($"Element preferred size {size}");
+            if (null != _elementSizeSetter)
+            {
+                _elementSizeSetter.ForceSetSize();
+            }
+            width = 1f <= _layoutElement.flexibleWidth ? ElementTransform.rect.width : _layoutElement.preferredWidth;
+            height = 1f <= _layoutElement.flexibleHeight ? ElementTransform.rect.height : _layoutElement.preferredHeight;
+            ElementPreferredSize = new Vector2(width, height);
         }
+
+#if UNITY_EDITOR
 
         private void Reset()
         {
             TryGetComponent<LayoutElement>(out _layoutElement);
         }
+
+#endif
     }
 }

@@ -14,6 +14,148 @@ namespace RecycleScrollView
         private const float EDGE_HEAD = 0F;
         private const float EDGE_TAIL = 1F;
 
+        public void AddElementToHead(int dataIndex)
+        {
+            RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+            m_currentUsingElements.Insert(0, newElement);
+            newElement.CalculatePreferredSize();
+            newElement.transform.SetAsFirstSibling();
+            newElement.SetIndex(dataIndex);
+            ForceRebuildContentLayout();
+            // Debug.LogError($"Add on top data{dataIndex} Time {Time.time}");
+        }
+
+        public void AddElementToTail(int dataIndex)
+        {
+            RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+            m_currentUsingElements.Add(newElement);
+            newElement.CalculatePreferredSize();
+            newElement.transform.SetAsLastSibling();
+            newElement.SetIndex(dataIndex);
+            ForceRebuildContentLayout();
+            // Debug.LogError($"Add on bottom data{dataIndex} Time {Time.time}");
+        }
+
+        public void InsertElement(int dataIndex)
+        {
+            int indexUpperBound = GetCurrentShowingElementIndexUpperBound();
+            if (dataIndex > indexUpperBound)
+            {
+                return;
+            }
+
+            bool hasAdded = false;
+            int indexLowerBound = GetCurrentShowingElementIndexLowerBound();
+            if (_scrollParam.reverseArrangement)
+            {
+                for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
+                {
+                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    int elementIndex = element.ElementIndex;
+                    if (dataIndex == elementIndex && !hasAdded)
+                    {
+                        RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+                        newElement.ElementTransform.SetSiblingIndex(element.ElementTransform.GetSiblingIndex() + 1);
+                        newElement.SetIndex(dataIndex);
+                        m_currentUsingElements.Insert(i, newElement);
+                        hasAdded = true;
+                    }
+                    else if (dataIndex < elementIndex && hasAdded)
+                    {
+                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex + 1);
+                        element.SetIndex(elementIndex + 1);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
+                {
+                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    int elementIndex = element.ElementIndex;
+                    if (dataIndex == elementIndex && !hasAdded)
+                    {
+                        RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+                        newElement.ElementTransform.SetSiblingIndex(element.ElementTransform.GetSiblingIndex());
+                        newElement.SetIndex(dataIndex);
+                        m_currentUsingElements.Insert(i, newElement);
+                        length++;
+                        hasAdded = true;
+                    }
+                    else if (dataIndex <= elementIndex && hasAdded)
+                    {
+                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex + 1);
+                        element.SetIndex(elementIndex + 1);
+                    }
+                }
+            }
+            if (hasAdded)
+            {
+                ForceRebuildContentLayout();
+                m_hasAdjustElementsCurrentFrame = true;
+                //ForceAdjustElements();
+            }
+        }
+
+        public void RemoveElement(int dataIndex)
+        {
+            int indexUpperBound = GetCurrentShowingElementIndexUpperBound();
+            if (dataIndex > indexUpperBound)
+            {
+                return;
+            }
+
+            bool hasRemoved = false;
+            int indexLowerBound = GetCurrentShowingElementIndexLowerBound();
+            if (_scrollParam.reverseArrangement)
+            {
+                for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
+                {
+                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    int elementIndex = element.ElementIndex;
+                    if (dataIndex == elementIndex && !hasRemoved)
+                    {
+                        m_currentUsingElements.RemoveAt(i);
+                        InternalRemoveElement(element);
+                        hasRemoved = true;
+                        break;
+                    }
+                    else if (dataIndex < elementIndex && !hasRemoved)
+                    {
+                        element.SetIndex(elementIndex - 1);
+                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex - 1);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
+                {
+                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    int elementIndex = element.ElementIndex;
+                    if (dataIndex == elementIndex && !hasRemoved)
+                    {
+                        m_currentUsingElements.RemoveAt(i);
+                        length--;
+                        i--;
+                        InternalRemoveElement(element);
+                        hasRemoved = true;
+                    }
+                    else if (dataIndex < elementIndex && hasRemoved)
+                    {
+                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex - 1);
+                        element.SetIndex(elementIndex - 1);
+                    }
+                }
+            }
+
+            if (hasRemoved)
+            {
+                ForceRebuildContentLayout();
+                ForceAdjustElements();
+            }
+        }
+
         /// <returns> -1 Need add, 0 Enough, 1 Need remove</returns>
         private int CheckHeadSideStatus()
         {
@@ -28,8 +170,8 @@ namespace RecycleScrollView
                 return SIDE_STATUS_ENOUGH; // HACK
             }
 
-            ScrollDirection checkDirection;
-            switch (_scrollParam.scrollDirection)
+            ScrollDirection checkDirection = _scrollParam.scrollDirection;
+            switch (checkDirection)
             {
                 case ScrollDirection.Horizontal_LeftToRight:
                     checkDirection = ScrollDirection.Horizontal_RightToLeft;
@@ -37,7 +179,6 @@ namespace RecycleScrollView
                 case ScrollDirection.Horizontal_RightToLeft:
                     checkDirection = ScrollDirection.Horizontal_LeftToRight;
                     break;
-
                 case ScrollDirection.Vertical_UpToDown:
                     checkDirection = ScrollDirection.Vertical_DownToUp;
                     break;
@@ -45,7 +186,6 @@ namespace RecycleScrollView
                     checkDirection = ScrollDirection.Vertical_UpToDown;
                     break;
                 default:
-                    checkDirection = ScrollDirection.None;
                     break;
             }
             RecycleOneDirectionScrollElement headElement = m_currentUsingElements[0];
@@ -55,7 +195,7 @@ namespace RecycleScrollView
                 if (2 <= elementCount)
                 {
                     RecycleOneDirectionScrollElement head2ndElement = m_currentUsingElements[1];
-                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, normalizedViewportEdgePosition: EDGE_HEAD, normalizedElementEdgePosition: EDGE_HEAD, checkDirection);
+                    isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, normalizedViewportEdgePosition: EDGE_HEAD, normalizedElementEdgePosition: EDGE_TAIL, checkDirection);
                     if (isBeyoudEdge)
                     {
                         return SIDE_STATUS_NEEDREMOVE;
@@ -151,6 +291,7 @@ namespace RecycleScrollView
             Vector2 elementEdge = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(element.ElementTransform, elementEdgeRectPosition);
             elementEdge = viewport.InverseTransformPoint(elementEdge);
 
+            float spacing = _scrollParam.spacing;
             bool isBeyoudEdge = false;
             switch (checkDirection)
             {
@@ -190,11 +331,15 @@ namespace RecycleScrollView
             int prevElementCount = m_currentUsingElements.Count;
             if (0 < prevElementCount)
             {
-                if (SIDE_STATUS_NEEDREMOVE == CheckHeadSideStatus())
+                if (SIDE_STATUS_NEEDREMOVE == CheckHeadSideStatus() && -1 != CalculateAvaialbeNextTailElementIndex())
                 {
                     int removeCount = -1;
                     do
                     {
+                        if (removeCount + 1 >= m_currentUsingElements.Count - 1)
+                        {
+                            break; // HACK
+                        }
                         RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[removeCount + 1];
                         // TODO This check is different with CheckHeadSideStatus(), need unify
                         if ((0 > removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
@@ -247,7 +392,7 @@ namespace RecycleScrollView
                             default:
                                 break;
                         }
-                        LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+                        ForceRebuildContentLayout();
                     }
                 }
             }
@@ -261,7 +406,7 @@ namespace RecycleScrollView
             int prevElementCount = m_currentUsingElements.Count;
             if (0 < prevElementCount)
             {
-                if (SIDE_STATUS_NEEDREMOVE == CheckTailSideStatus())
+                if (SIDE_STATUS_NEEDREMOVE == CheckTailSideStatus() && -1 != CalculateAvaialbeNextHeadElementIndex())
                 {
                     prevElementCount = m_currentUsingElements.Count;
                     int removeCount = -1;
@@ -324,7 +469,7 @@ namespace RecycleScrollView
             int dataIndex = element.ElementIndex;
             m_currentUsingElements.RemoveAt(0);
             InternalRemoveElement(element);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+            ForceRebuildContentLayout();
             // Debug.LogError($"Remove on top data{dataIndex} Time {Time.time}");
         }
 
@@ -335,7 +480,7 @@ namespace RecycleScrollView
             int dataIndex = element.ElementIndex;
             m_currentUsingElements.RemoveAt(elementIndex);
             InternalRemoveElement(element);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+            ForceRebuildContentLayout();
             // Debug.LogError($"Remove on bottom data{dataIndex} Time {Time.time}");
         }
 
@@ -409,7 +554,7 @@ namespace RecycleScrollView
                         default:
                             break;
                     }
-                    LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
+                    ForceRebuildContentLayout();
                     hasAddElements = true;
                 }
             }
@@ -517,28 +662,6 @@ namespace RecycleScrollView
             }
             int dataIndex = _scrollParam.reverseArrangement ? (index - 1) : (index + 1);
             return dataIndex;
-        }
-
-        private void AddElementToHead(int dataIndex)
-        {
-            RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
-            m_currentUsingElements.Insert(0, newElement);
-            newElement.CalculatePreferredSize();
-            newElement.transform.SetAsFirstSibling();
-            newElement.SetIndex(dataIndex);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
-            // Debug.LogError($"Add on top data{dataIndex} Time {Time.time}");
-        }
-
-        private void AddElementToTail(int dataIndex)
-        {
-            RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
-            m_currentUsingElements.Add(newElement);
-            newElement.CalculatePreferredSize();
-            newElement.transform.SetAsLastSibling();
-            newElement.SetIndex(dataIndex);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_scrollRect.content);
-            // Debug.LogError($"Add on bottom data{dataIndex} Time {Time.time}");
         }
 
     }
