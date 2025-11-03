@@ -1,3 +1,4 @@
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,15 +7,32 @@ namespace RecycleScrollView
     [RequireComponent(typeof(LayoutElement))]
     public class RecycleOneDirectionScrollElement : MonoBehaviour
     {
+        public static MethodInfo GetTotalPreferredSizeMethod
+        {
+            get
+            {
+                if (null == s_getTotalPreferredSizeMethod)
+                {
+                    s_getTotalPreferredSizeMethod = typeof(LayoutGroup).GetMethod("GetTotalPreferredSize", BindingFlags.Instance | BindingFlags.NonPublic);
+                }
+                return s_getTotalPreferredSizeMethod;
+            }
+        }
+        private static MethodInfo s_getTotalPreferredSizeMethod;
+        private static readonly object[] s_boxedInt0 = new object[] { 0 };
+        private static readonly object[] s_boxedInt1 = new object[] { 1 };
+
         [SerializeField]
         private LayoutElement _layoutElement;
         [SerializeField]
         private bool _directlyUseSizeFromLayoutElement;
         [SerializeField]
+        private bool _forceConvertFlexiableToPreferred;
+        [SerializeField]
         private LayoutElementSizeSetter _elementSizeSetter;
 
-        [SerializeField]
-        private int m_index = -1; // This value should be NonSerialized but better to show it in inspector
+        [SerializeField] // TODO This value should be NonSerialized but better to show it in inspector
+        private int m_index = -1;
 
         private RectTransform m_rectTransform;
 
@@ -39,20 +57,55 @@ namespace RecycleScrollView
             m_index = index;
         }
 
+        public void Clear()
+        {
+            if (_forceConvertFlexiableToPreferred)
+            {
+                const int LAYOUT_SIZE_DISABLE = -1;
+                if (Mathf.Approximately(1f, _layoutElement.flexibleHeight))
+                {
+                    _layoutElement.preferredHeight = LAYOUT_SIZE_DISABLE;
+                }
+                if (Mathf.Approximately(1f, _layoutElement.flexibleWidth))
+                {
+                    _layoutElement.preferredWidth = LAYOUT_SIZE_DISABLE;
+                }
+            }
+        }
+
         [ContextMenu("ForceCalculateSize")]
         public void CalculatePreferredSize()
         {
+            Vector2 rectSize = ElementTransform.rect.size;
             // HACK
-            if (TryGetComponent<HorizontalOrVerticalLayoutGroup>(out _))
+            if (TryGetComponent<HorizontalOrVerticalLayoutGroup>(out HorizontalOrVerticalLayoutGroup layoutGroup))
             {
                 LayoutRebuilder.ForceRebuildLayoutImmediate(ElementTransform);
+                if (_forceConvertFlexiableToPreferred)
+                {
+                    layoutGroup.CalculateLayoutInputHorizontal();
+                    layoutGroup.CalculateLayoutInputVertical();
+                    layoutGroup.SetLayoutHorizontal();
+                    layoutGroup.SetLayoutVertical();
+                    // IDK if this is cheap or not. If do this, remember to reset actual values when return to pool
+                    if (Mathf.Approximately(1f, _layoutElement.flexibleHeight))
+                    {
+                        rectSize.y = (float)GetTotalPreferredSizeMethod.Invoke(layoutGroup, s_boxedInt1);
+                        _layoutElement.preferredHeight = rectSize.y;
+                    }
+                    if (Mathf.Approximately(1f, _layoutElement.flexibleWidth))
+                    {
+                        rectSize.x = (float)GetTotalPreferredSizeMethod.Invoke(layoutGroup, s_boxedInt0);
+                        _layoutElement.preferredWidth = rectSize.x;
+                    }
+                }
             }
 
-            float width = 0f, height = 0f;
+            float width, height;
             if (_directlyUseSizeFromLayoutElement)
             {
-                width = 1f <= _layoutElement.flexibleWidth ? ElementTransform.rect.width : _layoutElement.preferredWidth;
-                height = 1f <= _layoutElement.flexibleHeight ? ElementTransform.rect.height : _layoutElement.preferredHeight;
+                width = 1f <= _layoutElement.flexibleWidth ? rectSize.x : _layoutElement.preferredWidth;
+                height = 1f <= _layoutElement.flexibleHeight ? rectSize.y : _layoutElement.preferredHeight;
                 ElementPreferredSize = new Vector2(width, height);
                 return;
             }

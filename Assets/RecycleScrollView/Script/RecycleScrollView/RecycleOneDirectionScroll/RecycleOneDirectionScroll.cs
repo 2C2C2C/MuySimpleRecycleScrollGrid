@@ -216,15 +216,17 @@ namespace RecycleScrollView
                     Debug.LogError($"[RecycleScrollView] receive wrong element");
                 }
             }
+            newElement.CalculatePreferredSize();
 #if UNITY_EDITOR
             newElement.name = $"{newElement.name} {dataIndex}";
+            // Debug.LogError($"Check; index {dataIndex}; size {newElement.ElementPreferredSize}");
 #endif
-            newElement.CalculatePreferredSize();
             return newElement;
         }
 
         private void InternalRemoveElement(RecycleOneDirectionScrollElement element)
         {
+            element.Clear();
             if (null == m_dataSource)
             {
                 GameObject.Destroy(element.gameObject);

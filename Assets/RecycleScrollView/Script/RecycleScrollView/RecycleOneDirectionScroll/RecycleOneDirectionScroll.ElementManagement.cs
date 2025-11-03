@@ -45,7 +45,6 @@ namespace RecycleScrollView
             }
 
             bool hasAdded = false;
-            int indexLowerBound = GetCurrentShowingElementIndexLowerBound();
             if (_scrollParam.reverseArrangement)
             {
                 for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
@@ -62,8 +61,10 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && hasAdded)
                     {
+                        element.Clear();
                         m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex + 1);
                         element.SetIndex(elementIndex + 1);
+                        element.CalculatePreferredSize();
                     }
                 }
             }
@@ -106,7 +107,6 @@ namespace RecycleScrollView
             }
 
             bool hasRemoved = false;
-            int indexLowerBound = GetCurrentShowingElementIndexLowerBound();
             if (_scrollParam.reverseArrangement)
             {
                 for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
@@ -143,7 +143,9 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && hasRemoved)
                     {
+                        element.Clear();
                         m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex - 1);
+                        element.CalculatePreferredSize();
                         element.SetIndex(elementIndex - 1);
                     }
                 }
