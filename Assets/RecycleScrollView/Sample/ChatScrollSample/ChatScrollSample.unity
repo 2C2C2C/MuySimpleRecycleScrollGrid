@@ -1969,8 +1969,6 @@ MonoBehaviour:
     scrollDirection: 4
     reverseArrangement: 1
     spacing: 12
-  _velocityStopThreshold: 7
-  _velocityMaxClamp: 1000
 --- !u!114 &2111627558
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2001,6 +1999,8 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+  _velocityStopThreshold: 7
+  _velocityMaxClamp: 1000
 --- !u!114 &2111627559
 MonoBehaviour:
   m_ObjectHideFlags: 0

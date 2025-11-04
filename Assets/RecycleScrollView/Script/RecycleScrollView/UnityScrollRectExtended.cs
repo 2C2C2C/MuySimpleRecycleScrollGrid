@@ -1,4 +1,6 @@
-﻿namespace UnityEngine.UI
+﻿using System;
+
+namespace UnityEngine.UI
 {
     [AddComponentMenu("UI/UnityScrollRectExtended", 1)]
     [SelectionBase]
@@ -7,6 +9,11 @@
     [RequireComponent(typeof(RectTransform))]
     public class UnityScrollRectExtended : ScrollRect
     {
+        [SerializeField]
+        private float _velocityStopSqrMagThreshold = 7f;
+        [SerializeField]
+        private float _velocityMaxSqrMag = 1000f;
+
         public Vector2 ContentStartPos
         {
             get => m_ContentStartPosition;
@@ -16,12 +23,13 @@
             }
         }
 
+        public event Action BeforeLateUpdate;
+        public event Action AfterLateUpdate;
+
         public void CallUpdateBoundsAndPrevData()
         {
             SetDirtyCaching();
             base.Rebuild(CanvasUpdate.PostLayout);
-            // UpdateBounds();
-            // UpdatePrevData();
         }
 
         [ContextMenu(nameof(TestCalculateOffset))]
@@ -73,5 +81,39 @@
 
             return offset;
         }
+
+        protected override void LateUpdate()
+        {
+            BeforeLateUpdate?.Invoke();
+            base.LateUpdate();
+            AdjustVelocity();
+            AfterLateUpdate?.Invoke();
+        }
+
+        private void AdjustVelocity()
+        {
+            // To prevent moving with very low velocity
+            if (_velocityStopSqrMagThreshold * _velocityStopSqrMagThreshold > velocity.sqrMagnitude)
+            {
+                base.velocity = Vector2.zero;
+            }
+            else if (_velocityMaxSqrMag * _velocityMaxSqrMag < velocity.sqrMagnitude)
+            {
+                base.velocity = _velocityMaxSqrMag * velocity.normalized;
+                base.velocity = velocity;
+            }
+        }
+
+#if UNITY_EDITOR
+
+        protected override void Reset()
+        {
+            base.Reset();
+            _velocityStopSqrMagThreshold = 7f;
+            _velocityMaxSqrMag = 1000f;
+        }
+
+#endif
+
     }
 }

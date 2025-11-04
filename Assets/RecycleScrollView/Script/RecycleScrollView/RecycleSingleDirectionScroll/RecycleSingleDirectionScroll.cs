@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,12 +22,6 @@ namespace RecycleScrollView
         [SerializeField]
         private SingleDirectionScrollParam _scrollParam;
 
-        [Header("Other settings")]
-        [SerializeField]
-        private float _velocityStopThreshold = 7f;
-        [SerializeField]
-        private float _velocityMaxClamp = 1000f;
-
         private bool m_hasAdjustElementsCurrentFrame = false;
 
         public bool IsVertical => _scrollParam.IsVertical;
@@ -38,6 +33,7 @@ namespace RecycleScrollView
 
         public IReadOnlyList<RecycleSingleDirectionScrollElement> CurrentUsingElements => m_currentUsingElements;
         private UnityAction<Vector2> m_onScrollPositionChanged;
+        private Action m_onLateUpdated;
 
         public void ForceRebuildContentLayout()
         {
@@ -251,29 +247,11 @@ namespace RecycleScrollView
 
         private void InternalAdjustment()
         {
-            // Debug.LogError(_scrollRect.velocity);
-            // Debug.LogError(_scrollRect.normalizedPosition);
             RectTransform content = _scrollRect.content;
             Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
             Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
-            Vector2 velocity = _scrollRect.velocity;
 
-            bool isOutOfBounds = 0f >= _scrollRect.verticalNormalizedPosition || 1f <= _scrollRect.verticalNormalizedPosition;
             bool hasAdjustedElements = AdjustElementsIfNeed();
-            if (_velocityStopThreshold * _velocityStopThreshold > velocity.sqrMagnitude)
-            {
-                _scrollRect.velocity = Vector2.zero;
-            }
-            else if (_velocityMaxClamp * _velocityMaxClamp < velocity.sqrMagnitude)
-            {
-                velocity = _velocityMaxClamp * velocity.normalized;
-                _scrollRect.velocity = velocity;
-            }
-            else if (hasAdjustedElements || isOutOfBounds)
-            {
-                _scrollRect.velocity = velocity;
-            }
-
             if (hasAdjustedElements)
             {
                 // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
@@ -289,7 +267,7 @@ namespace RecycleScrollView
             InternalAdjustment();
         }
 
-        private void LateUpdate()
+        private void OnLateUpdated()
         {
             if (!m_hasAdjustElementsCurrentFrame)
             {
@@ -305,6 +283,12 @@ namespace RecycleScrollView
                 m_onScrollPositionChanged = new UnityAction<Vector2>(OnScrollPositionChanged);
             }
             _scrollRect.onValueChanged.AddListener(m_onScrollPositionChanged);
+            if (null == m_onLateUpdated)
+            {
+                m_onLateUpdated = new Action(OnLateUpdated);
+            }
+            _scrollRect.AfterLateUpdate += m_onLateUpdated;
+
         }
 
         protected override void OnDisable()
@@ -312,6 +296,10 @@ namespace RecycleScrollView
             if (null != m_onScrollPositionChanged)
             {
                 _scrollRect.onValueChanged.RemoveListener(m_onScrollPositionChanged);
+            }
+            if (null != m_onLateUpdated)
+            {
+                _scrollRect.AfterLateUpdate -= m_onLateUpdated;
             }
         }
 
