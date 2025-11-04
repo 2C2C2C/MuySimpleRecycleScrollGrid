@@ -90,7 +90,7 @@ namespace RecycleScrollView
             {
                 if (null == listView)
                 {
-                    Debug.LogError("RecycleScrollGridController Init failed, the listview is null", this.gameObject);
+                    Debug.LogError("[RecycleScrollGrid] Init failed, the listview is null", this.gameObject);
                     return;
                 }
                 m_listView = listView;
@@ -550,7 +550,7 @@ namespace RecycleScrollView
                 _scrollRect.StopMovement();
                 return;
             }
-            Debug.LogWarning("RecycleScrollGridController should be on the same GameObject with ScrollRect, please remove this component and add RecycleScrollGridController to ScrollRect GameObject", this.gameObject);
+            Debug.LogWarning("[RecycleScrollGrid] should be on the same GameObject with ScrollRect, please remove this component and add RecycleScrollGrid to ScrollRect GameObject", this.gameObject);
         }
 
         protected override void OnEnable()

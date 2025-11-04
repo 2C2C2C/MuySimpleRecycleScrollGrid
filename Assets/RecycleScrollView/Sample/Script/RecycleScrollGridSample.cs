@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RecycleScrollView.Sample
 {
-    public class RecycleScrollGridControllerSample : MonoBehaviour
+    public class RecycleScrollGridSample : MonoBehaviour
     {
         [Range(4, 800)]
         public int m_dataCount = 10;
