@@ -4,7 +4,7 @@ using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
-    public partial class RecycleOneDirectionScroll
+    public partial class RecycleSingleDirectionScroll
     {
         [System.Serializable]
         public struct ScrollViewNavigationParams
@@ -32,7 +32,7 @@ namespace RecycleScrollView
             _scrollRect.StopMovement();
             RectTransform content = _scrollRect.content;
             RectTransform viewport = _scrollRect.viewport;
-            RecycleOneDirectionScrollElement targetElement = InternalCreateElement(dataIndex);
+            RecycleSingleDirectionScrollElement targetElement = InternalCreateElement(dataIndex);
             targetElement.SetIndex(dataIndex);
             targetElement.CalculatePreferredSize();
             m_currentUsingElements.Add(targetElement);

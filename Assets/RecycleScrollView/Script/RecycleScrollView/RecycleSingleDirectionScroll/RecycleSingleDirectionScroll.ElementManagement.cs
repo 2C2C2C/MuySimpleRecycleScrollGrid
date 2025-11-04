@@ -5,7 +5,7 @@ using ScrollDirection = RecycleScrollView.SingleDirectionScrollParam.ScrollDirec
 
 namespace RecycleScrollView
 {
-    public partial class RecycleOneDirectionScroll
+    public partial class RecycleSingleDirectionScroll
     {
         private const int SIDE_STATUS_ENOUGH = 0;
         private const int SIDE_STATUS_NEEDADD = -1;
@@ -16,7 +16,7 @@ namespace RecycleScrollView
 
         public void AddElementToHead(int dataIndex)
         {
-            RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+            RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
             m_currentUsingElements.Insert(0, newElement);
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsFirstSibling();
@@ -27,7 +27,7 @@ namespace RecycleScrollView
 
         public void AddElementToTail(int dataIndex)
         {
-            RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+            RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
             m_currentUsingElements.Add(newElement);
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsLastSibling();
@@ -49,11 +49,11 @@ namespace RecycleScrollView
             {
                 for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
                 {
-                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     int elementIndex = element.ElementIndex;
                     if (dataIndex == elementIndex && !hasAdded)
                     {
-                        RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+                        RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
                         newElement.ElementTransform.SetSiblingIndex(element.ElementTransform.GetSiblingIndex() + 1);
                         newElement.SetIndex(dataIndex);
                         m_currentUsingElements.Insert(i, newElement);
@@ -61,8 +61,8 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && hasAdded)
                     {
-                        element.Clear();
-                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex + 1);
+                        element.ClearPreferredSize();
+                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex + 1);
                         element.SetIndex(elementIndex + 1);
                         element.CalculatePreferredSize();
                     }
@@ -72,11 +72,11 @@ namespace RecycleScrollView
             {
                 for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
                 {
-                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     int elementIndex = element.ElementIndex;
                     if (dataIndex == elementIndex && !hasAdded)
                     {
-                        RecycleOneDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+                        RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
                         newElement.ElementTransform.SetSiblingIndex(element.ElementTransform.GetSiblingIndex());
                         newElement.SetIndex(dataIndex);
                         m_currentUsingElements.Insert(i, newElement);
@@ -85,7 +85,7 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex <= elementIndex && hasAdded)
                     {
-                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex + 1);
+                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex + 1);
                         element.SetIndex(elementIndex + 1);
                     }
                 }
@@ -111,7 +111,7 @@ namespace RecycleScrollView
             {
                 for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
                 {
-                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     int elementIndex = element.ElementIndex;
                     if (dataIndex == elementIndex && !hasRemoved)
                     {
@@ -123,7 +123,7 @@ namespace RecycleScrollView
                     else if (dataIndex < elementIndex && !hasRemoved)
                     {
                         element.SetIndex(elementIndex - 1);
-                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex - 1);
+                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex - 1);
                     }
                 }
             }
@@ -131,7 +131,7 @@ namespace RecycleScrollView
             {
                 for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
                 {
-                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     int elementIndex = element.ElementIndex;
                     if (dataIndex == elementIndex && !hasRemoved)
                     {
@@ -143,8 +143,8 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && hasRemoved)
                     {
-                        element.Clear();
-                        m_dataSource.RequestIndexChange(element.ElementTransform, elementIndex, elementIndex - 1);
+                        element.ClearPreferredSize();
+                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex - 1);
                         element.CalculatePreferredSize();
                         element.SetIndex(elementIndex - 1);
                     }
@@ -190,13 +190,13 @@ namespace RecycleScrollView
                 default:
                     break;
             }
-            RecycleOneDirectionScrollElement headElement = m_currentUsingElements[0];
+            RecycleSingleDirectionScrollElement headElement = m_currentUsingElements[0];
             bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(headElement, normalizedViewportEdgePosition: EDGE_HEAD, normalizedElementEdgePosition: EDGE_TAIL, checkDirection);
             if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
-                    RecycleOneDirectionScrollElement head2ndElement = m_currentUsingElements[1];
+                    RecycleSingleDirectionScrollElement head2ndElement = m_currentUsingElements[1];
                     isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(head2ndElement, normalizedViewportEdgePosition: EDGE_HEAD, normalizedElementEdgePosition: EDGE_TAIL, checkDirection);
                     if (isBeyoudEdge)
                     {
@@ -233,13 +233,13 @@ namespace RecycleScrollView
             }
 
             ScrollDirection checkDirection = _scrollParam.scrollDirection;
-            RecycleOneDirectionScrollElement tailElement = m_currentUsingElements[elementCount - 1];
+            RecycleSingleDirectionScrollElement tailElement = m_currentUsingElements[elementCount - 1];
             bool isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tailElement, normalizedViewportEdgePosition: EDGE_TAIL, normalizedElementEdgePosition: EDGE_HEAD, checkDirection);
             if (isBeyoudEdge)
             {
                 if (2 <= elementCount)
                 {
-                    RecycleOneDirectionScrollElement tail2ndElement = m_currentUsingElements[elementCount - 2];
+                    RecycleSingleDirectionScrollElement tail2ndElement = m_currentUsingElements[elementCount - 2];
                     isBeyoudEdge = IsElementEdgeBeyoudViewportEdge(tail2ndElement, normalizedViewportEdgePosition: EDGE_TAIL, normalizedElementEdgePosition: EDGE_HEAD, checkDirection);
                     if (isBeyoudEdge)
                     {
@@ -283,7 +283,7 @@ namespace RecycleScrollView
         /// <param name="normalizedElementEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <param name="normalizedViewportEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <returns></returns>
-        private bool IsElementEdgeBeyoudViewportEdge(RecycleOneDirectionScrollElement element, float normalizedViewportEdgePosition, float normalizedElementEdgePosition, ScrollDirection checkDirection)
+        private bool IsElementEdgeBeyoudViewportEdge(RecycleSingleDirectionScrollElement element, float normalizedViewportEdgePosition, float normalizedElementEdgePosition, ScrollDirection checkDirection)
         {
             RectTransform viewport = _scrollRect.viewport;
             Vector2 viewportEdgeRectPosition = CalculateNormalizedRectPosition(normalizedViewportEdgePosition);
@@ -342,7 +342,7 @@ namespace RecycleScrollView
                         {
                             break; // HACK
                         }
-                        RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[removeCount + 1];
+                        RecycleSingleDirectionScrollElement toRemove = m_currentUsingElements[removeCount + 1];
                         // TODO This check is different with CheckHeadSideStatus(), need unify
                         if ((0 > removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
                            (0 <= removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
@@ -358,7 +358,7 @@ namespace RecycleScrollView
                     float removeSize = 0f;
                     while (0 < removeCount && 0 < m_currentUsingElements.Count)
                     {
-                        RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[0];
+                        RecycleSingleDirectionScrollElement toRemove = m_currentUsingElements[0];
                         if (IsVertical)
                         {
                             removeSize += toRemove.ElementPreferredSize.y + _scrollParam.spacing;
@@ -417,7 +417,7 @@ namespace RecycleScrollView
                         int index = prevElementCount - 1 - (removeCount + 1);
                         if (0 < index)
                         {
-                            RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[index];
+                            RecycleSingleDirectionScrollElement toRemove = m_currentUsingElements[index];
                             // TODO This check is different with CheckTailSideStatus(), need unify
                             if ((0 > removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)) ||
                                (0 <= removeCount && RectTransformEx.IsNotIntersetedWithTargetRect(toRemove.ElementTransform, viewport)))
@@ -438,7 +438,7 @@ namespace RecycleScrollView
                     float removeSize = 0f;
                     while (0 < removeCount && 0 < m_currentUsingElements.Count)
                     {
-                        RecycleOneDirectionScrollElement toRemove = m_currentUsingElements[m_currentUsingElements.Count - 1];
+                        RecycleSingleDirectionScrollElement toRemove = m_currentUsingElements[m_currentUsingElements.Count - 1];
                         if (IsVertical)
                         {
                             removeSize += toRemove.ElementPreferredSize.y;
@@ -467,7 +467,7 @@ namespace RecycleScrollView
 
         private void RemoveElementFromHead()
         {
-            RecycleOneDirectionScrollElement element = m_currentUsingElements[0];
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[0];
             int dataIndex = element.ElementIndex;
             m_currentUsingElements.RemoveAt(0);
             InternalRemoveElement(element);
@@ -478,7 +478,7 @@ namespace RecycleScrollView
         private void RemoveElementFromTail()
         {
             int elementIndex = m_currentUsingElements.Count - 1;
-            RecycleOneDirectionScrollElement element = m_currentUsingElements[elementIndex];
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[elementIndex];
             int dataIndex = element.ElementIndex;
             m_currentUsingElements.RemoveAt(elementIndex);
             InternalRemoveElement(element);

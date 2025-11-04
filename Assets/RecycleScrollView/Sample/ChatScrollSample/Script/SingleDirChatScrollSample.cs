@@ -38,10 +38,10 @@ namespace RecycleScrollView.Sample
         }
     }
 
-    public class SingleDirChatScrollSample : MonoBehaviour, IOneDirectionScrollDataSource
+    public class SingleDirChatScrollSample : MonoBehaviour, ISingleDirectionScrollDataSource
     {
         [SerializeField]
-        private RecycleOneDirectionScroll _scrollController;
+        private RecycleSingleDirectionScroll _scrollController;
         [SerializeField]
         private RectTransform _elementPrefab;
         [SerializeField]
@@ -142,7 +142,7 @@ namespace RecycleScrollView.Sample
             _scrollController.JumpToElementInstant(_jumpToTestIndex);
         }
 
-        public void RequestIndexChange(RectTransform element, int prevIndex, int nextIndex)
+        public void ChangeElementIndex(RectTransform element, int prevIndex, int nextIndex)
         {
             if (element.TryGetComponent<ChatElementUI>(out ChatElementUI chatElementUI))
             {

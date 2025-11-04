@@ -1959,8 +1959,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _defaultNavigationParams:
-    normalizedPositionInViewPort: 0.3
-    normalizedElementPositionAdjustment: 0
+    normalizedPositionInViewPort: 0.75
+    normalizedElementPositionAdjustment: 0.5
   _scrollRect: {fileID: 2111627558}
   _contentLayoutGroup: {fileID: 1497416158}
   _fallbackElementPrefab: {fileID: 224671534218262706, guid: a93ea2669a74d5d459f08700a009e2ea,

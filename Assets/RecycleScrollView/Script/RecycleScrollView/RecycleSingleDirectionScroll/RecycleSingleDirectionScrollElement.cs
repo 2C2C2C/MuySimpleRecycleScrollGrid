@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace RecycleScrollView
 {
     [RequireComponent(typeof(LayoutElement))]
-    public class RecycleOneDirectionScrollElement : MonoBehaviour
+    public class RecycleSingleDirectionScrollElement : MonoBehaviour
     {
         public static MethodInfo GetTotalPreferredSizeMethod
         {
@@ -30,13 +30,10 @@ namespace RecycleScrollView
         private bool _forceConvertFlexiableToPreferred;
         [SerializeField]
         private LayoutElementSizeSetter _elementSizeSetter;
-
         [SerializeField] // TODO This value should be NonSerialized but better to show it in inspector
         private int m_index = -1;
 
         private RectTransform m_rectTransform;
-
-        public int ElementIndex => m_index;
 
         public RectTransform ElementTransform
         {
@@ -49,7 +46,7 @@ namespace RecycleScrollView
                 return m_rectTransform;
             }
         }
-
+        public int ElementIndex => m_index;
         public Vector2 ElementPreferredSize { get; private set; }
 
         public void SetIndex(int index)
@@ -57,8 +54,9 @@ namespace RecycleScrollView
             m_index = index;
         }
 
-        public void Clear()
+        public void ClearPreferredSize()
         {
+            // HACK
             if (_forceConvertFlexiableToPreferred)
             {
                 const int LAYOUT_SIZE_DISABLE = -1;
@@ -77,24 +75,26 @@ namespace RecycleScrollView
         public void CalculatePreferredSize()
         {
             Vector2 rectSize = ElementTransform.rect.size;
-            // HACK
             if (TryGetComponent<HorizontalOrVerticalLayoutGroup>(out HorizontalOrVerticalLayoutGroup layoutGroup))
             {
                 LayoutRebuilder.ForceRebuildLayoutImmediate(ElementTransform);
                 if (_forceConvertFlexiableToPreferred)
                 {
-                    layoutGroup.CalculateLayoutInputHorizontal();
-                    layoutGroup.CalculateLayoutInputVertical();
-                    layoutGroup.SetLayoutHorizontal();
-                    layoutGroup.SetLayoutVertical();
-                    // IDK if this is cheap or not. If do this, remember to reset actual values when return to pool
+                    const int LAYOUT_SIZE_DISABLE = -1;
+                    // HACK IDK if this is cheap or not. If do this, remember to reset actual values when return to pool
                     if (Mathf.Approximately(1f, _layoutElement.flexibleHeight))
                     {
+                        _layoutElement.preferredHeight = LAYOUT_SIZE_DISABLE;
+                        layoutGroup.CalculateLayoutInputVertical();
+                        layoutGroup.SetLayoutVertical();
                         rectSize.y = (float)GetTotalPreferredSizeMethod.Invoke(layoutGroup, s_boxedInt1);
                         _layoutElement.preferredHeight = rectSize.y;
                     }
                     if (Mathf.Approximately(1f, _layoutElement.flexibleWidth))
                     {
+                        _layoutElement.preferredWidth = LAYOUT_SIZE_DISABLE;
+                        layoutGroup.CalculateLayoutInputHorizontal();
+                        layoutGroup.SetLayoutHorizontal();
                         rectSize.x = (float)GetTotalPreferredSizeMethod.Invoke(layoutGroup, s_boxedInt0);
                         _layoutElement.preferredWidth = rectSize.x;
                     }
@@ -110,6 +110,7 @@ namespace RecycleScrollView
                 return;
             }
 
+            // TODO Maybe remove this
             if (null != _elementSizeSetter)
             {
                 _elementSizeSetter.ForceSetSize();

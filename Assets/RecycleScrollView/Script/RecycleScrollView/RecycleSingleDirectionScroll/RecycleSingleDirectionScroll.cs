@@ -8,7 +8,7 @@ using ScrollDirection = RecycleScrollView.SingleDirectionScrollParam.ScrollDirec
 namespace RecycleScrollView
 {
     [RequireComponent(typeof(UnityScrollRectExtended))]
-    public partial class RecycleOneDirectionScroll : UIBehaviour
+    public partial class RecycleSingleDirectionScroll : UIBehaviour
     {
         [SerializeField]
         private UnityScrollRectExtended _scrollRect;
@@ -33,10 +33,10 @@ namespace RecycleScrollView
         public bool IsHorizontal => _scrollParam.IsHorizontal;
         public bool IsReverseArrangement => _scrollParam.reverseArrangement;
 
-        private List<RecycleOneDirectionScrollElement> m_currentUsingElements = new List<RecycleOneDirectionScrollElement>();
-        private IOneDirectionScrollDataSource m_dataSource;
+        private List<RecycleSingleDirectionScrollElement> m_currentUsingElements = new List<RecycleSingleDirectionScrollElement>();
+        private ISingleDirectionScrollDataSource m_dataSource;
 
-        public IReadOnlyList<RecycleOneDirectionScrollElement> CurrentUsingElements => m_currentUsingElements;
+        public IReadOnlyList<RecycleSingleDirectionScrollElement> CurrentUsingElements => m_currentUsingElements;
         private UnityAction<Vector2> m_onScrollPositionChanged;
 
         public void ForceRebuildContentLayout()
@@ -62,7 +62,7 @@ namespace RecycleScrollView
             }
         }
 
-        public void Init(IOneDirectionScrollDataSource dataSource)
+        public void Init(ISingleDirectionScrollDataSource dataSource)
         {
             if (null == m_dataSource)
             {
@@ -122,7 +122,7 @@ namespace RecycleScrollView
             {
                 for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
                 {
-                    RecycleOneDirectionScrollElement element = m_currentUsingElements[i];
+                    RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     if (index == element.ElementIndex)
                     {
                         element.CalculatePreferredSize();
@@ -196,14 +196,14 @@ namespace RecycleScrollView
             }
         }
 
-        private RecycleOneDirectionScrollElement InternalCreateElement(int dataIndex)
+        private RecycleSingleDirectionScrollElement InternalCreateElement(int dataIndex)
         {
             RectTransform content = _scrollRect.content;
-            RecycleOneDirectionScrollElement newElement;
+            RecycleSingleDirectionScrollElement newElement;
             if (null == m_dataSource)
             {
                 RectTransform spawned = Instantiate(_fallbackElementPrefab, content);
-                if (!spawned.TryGetComponent<RecycleOneDirectionScrollElement>(out newElement))
+                if (!spawned.TryGetComponent<RecycleSingleDirectionScrollElement>(out newElement))
                 {
                     Debug.LogError($"[RecycleScrollView] receive wrong element");
                 }
@@ -211,7 +211,7 @@ namespace RecycleScrollView
             else
             {
                 RectTransform requestedElement = m_dataSource.RequestElement(content, dataIndex);
-                if (!requestedElement.TryGetComponent<RecycleOneDirectionScrollElement>(out newElement))
+                if (!requestedElement.TryGetComponent<RecycleSingleDirectionScrollElement>(out newElement))
                 {
                     Debug.LogError($"[RecycleScrollView] receive wrong element");
                 }
@@ -224,9 +224,9 @@ namespace RecycleScrollView
             return newElement;
         }
 
-        private void InternalRemoveElement(RecycleOneDirectionScrollElement element)
+        private void InternalRemoveElement(RecycleSingleDirectionScrollElement element)
         {
-            element.Clear();
+            element.ClearPreferredSize();
             if (null == m_dataSource)
             {
                 GameObject.Destroy(element.gameObject);

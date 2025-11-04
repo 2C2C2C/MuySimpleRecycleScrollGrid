@@ -2,12 +2,12 @@ using UnityEngine;
 
 namespace RecycleScrollView
 {
-    public interface IOneDirectionScrollDataSource
+    public interface ISingleDirectionScrollDataSource
     {
         int DataElementCount { get; }
 
         RectTransform RequestElement(RectTransform parent, int index);
         void ReturnElement(RectTransform element);
-        void RequestIndexChange(RectTransform element, int prevIndex, int nextIndex);
+        void ChangeElementIndex(RectTransform element, int prevIndex, int nextIndex);
     }
 }
