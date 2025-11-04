@@ -387,7 +387,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_dataCount: 255
   m_gridListUI: {fileID: 1720394423}
+  _scrollRectController: {fileID: 4279281952223755839}
   m_dataNames: []
+  jumpToTestIndex: 55
 --- !u!1 &5438040486668900135
 GameObject:
   m_ObjectHideFlags: 0
@@ -824,14 +826,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d4d94fc59acfad4f9a9988e3dc789cc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enableDebugDraw: 1
+  _alwaysDrawGizmos: 1
   _drawContentSize: 1
   _drawGrids: 1
+  _defaultNavigationParams:
+    normalizedPositionInViewPort: {x: 0.5, y: 0.5}
+    normalizedElementRectPositionOffset: {x: 0.5, y: 0.5}
   _scrollRect: {fileID: 5438040487593130230}
   _gridContainer: {fileID: 5438040486668900134}
-  _fallbackElementPrefab: {fileID: 6846283655454729985, guid: e8f58ab178c62a94d8fe650a25bcb8fb,
-    type: 3}
-  _drawActualUIGridElements: 1
+  _showActualGridElements: 1
   _gridLayoutData:
     startAxis: 0
     startCorner: 0

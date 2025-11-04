@@ -12,19 +12,30 @@ namespace RecycleScrollView
         private const int INDEX_LABEL_FONT_SIZE = 16;
 
         [Space, Header("Debug draw")]
-        public bool _enableDebugDraw = true;
-        public bool _drawContentSize = true;
-        public bool _drawGrids = true;
+        [SerializeField]
+        private bool _alwaysDrawGizmos;
+        [SerializeField]
+        private bool _drawContentSize = true;
+        [SerializeField]
+        private bool _drawGrids = true;
 
-        private void OnDrawGizmos()
+        private void OnDrawGizmosSelected()
         {
-            if (_enableDebugDraw)
+            if (_alwaysDrawGizmos)
             {
-                DebugDrawStyle();
+                GizmoDrawStuff();
             }
         }
 
-        private void DebugDrawStyle()
+        private void OnDrawGizmos()
+        {
+            if (!_alwaysDrawGizmos)
+            {
+                GizmoDrawStuff();
+            }
+        }
+
+        private void GizmoDrawStuff()
         {
             if (_drawGrids)
             {
@@ -34,6 +45,7 @@ namespace RecycleScrollView
             {
                 DrawDebugContentSize(m_simulatedDataCount);
             }
+            GizmoDrawDefaultNavigationPosition();
         }
 
         private void DrawDebugContentSize(int dataCount)
@@ -77,6 +89,7 @@ namespace RecycleScrollView
                 return;
             }
 
+            Color gridColor = Color.blue;
             ScrollGridLayoutData gridLayoutData = _gridLayoutData;
             RectTransform scrollContent = _scrollRect.content;
             Vector2 rawSize = CalculateContentSize(dataCount);
@@ -123,7 +136,7 @@ namespace RecycleScrollView
             GUIStyle gridIndexLableStyle = new GUIStyle()
             {
                 fontSize = INDEX_LABEL_FONT_SIZE,
-                normal = new GUIStyleState() { textColor = Color.green },
+                normal = new GUIStyleState() { textColor = gridColor },
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold,
             };
@@ -152,35 +165,13 @@ namespace RecycleScrollView
                     bool isInterestedWithViewport = viewportRect.Overlaps(gridRect);
 
                     bool isOutOfDataCount = gridDataIndex >= dataCount;
-                    Color gizmoColor = isOutOfDataCount ? Color.yellow * 0.5f : (isInterestedWithViewport ? Color.green : 0.75f * Color.green);
+                    Color gizmoColor = isOutOfDataCount ? Color.yellow * 0.5f : (isInterestedWithViewport ? gridColor : 0.75f * gridColor);
                     gridIndexLableStyle.normal.textColor = gizmoColor;
-                    DrawGridGizmo(gridStartPos, gridSize, localToWorld, gizmoColor);
+                    DrawRectGizmo(gridStartPos, gridSize, localToWorld, gizmoColor);
                     DrawGridIndexHandle(gridStartPos, gridSize, gridDataIndex, localToWorld, gridIndexLableStyle);
                     ++gridDataIndex;
                 }
             }
-        }
-
-        private void DrawGridGizmo(Vector2 bottomLeft, Vector2 gridSize, Matrix4x4 toWorldMatrix, Color color)
-        {
-            Vector2 topLeft = bottomLeft + new Vector2(0f, gridSize.y);
-            Vector2 topRight = topLeft + new Vector2(gridSize.x, 0f);
-            Vector2 bottomRight = bottomLeft + new Vector2(gridSize.x, 0f);
-
-            Vector3 bottomLeftWorld = toWorldMatrix.MultiplyPoint(bottomLeft);
-            Vector3 bottomRightWorld = toWorldMatrix.MultiplyPoint(bottomRight);
-            Vector3 topLeftWorld = toWorldMatrix.MultiplyPoint(topLeft);
-            Vector3 topRightWorld = toWorldMatrix.MultiplyPoint(topRight);
-
-            Color prevColor = Gizmos.color;
-            Gizmos.color = color;
-            Gizmos.DrawLine(bottomLeftWorld, bottomRightWorld);
-            Gizmos.DrawLine(topLeftWorld, topRightWorld);
-
-            Gizmos.DrawLine(bottomLeftWorld, topLeftWorld);
-            Gizmos.DrawLine(bottomRightWorld, topRightWorld);
-
-            Gizmos.color = prevColor;
         }
 
         private void DrawGridIndexHandle(Vector3 bottomLeft, Vector3 itemSize, int index, Matrix4x4 toWorldMatrix, GUIStyle labelStyle = null)
@@ -200,6 +191,65 @@ namespace RecycleScrollView
                 };
             }
             Handles.Label(drawPosition, labelText, labelStyle);
+        }
+
+        private void GizmoDrawDefaultNavigationPosition()
+        {
+            if (null == _scrollRect || null == _scrollRect.viewport)
+            {
+                return;
+            }
+
+            Color tempColor = Color.green;
+            Color prevColor = Gizmos.color;
+            Gizmos.color = tempColor;
+            RectTransform viewport = _scrollRect.viewport;
+            Vector2 normalizedPositionInViewPort = _defaultNavigationParams.normalizedPositionInViewPort;
+            // Draw vertical ref line
+            Vector2 viewPortLocalLeft = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(-0.1f, normalizedPositionInViewPort.y));
+            Vector2 viewPortLocalRight = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(1.1f, normalizedPositionInViewPort.y));
+            Vector3 viewPortLocalLeftWorld = viewport.TransformPoint(viewPortLocalLeft);
+            Vector3 viewPortLocalRightWorld = viewport.TransformPoint(viewPortLocalRight);
+            Gizmos.DrawLine(viewPortLocalLeftWorld, viewPortLocalRightWorld);
+
+            // Draw horizontal ref line
+            Vector2 viewPortLocalTop = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(normalizedPositionInViewPort.x, 1.1f));
+            Vector2 viewPortLocalBottom = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(normalizedPositionInViewPort.x, -0.1f));
+            Vector3 viewPortLocalTopWorld = viewport.TransformPoint(viewPortLocalTop);
+            Vector3 viewPortLocalBottomWorld = viewport.TransformPoint(viewPortLocalBottom);
+            Gizmos.DrawLine(viewPortLocalBottomWorld, viewPortLocalTopWorld);
+
+            // Draw element
+            Vector2 elementSize = _gridLayoutData.gridSize;
+            Vector2 elementInViewportPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, normalizedPositionInViewPort);
+            Vector2 elementOffset = _defaultNavigationParams.normalizedElementRectPositionOffset;
+            elementInViewportPos.x -= elementSize.x * (1f - elementOffset.x);
+            elementInViewportPos.y -= elementSize.y * (1f - elementOffset.y);
+            DrawRectGizmo(elementInViewportPos, elementSize, viewport.localToWorldMatrix, tempColor);
+
+            Gizmos.color = prevColor;
+        }
+
+        private void DrawRectGizmo(Vector2 bottomLeft, Vector2 size, Matrix4x4 toWorldMatrix, Color color)
+        {
+            Vector2 topLeft = bottomLeft + new Vector2(0f, size.y);
+            Vector2 topRight = topLeft + new Vector2(size.x, 0f);
+            Vector2 bottomRight = bottomLeft + new Vector2(size.x, 0f);
+
+            Vector3 bottomLeftWorld = toWorldMatrix.MultiplyPoint(bottomLeft);
+            Vector3 bottomRightWorld = toWorldMatrix.MultiplyPoint(bottomRight);
+            Vector3 topLeftWorld = toWorldMatrix.MultiplyPoint(topLeft);
+            Vector3 topRightWorld = toWorldMatrix.MultiplyPoint(topRight);
+
+            Color prevColor = Gizmos.color;
+            Gizmos.color = color;
+            Gizmos.DrawLine(bottomLeftWorld, bottomRightWorld);
+            Gizmos.DrawLine(topLeftWorld, topRightWorld);
+
+            Gizmos.DrawLine(bottomLeftWorld, topLeftWorld);
+            Gizmos.DrawLine(bottomRightWorld, topRightWorld);
+
+            Gizmos.color = prevColor;
         }
 
     }

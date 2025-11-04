@@ -57,7 +57,7 @@ namespace RecycleScrollView.Sample
             }
         }
 
-        public void OnElementIndexChanged(RectTransform element, int prevIndex, int nextIndex)
+        public void ChangeElementIndex(RectTransform element, int prevIndex, int nextIndex)
         {
             if (m_viewElementMap.TryGetValue(element, out GuidElementUI viewElement))
             {

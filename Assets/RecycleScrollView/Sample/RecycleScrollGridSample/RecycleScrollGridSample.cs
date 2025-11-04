@@ -10,6 +10,7 @@ namespace RecycleScrollView.Sample
         private GuidTempData[] m_dataArr = null;
 
         public GuidElementListUI m_gridListUI = null;
+        public RecycleScrollGrid _scrollRectController;
 
         public string[] m_dataNames = null;
 
@@ -31,6 +32,13 @@ namespace RecycleScrollView.Sample
         private void Start()
         {
             SetupData();
+        }
+
+        public int jumpToTestIndex = 55;
+        [ContextMenu(nameof(JumpToTest))]
+        private void JumpToTest()
+        {
+            _scrollRectController.JumpTo(jumpToTestIndex);
         }
     }
 }

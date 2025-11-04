@@ -7,21 +7,21 @@ namespace RecycleScrollView
     public partial class RecycleSingleDirectionScroll
     {
         [System.Serializable]
-        public struct ScrollViewNavigationParams
+        public struct SingleScrollElementNavigationParams
         {
             public float normalizedPositionInViewPort;
             public float normalizedElementPositionAdjustment;
         }
 
         [SerializeField]
-        private ScrollViewNavigationParams _defaultNavigationParams;
+        private SingleScrollElementNavigationParams _defaultNavigationParams;
 
         public void JumpToElementInstant(int dataIndex)
         {
             JumpToElementInstant(dataIndex, _defaultNavigationParams);
         }
 
-        public void JumpToElementInstant(int dataIndex, ScrollViewNavigationParams navigationParams)
+        public void JumpToElementInstant(int dataIndex, SingleScrollElementNavigationParams navigationParams)
         {
             if (null == m_dataSource || dataIndex < 0 || dataIndex >= m_dataSource.DataElementCount)
             {
@@ -66,12 +66,6 @@ namespace RecycleScrollView
             AddElemensIfNeed();
             _scrollRect.CallUpdateBoundsAndPrevData();
             _scrollRect.StopMovement();
-        }
-
-        public float CalculateCurrentNormalizedPosition()
-        {
-            // TODO
-            return 0f;
         }
 
 #if UNITY_EDITOR

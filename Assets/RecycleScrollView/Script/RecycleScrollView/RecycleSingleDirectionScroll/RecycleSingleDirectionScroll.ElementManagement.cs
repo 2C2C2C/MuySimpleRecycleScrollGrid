@@ -611,7 +611,7 @@ namespace RecycleScrollView
         }
 
         /// <summary> The data index of the element for adding head </summary>
-        /// <returns> -1 Means can not find valid index </returns>
+        /// <returns> -1 Means it can not find valid index </returns>
         private int CalculateAvaialbeNextHeadElementIndex()
         {
             if (null == m_dataSource)
@@ -635,7 +635,7 @@ namespace RecycleScrollView
         }
 
         /// <summary> The data index of the element for adding tail </summary>
-        /// <returns> -1 Means can not find valid index </returns>
+        /// <returns> -1 Means it can not find valid index </returns>
         private int CalculateAvaialbeNextTailElementIndex()
         {
             if (null == m_dataSource)

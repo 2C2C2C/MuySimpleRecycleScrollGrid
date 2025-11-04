@@ -207,8 +207,7 @@ namespace RecycleScrollView
             }
             newElement.CalculatePreferredSize();
 #if UNITY_EDITOR
-            newElement.name = $"{newElement.name} {dataIndex}";
-            // Debug.LogError($"Check; index {dataIndex}; size {newElement.ElementPreferredSize}");
+            ChangeObjectName(newElement, dataIndex);
 #endif
             return newElement;
         }
@@ -238,6 +237,9 @@ namespace RecycleScrollView
             {
                 element.CalculatePreferredSize();
             }
+#if UNITY_EDITOR
+            ChangeObjectName(element, nextIndex);
+#endif
         }
 
         private bool AdjustElementsIfNeed()
@@ -311,6 +313,12 @@ namespace RecycleScrollView
         }
 
 #if UNITY_EDITOR
+
+        private void ChangeObjectName(MonoBehaviour behaviour, int dataIndex)
+        {
+            behaviour.name = $"Element {dataIndex}";
+            // Debug.LogError($"Check; index {dataIndex}; size {newElement.ElementPreferredSize}");
+        }
 
         protected override void Reset()
         {

@@ -1960,7 +1960,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _defaultNavigationParams:
     normalizedPositionInViewPort: 0.75
-    normalizedElementPositionAdjustment: 0.5
+    normalizedElementPositionAdjustment: 0
   _alwaysDrawGizmos: 1
   _scrollRect: {fileID: 2111627558}
   _contentLayoutGroup: {fileID: 1497416158}

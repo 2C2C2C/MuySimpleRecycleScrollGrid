@@ -92,15 +92,16 @@ namespace UnityEngine.UI
 
         private void AdjustVelocity()
         {
+            Vector2 currentVelocity = velocity;
             // To prevent moving with very low velocity
-            if (_velocityStopSqrMagThreshold * _velocityStopSqrMagThreshold > velocity.sqrMagnitude)
+            if (_velocityStopSqrMagThreshold * _velocityStopSqrMagThreshold > currentVelocity.sqrMagnitude)
             {
-                base.velocity = Vector2.zero;
+                base.StopMovement();
             }
-            else if (_velocityMaxSqrMag * _velocityMaxSqrMag < velocity.sqrMagnitude)
+            else if (_velocityMaxSqrMag * _velocityMaxSqrMag < currentVelocity.sqrMagnitude)
             {
-                base.velocity = _velocityMaxSqrMag * velocity.normalized;
-                base.velocity = velocity;
+                currentVelocity = _velocityMaxSqrMag * currentVelocity.normalized;
+                base.velocity = currentVelocity;
             }
         }
 

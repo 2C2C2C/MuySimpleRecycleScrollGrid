@@ -38,7 +38,7 @@ namespace RecycleScrollView.Sample
         }
     }
 
-    public class SingleDirChatScrollSample : MonoBehaviour, ISingleDirectionScrollDataSource
+    public class SingleDirectionChatScrollSample : MonoBehaviour, ISingleDirectionScrollDataSource
     {
         [SerializeField]
         private RecycleSingleDirectionScroll _scrollController;

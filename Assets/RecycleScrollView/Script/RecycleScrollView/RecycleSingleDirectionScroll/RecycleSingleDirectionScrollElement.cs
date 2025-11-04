@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,20 +8,32 @@ namespace RecycleScrollView
     [RequireComponent(typeof(LayoutElement))]
     public class RecycleSingleDirectionScrollElement : MonoBehaviour
     {
-        public static MethodInfo GetTotalPreferredSizeMethod
+        private static Func<LayoutGroup, int, float> GetTotalPreferredSizeDelegate
         {
             get
             {
-                if (null == s_getTotalPreferredSizeMethod)
+                if (null == s_getTotalPreferredSizeDelegate)
                 {
-                    s_getTotalPreferredSizeMethod = typeof(LayoutGroup).GetMethod("GetTotalPreferredSize", BindingFlags.Instance | BindingFlags.NonPublic);
+                    try
+                    {
+                        MethodInfo methodInfo = typeof(LayoutGroup).GetMethod("GetTotalPreferredSize", BindingFlags.Instance | BindingFlags.NonPublic);
+                        // create an open instance delegate: (LayoutGroup lg, int axis) => float
+                        s_getTotalPreferredSizeDelegate = (Func<LayoutGroup, int, float>)Delegate.CreateDelegate
+                        (
+                            typeof(Func<LayoutGroup, int, float>),
+                            null,
+                            methodInfo
+                        );
+                    }
+                    catch
+                    {
+                        s_getTotalPreferredSizeDelegate = null; // fallback to Invoke if delegate creation fails
+                    }
                 }
-                return s_getTotalPreferredSizeMethod;
+                return s_getTotalPreferredSizeDelegate;
             }
         }
-        private static MethodInfo s_getTotalPreferredSizeMethod;
-        private static readonly object[] s_boxedInt0 = new object[] { 0 };
-        private static readonly object[] s_boxedInt1 = new object[] { 1 };
+        private static Func<LayoutGroup, int, float> s_getTotalPreferredSizeDelegate;
 
         [SerializeField]
         private LayoutElement _layoutElement;
@@ -81,13 +94,18 @@ namespace RecycleScrollView
                 if (_forceConvertFlexiableToPreferred)
                 {
                     const int LAYOUT_SIZE_DISABLE = -1;
-                    // HACK IDK if this is cheap or not. If do this, remember to reset actual values when return to pool
+                    /*
+                        HACK 
+                        IDK if this is cheap or not. 
+                        If do this, remember to reset actual values when return to pool.
+                        If it is expensive, then consider to inherit LayoutElement and create pubic get method.
+                    */
                     if (Mathf.Approximately(1f, _layoutElement.flexibleHeight))
                     {
                         _layoutElement.preferredHeight = LAYOUT_SIZE_DISABLE;
                         layoutGroup.CalculateLayoutInputVertical();
                         layoutGroup.SetLayoutVertical();
-                        rectSize.y = (float)GetTotalPreferredSizeMethod.Invoke(layoutGroup, s_boxedInt1);
+                        rectSize.y = GetTotalPreferredSizeDelegate.Invoke(layoutGroup, (int)RectTransform.Axis.Vertical);
                         _layoutElement.preferredHeight = rectSize.y;
                     }
                     if (Mathf.Approximately(1f, _layoutElement.flexibleWidth))
@@ -95,7 +113,7 @@ namespace RecycleScrollView
                         _layoutElement.preferredWidth = LAYOUT_SIZE_DISABLE;
                         layoutGroup.CalculateLayoutInputHorizontal();
                         layoutGroup.SetLayoutHorizontal();
-                        rectSize.x = (float)GetTotalPreferredSizeMethod.Invoke(layoutGroup, s_boxedInt0);
+                        rectSize.x = GetTotalPreferredSizeDelegate.Invoke(layoutGroup, (int)RectTransform.Axis.Horizontal);
                         _layoutElement.preferredWidth = rectSize.x;
                     }
                 }
