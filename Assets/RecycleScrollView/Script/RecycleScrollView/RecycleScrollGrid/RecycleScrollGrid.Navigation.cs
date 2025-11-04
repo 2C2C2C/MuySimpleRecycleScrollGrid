@@ -16,6 +16,7 @@ namespace RecycleScrollView
         [SerializeField]
         private RecycleScrollGridElementNavigationParams _defaultNavigationParams;
 
+        /// <summary> Jump to element instantly </summary>
         public void JumpTo(int dataIndex)
         {
             if (HasDataSource)
@@ -37,7 +38,7 @@ namespace RecycleScrollView
                 RectTransform content = _scrollRect.content;
                 Vector2 contentSize = content.rect.size;
                 // Calculate current position
-                Vector2 elementRectPosition = CalculateElementRectPositionInCoutent(dataIndex);
+                Vector2 elementRectPosition = TransferElementRectPositionToContentRectPosition(dataIndex, Vector2.zero);
                 Vector3 worldPos = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(content, new Vector2(elementRectPosition.x / contentSize.x, elementRectPosition.y / contentSize.y));
                 Vector2 elementPosInViewport = (Vector2)viewport.InverseTransformPoint(worldPos);
 
@@ -53,56 +54,64 @@ namespace RecycleScrollView
                     normalizedMove.y = 0f;
                 }
                 Vector2 nextNormalizedPos = _scrollRect.normalizedPosition + normalizedMove;
+                nextNormalizedPos.x = Mathf.Clamp01(nextNormalizedPos.x);
+                nextNormalizedPos.y = Mathf.Clamp01(nextNormalizedPos.y);
                 _scrollRect.normalizedPosition = nextNormalizedPos;
             }
         }
 
-        private Vector2 CalculateElementRectPositionInCoutent(int dataIndex)
+        private Vector2 TransferElementRectPositionToContentRectPosition(int dataIndex, Vector2 normalizedElementRectPosition)
         {
             dataIndex = Mathf.Clamp(dataIndex, 0, SimulatedDataCount - 1);
             int primaryCount = Mathf.Max(1, _gridLayoutData.constraintCount);
-            int primaryIndex = dataIndex % primaryCount;
-            int secondaryIndex = dataIndex / primaryCount;
+            int indexInGroup = dataIndex % primaryCount;
+            int groupIndex = dataIndex / primaryCount;
 
             int rowIndex, columnIndex;
             if (_gridLayoutData.startAxis == GridLayoutGroup.Axis.Horizontal)
             {
-                columnIndex = primaryIndex;
-                rowIndex = secondaryIndex;
+                columnIndex = indexInGroup;
+                rowIndex = groupIndex;
             }
             else // Vertical primary
             {
-                rowIndex = primaryIndex;
-                columnIndex = secondaryIndex;
+                rowIndex = indexInGroup;
+                columnIndex = groupIndex;
             }
 
+            Vector2 gridSize = _gridLayoutData.gridSize;
+            Vector2 spacing = _gridLayoutData.Spacing;
             // Grid stepping
-            float stepX = _gridLayoutData.gridSize.x + _gridLayoutData.Spacing.x;
-            float stepY = _gridLayoutData.gridSize.y + _gridLayoutData.Spacing.y;
+            float stepX = gridSize.x + spacing.x;
+            float stepY = gridSize.y + spacing.y;
 
-            // default: UpperLeft behaviour (x grows right, y grows down -> negative local y)
-            float x = _gridLayoutData.RectPadding.left + columnIndex * stepX;
-            float y = -(_gridLayoutData.RectPadding.top + rowIndex * stepY);
-
-            // adjust for other corners
+            RectOffset padding = _gridLayoutData.RectPadding;
+            Vector2 contentSize = _scrollRect.content.rect.size;
+            // Default is bottom left
+            Vector2 rectPosition = new Vector2(normalizedElementRectPosition.x * gridSize.x, normalizedElementRectPosition.y * gridSize.y);
             switch (_gridLayoutData.startCorner)
             {
                 case GridLayoutGroup.Corner.UpperLeft:
-                    // already set
+                    rectPosition.y = contentSize.y - padding.top - gridSize.y - rowIndex * stepY;
+                    rectPosition.x = padding.left + columnIndex * stepX;
                     break;
                 case GridLayoutGroup.Corner.UpperRight:
-                    x = -(_gridLayoutData.RectPadding.right + columnIndex * stepX);
+                    rectPosition.y = contentSize.y - padding.top - gridSize.y;
+                    rectPosition.x = contentSize.x - padding.right - gridSize.x - columnIndex * stepX;
                     break;
                 case GridLayoutGroup.Corner.LowerLeft:
-                    y = _gridLayoutData.RectPadding.bottom + rowIndex * stepY;
+                    rectPosition.x = padding.left + columnIndex * stepX;
+                    rectPosition.y = padding.bottom + rowIndex * stepY;
                     break;
                 case GridLayoutGroup.Corner.LowerRight:
-                    x = -(_gridLayoutData.RectPadding.right + columnIndex * stepX);
-                    y = _gridLayoutData.RectPadding.bottom + rowIndex * stepY;
+                    rectPosition.x = contentSize.x - padding.right - gridSize.x - columnIndex * stepX;
+                    rectPosition.y = padding.bottom + rowIndex * stepY;
+                    break;
+                default:
                     break;
             }
 
-            return new Vector2(x, y);
+            return rectPosition;
         }
 
     }
