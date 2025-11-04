@@ -16,6 +16,6 @@ namespace RecycleScrollView
         /// <param name="index">May be -1, if the element is not used yet</param>
         void InitElement(RectTransform element, int index);
         void UnInitElement(RectTransform element);
-        void OnElementIndexChanged(RectTransform element, int prevIndex, int nextIndex);
+        void ChangeElementIndex(RectTransform element, int prevIndex, int nextIndex);
     }
 }

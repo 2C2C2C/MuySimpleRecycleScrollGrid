@@ -49,8 +49,6 @@ namespace RecycleScrollView
         private ScrollRect _scrollRect = null;
         [SerializeField]
         private RectTransform _gridContainer = null;
-        [SerializeField]
-        private RecycleScrollGridElement _fallbackElementPrefab = null;
 
         [SerializeField]
         private bool _showActualGridElements = true;
@@ -69,7 +67,7 @@ namespace RecycleScrollView
         private int m_viewElementCountInRow = 0;
         private int m_viewElementCountInColumn = 0;
 
-        private IScrollGridDataSource m_listView = null;
+        private IScrollGridDataSource m_dataSource = null;
         private List<RecycleScrollGridElement> m_gridElements;
 
         private UnityAction<Vector2> m_onScrollRectValueChanged;
@@ -82,34 +80,39 @@ namespace RecycleScrollView
 
         public IReadOnlyList<RecycleScrollGridElement> ElementList => m_gridElements ??= new List<RecycleScrollGridElement>();
         public ScrollGridLayoutData GridLayoutData => _gridLayoutData;
-        public int SimulatedDataCount => m_simulatedDataCount;
+        public int SimulatedDataCount => HasDataSource ? m_dataSource.DataElementCount : m_simulatedDataCount;
+        public bool HasDataSource => null != m_dataSource;
 
-        public void Init(IScrollGridDataSource listView)
+        public void Init(IScrollGridDataSource source)
         {
-            if (null == m_listView)
+            if (HasDataSource)
             {
-                if (null == listView)
+                Debug.LogError($"[RecycleScrollGrid] Init failed, the already has data source");
+            }
+            else
+            {
+                if (null == source)
                 {
-                    Debug.LogError("RecycleScrollGridController Init failed, the listview is null", this.gameObject);
+                    Debug.LogError("[RecycleScrollGrid] Init failed, the listview is null", this);
                     return;
                 }
-                m_listView = listView;
+                m_dataSource = source;
                 RefreshLayoutChanges();
             }
         }
 
         public void Uninit()
         {
-            if (null != m_listView)
+            if (HasDataSource)
             {
                 for (int i = 0, length = m_gridElements.Count; i < length; i++)
                 {
                     RectTransform gridRectTransform = m_gridElements[i].ElementTransform;
-                    m_listView.UnInitElement(gridRectTransform);
-                    m_listView.RemoveElement(gridRectTransform);
+                    m_dataSource.UnInitElement(gridRectTransform);
+                    m_dataSource.RemoveElement(gridRectTransform);
                 }
                 m_gridElements.Clear();
-                m_listView = null;
+                m_dataSource = null;
             }
         }
 
@@ -187,16 +190,15 @@ namespace RecycleScrollView
 
         private void ApplySizeToScrollContent()
         {
-            if (null != m_listView)
+            if (HasDataSource)
             {
-                m_simulatedDataCount = m_listView.DataElementCount;
+                m_simulatedDataCount = m_dataSource.DataElementCount;
+                int dataCount = m_simulatedDataCount;
+                Vector2 contentSize = CalculateContentSize(dataCount);
+                RectTransform content = _scrollRect.content;
+                content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentSize.x);
+                content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, contentSize.y);
             }
-            int dataCount = m_simulatedDataCount;
-            // m_simulatedDataCount
-            Vector2 contentSize = CalculateContentSize(dataCount);
-            RectTransform content = _scrollRect.content;
-            // TODO Directly change sizeDelta is not safe
-            content.sizeDelta = contentSize;
         }
 
         private void OnScrollRectValueChanged(Vector2 position)
@@ -229,8 +231,8 @@ namespace RecycleScrollView
                 return;
             }
 
-            bool hasValidListView = null != m_listView;
-            int dataCount = hasValidListView ? m_listView.DataElementCount : SimulatedDataCount;
+            bool hasDataSource = HasDataSource;
+            int dataCount = hasDataSource ? m_dataSource.DataElementCount : SimulatedDataCount;
             ScrollGridLayoutData gridLayoutData = _gridLayoutData;
             RectTransform scrollContent = _scrollRect.content;
             Vector2 rawSize = CalculateContentSize(dataCount);
@@ -311,18 +313,22 @@ namespace RecycleScrollView
                         RecycleScrollGridElement gridElement = m_gridElements[usedElementIndex];
                         gridElement.ElementTransform.localPosition = gridStartPos;
                         int prevIndex = gridElement.ElementIndex;
-                        gridElement.SetIndex(gridDataIndex);
-                        gridElement.SetObjectActive();
-                        if (hasValidListView)
+                        if (prevIndex != gridDataIndex)
                         {
-                            if (0 <= prevIndex) // Prev index valid
+                            gridElement.SetIndex(gridDataIndex);
+                            gridElement.SetObjectActive();
+                            if (hasDataSource)
                             {
-                                m_listView.OnElementIndexChanged(gridElement.ElementTransform, prevIndex, gridDataIndex);
+                                if (0 <= prevIndex) // Prev index valid
+                                {
+                                    m_dataSource.ChangeElementIndex(gridElement.ElementTransform, prevIndex, gridDataIndex);
+                                }
+                                else
+                                {
+                                    m_dataSource.InitElement(gridElement.ElementTransform, gridDataIndex);
+                                }
                             }
-                            else
-                            {
-                                m_listView.InitElement(gridElement.ElementTransform, gridDataIndex);
-                            }
+                            ChangeObjectName(gridElement, gridDataIndex);
                         }
                         ++usedElementIndex;
                     }
@@ -336,9 +342,9 @@ namespace RecycleScrollView
                 bool prevIndexValid = 0 <= gridElement.ElementIndex;
                 gridElement.SetIndex(-1);
                 gridElement.SetObjectDeactive();
-                if (hasValidListView && prevIndexValid)
+                if (hasDataSource && prevIndexValid)
                 {
-                    m_listView.UnInitElement(gridElement.ElementTransform);
+                    m_dataSource.UnInitElement(gridElement.ElementTransform);
                 }
             }
 
@@ -350,7 +356,9 @@ namespace RecycleScrollView
             sqrLimit *= sqrLimit;
             float velocitySqrMag = _scrollRect.velocity.sqrMagnitude;
             if (velocitySqrMag < sqrLimit && !Mathf.Approximately(0.0f, velocitySqrMag)) // try to clamped move to save 
+            {
                 _scrollRect.StopMovement();
+            }
         }
 
         private void AdjustElementArray(int size)
@@ -370,16 +378,17 @@ namespace RecycleScrollView
 
         private void ApplySizeOnElements()
         {
-            if (null == m_listView)
+            if (HasDataSource)
             {
-                return;
-            }
-            // sync the size form grid data
-            Vector2 itemAcutalSize = GridLayoutData.gridSize;
-            IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
-            for (int i = 0; i < elementList.Count; i++)
-            {
-                elementList[i].ElementTransform.sizeDelta = itemAcutalSize;
+                // sync the size form grid data
+                Vector2 itemAcutalSize = GridLayoutData.gridSize;
+                IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
+                for (int i = 0; i < elementList.Count; i++)
+                {
+                    RectTransform element = elementList[i].ElementTransform;
+                    element.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, itemAcutalSize.x);
+                    element.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, itemAcutalSize.y);
+                }
             }
         }
 
@@ -481,29 +490,19 @@ namespace RecycleScrollView
         private void AddElements(int count)
         {
             Vector2 gridSize = _gridLayoutData.gridSize;
-            if (null == m_listView)
+            if (HasDataSource)
             {
                 for (int i = 0; i < count; i++)
                 {
-                    RecycleScrollGridElement added;
-                    added = RecycleScrollGridElement.Instantiate(_fallbackElementPrefab, _gridContainer);
-                    added.SetElementSize(gridSize);
-                    m_gridElements.Add(added);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    RectTransform target = m_listView.AddElement(_gridContainer);
+                    RectTransform target = m_dataSource.AddElement(_gridContainer);
                     if (!target.gameObject.TryGetComponent<RecycleScrollGridElement>(out RecycleScrollGridElement added))
                     {
-                        Debug.LogError("the element prefab does not have RecycleScrollGridElement component", target.gameObject);
+                        Debug.LogError("[RecycleScrollGrid] The element prefab does not have RecycleScrollGridElement component", target.gameObject);
                         return;
                     }
                     added.SetElementSize(gridSize);
                     m_gridElements.Add(added);
-                    m_listView.UnInitElement(target);
+                    m_dataSource.UnInitElement(target);
                 }
             }
         }
@@ -514,20 +513,12 @@ namespace RecycleScrollView
             m_gridElements.Sort(GridElementCompare);
             int elementCount = m_gridElements.Count;
             // Try remove non-used elements first
-            if (null == m_listView)
+            if (HasDataSource)
             {
                 for (int i = 0; i < count; i++)
                 {
                     int elementIndex = elementCount - i - 1;
-                    GameObject.Destroy(m_gridElements[elementIndex].gameObject);
-                }
-            }
-            else
-            {
-                for (int i = 0; i < count; i++)
-                {
-                    int elementIndex = elementCount - i - 1;
-                    m_listView.RemoveElement(m_gridElements[elementIndex].ElementTransform);
+                    m_dataSource.RemoveElement(m_gridElements[elementIndex].ElementTransform);
                 }
             }
 
@@ -541,7 +532,18 @@ namespace RecycleScrollView
             }
         }
 
+#if UNITY_EDITOR
+
+        private void ChangeObjectName(MonoBehaviour behaviour, int dataIndex)
+        {
+            behaviour.name = $"Element {dataIndex}";
+        }
+
+#endif
+
         #region mono method
+
+#if UNITY_EDITOR
 
         protected override void Reset()
         {
@@ -550,8 +552,10 @@ namespace RecycleScrollView
                 _scrollRect.StopMovement();
                 return;
             }
-            Debug.LogWarning("RecycleScrollGridController should be on the same GameObject with ScrollRect, please remove this component and add RecycleScrollGridController to ScrollRect GameObject", this.gameObject);
+            Debug.LogWarning("[RecycleScrollGrid] should be on the same GameObject with ScrollRect, please remove this component and add RecycleScrollGrid to ScrollRect GameObject", this.gameObject);
         }
+
+#endif
 
         protected override void OnEnable()
         {
@@ -573,10 +577,13 @@ namespace RecycleScrollView
 
         protected override void OnDestroy()
         {
-            if (0 < m_gridElements.Count)
+            if (Application.isPlaying)
             {
-                RemoveElements(m_gridElements.Count);
-                m_gridElements.Clear();
+                if (null != m_gridElements && 0 < m_gridElements.Count)
+                {
+                    RemoveElements(m_gridElements.Count);
+                    m_gridElements.Clear();
+                }
             }
         }
 
