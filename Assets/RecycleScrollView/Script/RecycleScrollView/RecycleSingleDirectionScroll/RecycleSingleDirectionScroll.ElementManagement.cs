@@ -61,10 +61,7 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && hasAdded)
                     {
-                        element.ClearPreferredSize();
-                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex + 1);
-                        element.SetIndex(elementIndex + 1);
-                        element.CalculatePreferredSize();
+                        InternalChangeElementIndex(element, elementIndex + 1, false);
                     }
                 }
             }
@@ -85,8 +82,7 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex <= elementIndex && hasAdded)
                     {
-                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex + 1);
-                        element.SetIndex(elementIndex + 1);
+                        InternalChangeElementIndex(element, elementIndex + 1, false);
                     }
                 }
             }
@@ -122,8 +118,7 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && !hasRemoved)
                     {
-                        element.SetIndex(elementIndex - 1);
-                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex - 1);
+                        InternalChangeElementIndex(element, elementIndex - 1, false);
                     }
                 }
             }
@@ -143,10 +138,7 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && hasRemoved)
                     {
-                        element.ClearPreferredSize();
-                        m_dataSource.ChangeElementIndex(element.ElementTransform, elementIndex, elementIndex - 1);
-                        element.CalculatePreferredSize();
-                        element.SetIndex(elementIndex - 1);
+                        InternalChangeElementIndex(element, elementIndex - 1, false);
                     }
                 }
             }

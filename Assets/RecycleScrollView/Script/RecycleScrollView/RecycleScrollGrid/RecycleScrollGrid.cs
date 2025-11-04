@@ -543,6 +543,8 @@ namespace RecycleScrollView
 
         #region mono method
 
+#if UNITY_EDITOR
+
         protected override void Reset()
         {
             if (TryGetComponent<ScrollRect>(out _scrollRect))
@@ -552,6 +554,8 @@ namespace RecycleScrollView
             }
             Debug.LogWarning("[RecycleScrollGrid] should be on the same GameObject with ScrollRect, please remove this component and add RecycleScrollGrid to ScrollRect GameObject", this.gameObject);
         }
+
+#endif
 
         protected override void OnEnable()
         {
@@ -573,10 +577,13 @@ namespace RecycleScrollView
 
         protected override void OnDestroy()
         {
-            if (0 < m_gridElements.Count)
+            if (Application.isPlaying)
             {
-                RemoveElements(m_gridElements.Count);
-                m_gridElements.Clear();
+                if (null != m_gridElements && 0 < m_gridElements.Count)
+                {
+                    RemoveElements(m_gridElements.Count);
+                    m_gridElements.Clear();
+                }
             }
         }
 

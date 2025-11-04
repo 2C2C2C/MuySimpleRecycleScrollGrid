@@ -76,9 +76,23 @@ namespace RecycleScrollView
 
 #if UNITY_EDITOR
 
+        [SerializeField]
+        private bool _alwaysDrawGizmos;
+
+        private void OnDrawGizmos()
+        {
+            if (_alwaysDrawGizmos)
+            {
+                GizmoDrawDefaultNavigationPosition();
+            }
+        }
+
         private void OnDrawGizmosSelected()
         {
-            GizmoDrawDefaultNavigationPosition();
+            if (!_alwaysDrawGizmos)
+            {
+                GizmoDrawDefaultNavigationPosition();
+            }
         }
 
         private void GizmoDrawDefaultNavigationPosition()

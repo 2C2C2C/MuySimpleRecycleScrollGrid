@@ -114,7 +114,7 @@ public partial class ScrollrectNavigator
     [ContextMenu(nameof(SnapTest_EditorOnly))]
     private void SnapTest_EditorOnly()
     {
-        GetNearestVerticalLayoutElementIndex(_snapOption.normalizedSnapReferencePosition);
+        //GetNearestVerticalLayoutElementIndex(_snapOption.normalizedSnapReferencePosition);
     }
 
 #endif

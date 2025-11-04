@@ -15,8 +15,6 @@ namespace RecycleScrollView
         private UnityScrollRectExtended _scrollRect;
         [SerializeField]
         private HorizontalOrVerticalLayoutGroup _contentLayoutGroup;
-        [SerializeField] // TODO Remove it later
-        private RectTransform _fallbackElementPrefab;
 
         // Simple layout param
         [SerializeField]
@@ -27,6 +25,8 @@ namespace RecycleScrollView
         public bool IsVertical => _scrollParam.IsVertical;
         public bool IsHorizontal => _scrollParam.IsHorizontal;
         public bool IsReverseArrangement => _scrollParam.reverseArrangement;
+
+        public bool HasDataSource => null != m_dataSource;
 
         private List<RecycleSingleDirectionScrollElement> m_currentUsingElements = new List<RecycleSingleDirectionScrollElement>();
         private ISingleDirectionScrollDataSource m_dataSource;
@@ -47,7 +47,7 @@ namespace RecycleScrollView
 
         public void UnInit()
         {
-            if (null != m_dataSource)
+            if (HasDataSource)
             {
                 for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
                 {
@@ -60,7 +60,11 @@ namespace RecycleScrollView
 
         public void Init(ISingleDirectionScrollDataSource dataSource)
         {
-            if (null == m_dataSource)
+            if (HasDataSource)
+            {
+                Debug.LogError($"[RecycleSingleDirectionScroll] Has already register a datasource");
+            }
+            else
             {
                 m_dataSource = dataSource;
                 ApplyLayoutSetting();
@@ -196,21 +200,10 @@ namespace RecycleScrollView
         {
             RectTransform content = _scrollRect.content;
             RecycleSingleDirectionScrollElement newElement;
-            if (null == m_dataSource)
+            RectTransform requestedElement = m_dataSource.RequestElement(content, dataIndex);
+            if (!requestedElement.TryGetComponent<RecycleSingleDirectionScrollElement>(out newElement))
             {
-                RectTransform spawned = Instantiate(_fallbackElementPrefab, content);
-                if (!spawned.TryGetComponent<RecycleSingleDirectionScrollElement>(out newElement))
-                {
-                    Debug.LogError($"[RecycleScrollView] receive wrong element");
-                }
-            }
-            else
-            {
-                RectTransform requestedElement = m_dataSource.RequestElement(content, dataIndex);
-                if (!requestedElement.TryGetComponent<RecycleSingleDirectionScrollElement>(out newElement))
-                {
-                    Debug.LogError($"[RecycleScrollView] receive wrong element");
-                }
+                Debug.LogError($"[RecycleScrollView] receive wrong element");
             }
             newElement.CalculatePreferredSize();
 #if UNITY_EDITOR
@@ -230,6 +223,20 @@ namespace RecycleScrollView
             else
             {
                 m_dataSource.ReturnElement(element.transform as RectTransform);
+            }
+        }
+
+        private void InternalChangeElementIndex(RecycleSingleDirectionScrollElement element, int nextIndex, bool needReCalculateSize)
+        {
+            if (needReCalculateSize)
+            {
+                element.ClearPreferredSize();
+            }
+            m_dataSource.ChangeElementIndex(element.ElementTransform, element.ElementIndex, nextIndex);
+            element.SetIndex(nextIndex);
+            if (needReCalculateSize)
+            {
+                element.CalculatePreferredSize();
             }
         }
 

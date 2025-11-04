@@ -1944,7 +1944,7 @@ MonoBehaviour:
   _elementPrefab: {fileID: 224671534218262706, guid: 2d934ed5fe5ab744298d9857becafcea,
     type: 3}
   _scrollrect: {fileID: 2111627558}
-  _dataCount: 50
+  _dataCount: 192
   _jumpToTestIndex: 10
 --- !u!114 &2111627557
 MonoBehaviour:
@@ -1961,10 +1961,9 @@ MonoBehaviour:
   _defaultNavigationParams:
     normalizedPositionInViewPort: 0.75
     normalizedElementPositionAdjustment: 0.5
+  _alwaysDrawGizmos: 1
   _scrollRect: {fileID: 2111627558}
   _contentLayoutGroup: {fileID: 1497416158}
-  _fallbackElementPrefab: {fileID: 224671534218262706, guid: a93ea2669a74d5d459f08700a009e2ea,
-    type: 3}
   _scrollParam:
     scrollDirection: 4
     reverseArrangement: 1
@@ -1999,8 +1998,8 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  _velocityStopThreshold: 7
-  _velocityMaxClamp: 1000
+  _velocityStopSqrMagThreshold: 7
+  _velocityMaxSqrMag: 1000
 --- !u!114 &2111627559
 MonoBehaviour:
   m_ObjectHideFlags: 0

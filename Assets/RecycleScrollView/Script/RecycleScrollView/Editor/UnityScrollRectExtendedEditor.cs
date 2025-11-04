@@ -19,7 +19,6 @@ namespace UnityEngine.UI
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-
             serializedObject.Update();
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Other settings");
