@@ -3,14 +3,14 @@ using UnityEngine;
 
 namespace RecycleScrollView.Sample
 {
-    public class RecycleScrollGridSample : MonoBehaviour
+    public class RecycleGridScrollSample : MonoBehaviour
     {
         [Range(4, 800)]
         public int m_dataCount = 10;
         private GuidTempData[] m_dataArr = null;
 
         public GuidElementListUI m_gridListUI = null;
-        public RecycleScrollGrid _scrollRectController;
+        public RecycleGridScroll _scrollRectController;
 
         public string[] m_dataNames = null;
 

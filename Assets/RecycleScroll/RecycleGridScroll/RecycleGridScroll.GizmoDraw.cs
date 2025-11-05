@@ -7,7 +7,7 @@ using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
-    public partial class RecycleScrollGrid : UIBehaviour
+    public partial class RecycleGridScroll : UIBehaviour
     {
         private const int INDEX_LABEL_FONT_SIZE = 16;
 
@@ -90,7 +90,7 @@ namespace RecycleScrollView
             }
 
             Color gridColor = Color.blue;
-            ScrollGridLayoutData gridLayoutData = _gridLayoutData;
+            SimpleGridLayoutData gridLayoutData = _gridLayoutData;
             RectTransform scrollContent = _scrollRect.content;
             Vector2 rawSize = CalculateContentSize(dataCount);
             Vector2 contentPivot = scrollContent.pivot;

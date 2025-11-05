@@ -10,17 +10,17 @@ namespace RecycleScrollView
 {
     [ExecuteAlways]
     [RequireComponent(typeof(UnityScrollRectExtended))]
-    public partial class RecycleScrollGrid : UIBehaviour
+    public partial class RecycleGridScroll : UIBehaviour
     {
-        private static Comparison<RecycleScrollGridElement> s_gridElementCompare;
+        private static Comparison<RecycleGridScrollElement> s_gridElementCompare;
 
-        public static Comparison<RecycleScrollGridElement> GridElementCompare
+        public static Comparison<RecycleGridScrollElement> GridElementCompare
         {
             get
             {
                 if (null == s_gridElementCompare)
                 {
-                    s_gridElementCompare = new Comparison<RecycleScrollGridElement>((x, y) =>
+                    s_gridElementCompare = new Comparison<RecycleGridScrollElement>((x, y) =>
                     {
                         int xIndex = x.ElementIndex, yIndex = y.ElementIndex;
                         if (xIndex == yIndex)
@@ -54,7 +54,7 @@ namespace RecycleScrollView
         private bool _showActualGridElements = true;
 
         [Space, Header("Grid Layout Setting"), SerializeField]
-        private ScrollGridLayoutData _gridLayoutData = new ScrollGridLayoutData();
+        private SimpleGridLayoutData _gridLayoutData = new SimpleGridLayoutData();
 
         [SerializeField] // This value should be NonSerialized but better to show it in inspector
         /// <summary> The value should greater than 0 </summary>
@@ -67,20 +67,20 @@ namespace RecycleScrollView
         private int m_viewElementCountInRow = 0;
         private int m_viewElementCountInColumn = 0;
 
-        private IScrollGridDataSource m_dataSource = null;
-        private List<RecycleScrollGridElement> m_gridElements;
+        private IGridScrollDataSource m_dataSource = null;
+        private List<RecycleGridScrollElement> m_gridElements;
         private UnityAction<Vector2> m_onScrollRectValueChanged;
 
         public int ViewItemCount => m_viewElementCount;
         public int ViewItemCountInRow => m_viewElementCountInRow;
         public int ViewItemCountInColumn => m_viewElementCountInColumn;
 
-        public IReadOnlyList<RecycleScrollGridElement> ElementList => m_gridElements ??= new List<RecycleScrollGridElement>();
-        public ScrollGridLayoutData GridLayoutData => _gridLayoutData;
+        public IReadOnlyList<RecycleGridScrollElement> ElementList => m_gridElements ??= new List<RecycleGridScrollElement>();
+        public SimpleGridLayoutData GridLayoutData => _gridLayoutData;
         public int SimulatedDataCount => HasDataSource ? m_dataSource.DataElementCount : m_simulatedDataCount;
         public bool HasDataSource => null != m_dataSource;
 
-        public void Init(IScrollGridDataSource source)
+        public void Init(IGridScrollDataSource source)
         {
             if (HasDataSource)
             {
@@ -123,7 +123,7 @@ namespace RecycleScrollView
             Vector2 itemSize = new Vector2(_gridLayoutData.gridSize.x, _gridLayoutData.gridSize.y);
 
             int constraintCount;
-            if (ScrollGridLayoutData.Constraint.FixedColumnCount == _gridLayoutData.constraint)
+            if (SimpleGridLayoutData.Constraint.FixedColumnCount == _gridLayoutData.constraint)
             {
                 constraintCount = Mathf.FloorToInt(viewportWidth / (itemSize.x + spacing.x));
             }
@@ -162,7 +162,7 @@ namespace RecycleScrollView
             m_viewElementCountInColumn += (0 < viewportHeight % (gridSize.y + spacing.y)) ? 2 : 1;
             m_viewElementCountInRow += (0 > viewportWidth % (gridSize.x + spacing.x)) ? 2 : 1;
 
-            if (ScrollGridLayoutData.Constraint.FixedColumnCount == _gridLayoutData.constraint)
+            if (SimpleGridLayoutData.Constraint.FixedColumnCount == _gridLayoutData.constraint)
             {
                 m_viewElementCountInRow = Mathf.Clamp(m_viewElementCountInRow, 1, _gridLayoutData.constraintCount);
             }
@@ -202,7 +202,7 @@ namespace RecycleScrollView
 
         private void AdjustGrids()
         {
-            IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
+            IReadOnlyList<RecycleGridScrollElement> elementList = ElementList;
             if (_showActualGridElements)
             {
                 if (elementList.Count != m_viewElementCount)
@@ -248,7 +248,7 @@ namespace RecycleScrollView
             {
                 // sync the size form grid data
                 Vector2 itemAcutalSize = GridLayoutData.gridSize;
-                IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
+                IReadOnlyList<RecycleGridScrollElement> elementList = ElementList;
                 for (int i = 0; i < elementList.Count; i++)
                 {
                     RectTransform element = elementList[i].ElementTransform;
@@ -267,12 +267,12 @@ namespace RecycleScrollView
 
             int constraintCount = _gridLayoutData.constraintCount;
             int groupCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
-            if (_gridLayoutData.constraint == ScrollGridLayoutData.Constraint.FixedColumnCount)
+            if (_gridLayoutData.constraint == SimpleGridLayoutData.Constraint.FixedColumnCount)
             {
                 result.x = (constraintCount * gridSize.x) + ((constraintCount - 1) * spacing.x);
                 result.y = groupCount * gridSize.y + (groupCount - 1) * spacing.y;
             }
-            else if (_gridLayoutData.constraint == ScrollGridLayoutData.Constraint.FixedRowCount)
+            else if (_gridLayoutData.constraint == SimpleGridLayoutData.Constraint.FixedRowCount)
             {
                 result.y = (constraintCount * gridSize.y) + ((constraintCount - 1) * spacing.y);
                 result.x = groupCount * gridSize.x + (groupCount - 1) * spacing.x;
@@ -299,7 +299,7 @@ namespace RecycleScrollView
                 for (int i = 0; i < count; i++)
                 {
                     RectTransform target = m_dataSource.AddElement(_gridContainer);
-                    if (!target.gameObject.TryGetComponent<RecycleScrollGridElement>(out RecycleScrollGridElement added))
+                    if (!target.gameObject.TryGetComponent<RecycleGridScrollElement>(out RecycleGridScrollElement added))
                     {
                         Debug.LogError("[RecycleScrollGrid] The element prefab does not have RecycleScrollGridElement component", target.gameObject);
                         return;
