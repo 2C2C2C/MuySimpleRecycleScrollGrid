@@ -14,7 +14,6 @@ namespace RecycleScrollView
         private int m_index = -1; // This value should be NonSerialized but better to show it in inspector
 
         public int ElementIndex => m_index;
-        public bool NeedRefreshData { get; private set; } = false;
 
         public RectTransform ElementTransform
         {
@@ -58,7 +57,6 @@ namespace RecycleScrollView
                 return;
             }
             m_index = index;
-            NeedRefreshData = true;
         }
 
         private void Awake()

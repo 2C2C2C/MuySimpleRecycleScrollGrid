@@ -714,7 +714,7 @@ GameObject:
   - component: {fileID: 5438040487593130228}
   - component: {fileID: 5438040487593130224}
   - component: {fileID: 6249718246315757424}
-  - component: {fileID: 5438040487593130230}
+  - component: {fileID: 8675567675530721526}
   - component: {fileID: 4279281952223755839}
   - component: {fileID: 1720394423}
   m_Layer: 5
@@ -784,7 +784,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5438040487593130230
+--- !u!114 &8675567675530721526
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -793,7 +793,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5438040487593130229}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1aa08ab6e0800fa44ae55d278d1423e3, type: 3}
+  m_Script: {fileID: 11500000, guid: f4b461e5eeed6aa47aeac772da4ea305, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Content: {fileID: 5438040486668900134}
@@ -807,13 +807,15 @@ MonoBehaviour:
   m_Viewport: {fileID: 5438040487183274192}
   m_HorizontalScrollbar: {fileID: 5438040485948332830}
   m_VerticalScrollbar: {fileID: 5438040485964838613}
-  m_HorizontalScrollbarVisibility: 1
-  m_VerticalScrollbarVisibility: 1
+  m_HorizontalScrollbarVisibility: 0
+  m_VerticalScrollbarVisibility: 0
   m_HorizontalScrollbarSpacing: 0
   m_VerticalScrollbarSpacing: 0
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+  _velocityStopSqrMagThreshold: 7
+  _velocityMaxSqrMag: 1000
 --- !u!114 &4279281952223755839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -832,7 +834,7 @@ MonoBehaviour:
   _defaultNavigationParams:
     normalizedPositionInViewPort: {x: 0.5, y: 0.5}
     normalizedElementRectPositionOffset: {x: 0.5, y: 0.5}
-  _scrollRect: {fileID: 5438040487593130230}
+  _scrollRect: {fileID: 8675567675530721526}
   _gridContainer: {fileID: 5438040486668900134}
   _showActualGridElements: 1
   _gridLayoutData:

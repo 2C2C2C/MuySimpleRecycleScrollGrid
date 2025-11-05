@@ -9,7 +9,7 @@ using UnityEngine.UI.Extend;
 namespace RecycleScrollView
 {
     [ExecuteAlways]
-    [RequireComponent(typeof(ScrollRect))]
+    [RequireComponent(typeof(UnityScrollRectExtended))]
     public partial class RecycleScrollGrid : UIBehaviour
     {
         private static Comparison<RecycleScrollGridElement> s_gridElementCompare;
@@ -46,7 +46,7 @@ namespace RecycleScrollView
         }
 
         [SerializeField]
-        private ScrollRect _scrollRect = null;
+        private UnityScrollRectExtended _scrollRect = null;
         [SerializeField]
         private RectTransform _gridContainer = null;
 
@@ -69,10 +69,7 @@ namespace RecycleScrollView
 
         private IScrollGridDataSource m_dataSource = null;
         private List<RecycleScrollGridElement> m_gridElements;
-
         private UnityAction<Vector2> m_onScrollRectValueChanged;
-        public event Action BeforedGridElementsListResized;
-        public event Action AfterGridElementListResized;
 
         public int ViewItemCount => m_viewElementCount;
         public int ViewItemCountInRow => m_viewElementCountInRow;
@@ -142,9 +139,8 @@ namespace RecycleScrollView
         public void RefreshLayoutChanges()
         {
             // TODO
-            //UpdateConstraintWithAutoFit();
             ApplySizeToScrollContent();
-            AdjustCachedItems();
+            AdjustCachedGrids();
             ApplySizeOnElements();
             OnScrollRectValueChanged(Vector2.zero);
         }
@@ -179,13 +175,11 @@ namespace RecycleScrollView
             return result;
         }
 
-        private void AdjustCachedItems()
+        private void AdjustCachedGrids()
         {
-            BeforedGridElementsListResized?.Invoke();
             m_viewElementCount = CalculateCurrentViewportShowCount();
             AdjustElementArray(m_viewElementCount);
             ApplySizeOnElements();
-            AfterGridElementListResized?.Invoke();
         }
 
         private void ApplySizeToScrollContent()
@@ -203,12 +197,17 @@ namespace RecycleScrollView
 
         private void OnScrollRectValueChanged(Vector2 position)
         {
+            AdjustGrids();
+        }
+
+        private void AdjustGrids()
+        {
             IReadOnlyList<RecycleScrollGridElement> elementList = ElementList;
             if (_showActualGridElements)
             {
                 if (elementList.Count != m_viewElementCount)
                 {
-                    AdjustCachedItems();
+                    AdjustCachedGrids();
                 }
                 UpdateGridPosition();
             }
@@ -220,8 +219,6 @@ namespace RecycleScrollView
                     elementList[i].SetObjectDeactive();
                 }
             }
-
-            ClampVelocityToToStop();
         }
 
         private void UpdateGridPosition()
@@ -328,7 +325,9 @@ namespace RecycleScrollView
                                     m_dataSource.InitElement(gridElement.ElementTransform, gridDataIndex);
                                 }
                             }
-                            ChangeObjectName(gridElement, gridDataIndex);
+#if UNITY_EDITOR
+                            ChangeObjectName_EditorOnly(gridElement, gridDataIndex);
+#endif
                         }
                         ++usedElementIndex;
                     }
@@ -339,25 +338,15 @@ namespace RecycleScrollView
             for (int i = usedElementIndex; i < gridElementCount; i++)
             {
                 RecycleScrollGridElement gridElement = m_gridElements[i];
-                bool prevIndexValid = 0 <= gridElement.ElementIndex;
-                gridElement.SetIndex(-1);
-                gridElement.SetObjectDeactive();
-                if (hasDataSource && prevIndexValid)
+                if (hasDataSource)
                 {
-                    m_dataSource.UnInitElement(gridElement.ElementTransform);
+                    if (0 <= gridElement.ElementIndex) // prevIndexValidprevIndexValid
+                    {
+                        gridElement.SetIndex(-1);
+                        m_dataSource.UnInitElement(gridElement.ElementTransform);
+                    }
+                    gridElement.SetObjectDeactive();
                 }
-            }
-
-        }
-
-        private void ClampVelocityToToStop()
-        {
-            float sqrLimit = _gridLayoutData.scrollStopVelocityMagSqr;
-            sqrLimit *= sqrLimit;
-            float velocitySqrMag = _scrollRect.velocity.sqrMagnitude;
-            if (velocitySqrMag < sqrLimit && !Mathf.Approximately(0.0f, velocitySqrMag)) // try to clamped move to save 
-            {
-                _scrollRect.StopMovement();
             }
         }
 
@@ -534,7 +523,7 @@ namespace RecycleScrollView
 
 #if UNITY_EDITOR
 
-        private void ChangeObjectName(MonoBehaviour behaviour, int dataIndex)
+        private void ChangeObjectName_EditorOnly(MonoBehaviour behaviour, int dataIndex)
         {
             behaviour.name = $"Element {dataIndex}";
         }
@@ -547,7 +536,7 @@ namespace RecycleScrollView
 
         protected override void Reset()
         {
-            if (TryGetComponent<ScrollRect>(out _scrollRect))
+            if (TryGetComponent<UnityScrollRectExtended>(out _scrollRect))
             {
                 _scrollRect.StopMovement();
                 return;
@@ -559,8 +548,7 @@ namespace RecycleScrollView
 
         protected override void OnEnable()
         {
-            //UpdateConstraintWithAutoFit();
-            if (null == m_onScrollRectValueChanged)
+            if (Application.isPlaying && null == m_onScrollRectValueChanged)
             {
                 m_onScrollRectValueChanged = new UnityAction<Vector2>(OnScrollRectValueChanged);
             }
@@ -569,7 +557,7 @@ namespace RecycleScrollView
 
         protected override void OnDisable()
         {
-            if (null != m_onScrollRectValueChanged)
+            if (Application.isPlaying && null != m_onScrollRectValueChanged)
             {
                 _scrollRect.onValueChanged.RemoveListener(m_onScrollRectValueChanged);
             }
