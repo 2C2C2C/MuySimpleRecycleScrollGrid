@@ -4,7 +4,7 @@ using UnityEngine.UI;
 namespace RecycleScrollView
 {
     [System.Serializable]
-    public class ScrollGridLayoutData
+    public class SimpleGridLayoutData
     {
         public enum Constraint
         {

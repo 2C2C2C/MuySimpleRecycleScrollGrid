@@ -4,9 +4,9 @@ A simple recycle scroll based on Unity ScollRect.
 It's a bit costy then others(which have their own scroller).
 But mine should be much more simpler.
 
-## RecycleScrollGrid
+## RecycleGridScroll
 
-![Sample](https://github.com/2C2C2C/MuyScrollRect/blob/master/TempSrc/RecycleScrollGrid01.gif)
+![Sample](https://github.com/2C2C2C/MuyScrollRect/blob/master/TempSrc/RecycleGridScroll01.gif)
 
 ## RecycleOneDirectionScroll
 

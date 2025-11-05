@@ -7,7 +7,7 @@ using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
-    public partial class RecycleScrollGrid
+    public partial class RecycleGridScroll
     {
         internal struct GridPositionData
         {
@@ -24,7 +24,7 @@ namespace RecycleScrollView
         private HashSet<int> m_dataIndex2Show = new HashSet<int>();
 
         private Comparison<GridPositionData> m_positionDataComparsion;
-        private Comparison<RecycleScrollGridElement> m_elementComparsion;
+        private Comparison<RecycleGridScrollElement> m_elementComparsion;
 
         private void UpdateGridPositionData()
         {
@@ -35,7 +35,7 @@ namespace RecycleScrollView
 
             bool hasDataSource = HasDataSource;
             int dataCount = hasDataSource ? m_dataSource.DataElementCount : SimulatedDataCount;
-            ScrollGridLayoutData gridLayoutData = _gridLayoutData;
+            SimpleGridLayoutData gridLayoutData = _gridLayoutData;
             RectTransform scrollContent = _scrollRect.content;
             Vector2 rawSize = CalculateContentSize(dataCount);
             Vector2 contentPivot = scrollContent.pivot;
@@ -126,7 +126,7 @@ namespace RecycleScrollView
         private Vector2 CalculateGridGroupMoveDirection()
         {
             Vector2 gridGroupMoveDirection = default;
-            ScrollGridLayoutData layoutData = _gridLayoutData;
+            SimpleGridLayoutData layoutData = _gridLayoutData;
             if (GridLayoutGroup.Axis.Horizontal == layoutData.startAxis)
             {
                 if (GridLayoutGroup.Corner.LowerLeft == _gridLayoutData.startCorner ||
@@ -157,7 +157,7 @@ namespace RecycleScrollView
         private Vector2 CalculateGridMoveDirectionInGroup()
         {
             Vector2 girdMoveDirection = default;
-            ScrollGridLayoutData layoutData = _gridLayoutData;
+            SimpleGridLayoutData layoutData = _gridLayoutData;
             if (GridLayoutGroup.Axis.Horizontal == layoutData.startAxis)
             {
                 if (GridLayoutGroup.Corner.LowerLeft == _gridLayoutData.startCorner ||
@@ -196,7 +196,7 @@ namespace RecycleScrollView
                 int dataIndex = gridPositionData.dataIndex;
                 if (0 <= usedElementIndex && usedElementIndex <= gridElementIndexMax)
                 {
-                    RecycleScrollGridElement gridElement = m_gridElements[usedElementIndex];
+                    RecycleGridScrollElement gridElement = m_gridElements[usedElementIndex];
                     if (dataIndex != gridElement.ElementIndex)
                     {
                         if (0 > gridElement.ElementIndex)
@@ -220,7 +220,7 @@ namespace RecycleScrollView
 
             for (int i = usedElementIndex; i <= gridElementIndexMax; i++)
             {
-                RecycleScrollGridElement gridElement = m_gridElements[i];
+                RecycleGridScrollElement gridElement = m_gridElements[i];
                 if (0 <= gridElement.ElementIndex) // prevIndexValidprevIndexValid
                 {
                     m_dataSource.UnInitElement(gridElement.ElementTransform);
@@ -244,7 +244,7 @@ namespace RecycleScrollView
 
             if (null == m_elementComparsion)
             {
-                m_elementComparsion = new Comparison<RecycleScrollGridElement>(PositionDataComparer);
+                m_elementComparsion = new Comparison<RecycleGridScrollElement>(PositionDataComparer);
             }
             m_gridElements.Sort(m_elementComparsion);
         }
@@ -254,7 +254,7 @@ namespace RecycleScrollView
             return x.dataIndex.CompareTo(y.dataIndex);
         }
 
-        private int PositionDataComparer(RecycleScrollGridElement x, RecycleScrollGridElement y)
+        private int PositionDataComparer(RecycleGridScrollElement x, RecycleGridScrollElement y)
         {
             const int INVALID_INDEX = -1;
             int xIndex = x.ElementIndex, yIndex = y.ElementIndex;

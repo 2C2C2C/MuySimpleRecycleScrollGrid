@@ -4,7 +4,7 @@ using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
-    public partial class RecycleScrollGrid
+    public partial class RecycleGridScroll
     {
         [System.Serializable]
         public struct RecycleScrollGridElementNavigationParams

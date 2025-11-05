@@ -2,7 +2,7 @@
 
 namespace RecycleScrollView
 {
-    public class RecycleScrollGridElement : MonoBehaviour
+    public class RecycleGridScrollElement : MonoBehaviour
     {
         [Header("must have"), Tooltip("should inherit from ISetupable")]
         [SerializeField]
