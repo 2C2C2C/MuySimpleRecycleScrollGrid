@@ -209,7 +209,9 @@ namespace RecycleScrollView
                 {
                     AdjustCachedGrids();
                 }
-                UpdateGridPosition();
+                UpdateGridPositionData();
+                SortPositionData();
+                ApplyGridPosition();
             }
             else
             {
@@ -217,135 +219,6 @@ namespace RecycleScrollView
                 for (int i = 0; i < elementList.Count; i++)
                 {
                     elementList[i].SetObjectDeactive();
-                }
-            }
-        }
-
-        private void UpdateGridPosition()
-        {
-            if (IsCurrentLayoutDataInvalid())
-            {
-                return;
-            }
-
-            bool hasDataSource = HasDataSource;
-            int dataCount = hasDataSource ? m_dataSource.DataElementCount : SimulatedDataCount;
-            ScrollGridLayoutData gridLayoutData = _gridLayoutData;
-            RectTransform scrollContent = _scrollRect.content;
-            Vector2 rawSize = CalculateContentSize(dataCount);
-            Vector2 contentPivot = scrollContent.pivot;
-            Vector2 pivotLocalPosition = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(scrollContent, contentPivot);
-            Vector2 startLocalPosition = pivotLocalPosition;  // The start position of the first grid(bottom left)
-            startLocalPosition.x = pivotLocalPosition.x - rawSize.x * contentPivot.x;
-            startLocalPosition.y = pivotLocalPosition.y - rawSize.y * contentPivot.y;
-
-            Vector2 gridSize = _gridLayoutData.gridSize;
-            switch (_gridLayoutData.startCorner)
-            {
-                case GridLayoutGroup.Corner.LowerRight:
-                    startLocalPosition.x += rawSize.x;
-                    startLocalPosition.x -= gridLayoutData.RectPadding.right;
-                    startLocalPosition.y += gridLayoutData.RectPadding.bottom;
-                    startLocalPosition.x -= gridSize.x;
-                    break;
-                case GridLayoutGroup.Corner.UpperRight:
-                    startLocalPosition += rawSize;
-                    startLocalPosition.x -= gridLayoutData.RectPadding.right;
-                    startLocalPosition.y -= gridLayoutData.RectPadding.top;
-                    startLocalPosition.x -= gridSize.x;
-                    startLocalPosition.y -= gridSize.y;
-                    break;
-                case GridLayoutGroup.Corner.UpperLeft:
-                    startLocalPosition.y += rawSize.y;
-                    startLocalPosition.x += gridLayoutData.RectPadding.left;
-                    startLocalPosition.y -= gridLayoutData.RectPadding.top;
-                    startLocalPosition.y -= gridSize.y;
-                    break;
-                case GridLayoutGroup.Corner.LowerLeft:
-                default:
-                    startLocalPosition.x += gridLayoutData.RectPadding.left;
-                    startLocalPosition.y += gridLayoutData.RectPadding.bottom;
-                    break;
-            }
-
-            Vector2 gridGroupMoveDirection = CalculateGridGroupMoveDirection();
-            Vector2 gridGroupSpacing = Mathf.Approximately(0f, gridGroupMoveDirection.x) ? _gridLayoutData.Spacing.y * Vector2.up : _gridLayoutData.Spacing.x * Vector2.right;
-            Vector2 girdMoveDirection = CalculateGridMoveDirectionInGroup();
-            Vector2 gridSpacing = Mathf.Approximately(0f, girdMoveDirection.x) ? _gridLayoutData.Spacing.y * Vector2.up : _gridLayoutData.Spacing.x * Vector2.right;
-
-            Rect viewportRect = _scrollRect.viewport.rect;
-            Matrix4x4 worldToViewportLocal = _scrollRect.viewport.worldToLocalMatrix;
-
-            RectTransform content = _scrollRect.content;
-            Matrix4x4 localToWorld = content.localToWorldMatrix;
-            int constraintCount = _gridLayoutData.constraintCount;
-            int groupCount = (dataCount % constraintCount > 0) ? (dataCount / constraintCount) + 1 : (dataCount / constraintCount);
-            Vector2 groupStartPos = startLocalPosition;
-            int gridDataIndex = 0;
-            int usedElementIndex = 0;
-            int gridElementCount = m_gridElements.Count;
-            for (int i = 0; i < groupCount; i++)
-            {
-                Vector2 gridGroupStartPos = groupStartPos + (i * new Vector2(gridGroupMoveDirection.x * gridGroupSpacing.x, gridGroupMoveDirection.y * gridGroupSpacing.y));
-                gridGroupStartPos += i * new Vector2(gridGroupMoveDirection.x * gridSize.x, gridGroupMoveDirection.y * gridSize.y);
-                for (int j = 0; j < constraintCount; j++)
-                {
-                    bool isOutOfDataCount = gridDataIndex >= dataCount;
-                    if (isOutOfDataCount || usedElementIndex >= gridElementCount)
-                    {
-                        ++gridDataIndex;
-                        continue;
-                    }
-
-                    Vector2 gridStartPos = gridGroupStartPos + (j * new Vector2(girdMoveDirection.x * gridSpacing.x, girdMoveDirection.y * gridSpacing.y));
-                    gridStartPos += j * new Vector2(girdMoveDirection.x * gridSize.x, girdMoveDirection.y * gridSize.y);
-
-                    // HACK Have to covert the rect to viewport's local space
-                    Vector3 worldPos = localToWorld.MultiplyPoint(gridStartPos);
-                    Vector2 rectMinPoint = worldToViewportLocal.MultiplyPoint(worldPos);
-                    Rect gridRect = new Rect(rectMinPoint, gridSize);
-                    bool isInterestedWithViewport = viewportRect.Overlaps(gridRect);
-                    if (isInterestedWithViewport)
-                    {
-                        RecycleScrollGridElement gridElement = m_gridElements[usedElementIndex];
-                        gridElement.ElementTransform.localPosition = gridStartPos;
-                        int prevIndex = gridElement.ElementIndex;
-                        if (prevIndex != gridDataIndex)
-                        {
-                            gridElement.SetIndex(gridDataIndex);
-                            gridElement.SetObjectActive();
-                            if (hasDataSource)
-                            {
-                                if (0 <= prevIndex) // Prev index valid
-                                {
-                                    m_dataSource.ChangeElementIndex(gridElement.ElementTransform, prevIndex, gridDataIndex);
-                                }
-                                else
-                                {
-                                    m_dataSource.InitElement(gridElement.ElementTransform, gridDataIndex);
-                                }
-                            }
-#if UNITY_EDITOR
-                            ChangeObjectName_EditorOnly(gridElement, gridDataIndex);
-#endif
-                        }
-                        ++usedElementIndex;
-                    }
-                    ++gridDataIndex;
-                }
-            }
-
-            for (int i = usedElementIndex; i < gridElementCount; i++)
-            {
-                RecycleScrollGridElement gridElement = m_gridElements[i];
-                if (hasDataSource)
-                {
-                    if (0 <= gridElement.ElementIndex) // prevIndexValidprevIndexValid
-                    {
-                        gridElement.SetIndex(-1);
-                        m_dataSource.UnInitElement(gridElement.ElementTransform);
-                    }
-                    gridElement.SetObjectDeactive();
                 }
             }
         }
@@ -362,6 +235,10 @@ namespace RecycleScrollView
             if (0 > deltaCount && currentElementCount > 0)
             {
                 RemoveElements(deltaCount);
+            }
+            if (0 == m_dataNeed2Show.Count)
+            {
+                m_dataNeed2Show.Capacity = currentElementCount;
             }
         }
 
@@ -403,68 +280,6 @@ namespace RecycleScrollView
 
             result += new Vector2(m_padding.horizontal, m_padding.vertical);
             return result;
-        }
-
-        private Vector2 CalculateGridGroupMoveDirection()
-        {
-            Vector2 gridGroupMoveDirection = default;
-            ScrollGridLayoutData layoutData = _gridLayoutData;
-            if (GridLayoutGroup.Axis.Horizontal == layoutData.startAxis)
-            {
-                if (GridLayoutGroup.Corner.LowerLeft == _gridLayoutData.startCorner ||
-                    GridLayoutGroup.Corner.LowerRight == _gridLayoutData.startCorner)
-                {
-                    gridGroupMoveDirection.y = 1f;
-                }
-                else
-                {
-                    gridGroupMoveDirection.y = -1f;
-                }
-            }
-            else // GridLayoutGroup.Axis.Vertical == layoutData.startAxis
-            {
-                if (GridLayoutGroup.Corner.UpperLeft == _gridLayoutData.startCorner ||
-                    GridLayoutGroup.Corner.LowerLeft == _gridLayoutData.startCorner)
-                {
-                    gridGroupMoveDirection.x = 1f;
-                }
-                else
-                {
-                    gridGroupMoveDirection.x = -1f;
-                }
-            }
-            return gridGroupMoveDirection;
-        }
-
-        private Vector2 CalculateGridMoveDirectionInGroup()
-        {
-            Vector2 girdMoveDirection = default;
-            ScrollGridLayoutData layoutData = _gridLayoutData;
-            if (GridLayoutGroup.Axis.Horizontal == layoutData.startAxis)
-            {
-                if (GridLayoutGroup.Corner.LowerLeft == _gridLayoutData.startCorner ||
-                    GridLayoutGroup.Corner.UpperLeft == _gridLayoutData.startCorner)
-                {
-                    girdMoveDirection.x = 1f;
-                }
-                else
-                {
-                    girdMoveDirection.x = -1f;
-                }
-            }
-            else // GridLayoutGroup.Axis.Vertical == layoutData.startAxis
-            {
-                if (GridLayoutGroup.Corner.LowerLeft == _gridLayoutData.startCorner ||
-                    GridLayoutGroup.Corner.LowerRight == _gridLayoutData.startCorner)
-                {
-                    girdMoveDirection.y = 1f;
-                }
-                else
-                {
-                    girdMoveDirection.y = -1f;
-                }
-            }
-            return girdMoveDirection;
         }
 
         private bool IsCurrentLayoutDataInvalid()
