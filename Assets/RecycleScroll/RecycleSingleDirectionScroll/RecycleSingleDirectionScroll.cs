@@ -249,6 +249,7 @@ namespace RecycleScrollView
             bool hasAdjusted = hasRemoved || hasAdded;
             if (hasAdjusted)
             {
+                ForceRebuildContentLayout();
                 _scrollRect.CallUpdateBoundsAndPrevData();
             }
             return hasAdjusted;

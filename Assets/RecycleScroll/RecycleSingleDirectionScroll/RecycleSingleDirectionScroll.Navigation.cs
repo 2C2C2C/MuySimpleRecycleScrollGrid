@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
@@ -61,9 +60,9 @@ namespace RecycleScrollView
                 localPosition.x += delta;
                 content.localPosition = localPosition;
             }
-            ForceRebuildContentLayout();
 
             AddElemensIfNeed();
+            ForceRebuildContentLayout();
             _scrollRect.CallUpdateBoundsAndPrevData();
             _scrollRect.StopMovement();
         }

@@ -34,7 +34,7 @@ namespace RecycleScrollView.Sample
         public RectTransform RequestElement(RectTransform parent, int index)
         {
             RectTransform newElement = RectTransform.Instantiate(_elementPrefab, parent);
-            if (newElement.TryGetComponent<ChatTextElementUI>(out ChatTextElementUI chatTextElement))
+            if (newElement.TryGetComponent<TextElementUI>(out TextElementUI chatTextElement))
             {
                 if (!m_sizeMap.TryGetValue(index, out float tempSize))
                 {
@@ -71,7 +71,7 @@ namespace RecycleScrollView.Sample
         {
             RectTransform newElement = RectTransform.Instantiate(_elementPrefab, _content);
             Debug.LogError($"1 {_scrollrect.verticalNormalizedPosition}");
-            if (newElement.TryGetComponent<ChatTextElementUI>(out ChatTextElementUI chatTextElement))
+            if (newElement.TryGetComponent<TextElementUI>(out TextElementUI chatTextElement))
             {
                 float heightee = UnityRandom.Range(80, 560);
                 chatTextElement.SetHeight(heightee);

@@ -1,11 +1,10 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.UIElements;
 
 namespace RecycleScrollView.Sample
 {
     [RequireComponent(typeof(LayoutElement))]
-    public class ChatTextElementUI : MonoBehaviour
+    public class TextElementUI : MonoBehaviour
     {
         [SerializeField]
         private LayoutElement _layoutElement;
