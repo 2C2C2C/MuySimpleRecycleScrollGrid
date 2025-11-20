@@ -1,6 +1,4 @@
-﻿using System;
-using UnityEngine;
-using UnityEngine.EventSystems;
+﻿using UnityEngine;
 
 namespace RecycleScrollView.Sample
 {
@@ -11,33 +9,19 @@ namespace RecycleScrollView.Sample
 
         private RectTransform m_rectTransform;
 
-        public GuidTempData Data { get; private set; } = null;
+        public GuidElementData Data { get; private set; } = null;
+        public RectTransform ElementRectTransform => m_rectTransform != null ? m_rectTransform : m_rectTransform = transform as RectTransform;
 
-        public RectTransform ElementRectTransform => (m_rectTransform != null ? m_rectTransform : m_rectTransform = transform as RectTransform);
-
-        Action<GuidTempData> m_onPointerEnter = null;
-        Action<GuidTempData> m_onPointerLeave = null;
-
-        public void Setup(GuidTempData data)
+        public void Setup(GuidElementData data)
         {
             Data = data;
-            m_dataText.text = $"no.\n{Data.ItemName}";
+            m_dataText.text = Data.ItemName;
         }
 
         public void Clear()
         {
             Data = null;
             m_dataText.text = $"EMPTY";
-        }
-
-        public void OnPointerEnter(PointerEventData eventData)
-        {
-            m_onPointerEnter?.Invoke(Data);
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            m_onPointerLeave?.Invoke(Data);
         }
 
         private void Awake()

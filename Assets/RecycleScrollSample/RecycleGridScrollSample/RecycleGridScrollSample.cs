@@ -6,39 +6,44 @@ namespace RecycleScrollView.Sample
     public class RecycleGridScrollSample : MonoBehaviour
     {
         [Range(4, 800)]
-        public int m_dataCount = 10;
-        private GuidTempData[] m_dataArr = null;
+        [SerializeField]
+        private int _dataCount = 10;
+        [SerializeField]
+        private GuidElementListUI _gridListUI = null;
+        [SerializeField]
+        private RecycleGridScroll _scrollRectController;
 
-        public GuidElementListUI m_gridListUI = null;
-        public RecycleGridScroll _scrollRectController;
+        [SerializeField]
+        private int _jumpToIndex = 55;
 
-        public string[] m_dataNames = null;
+        [SerializeField]
+        private GuidElementData[] m_dataArr = null;
+        [SerializeField]
+        private string[] m_dataNames = null;
 
-        [ContextMenu("setup data")]
-        private void SetupData()
-        {
-            m_dataArr = new GuidTempData[m_dataCount];
-            m_dataNames = new string[m_dataCount];
-            for (int i = 0; i < m_dataCount; i++)
-            {
-                m_dataArr[i] = new GuidTempData();
-                m_dataNames[i] = m_dataArr[i].ItemName;
-            }
-
-            m_gridListUI.Setup(new List<GuidTempData>(m_dataArr));
-        }
-
-        // Start is called before the first frame update
         private void Start()
         {
             SetupData();
         }
 
-        public int jumpToTestIndex = 55;
+        [ContextMenu("setup data")]
+        private void SetupData()
+        {
+            m_dataArr = new GuidElementData[_dataCount];
+            m_dataNames = new string[_dataCount];
+            for (int i = 0; i < _dataCount; i++)
+            {
+                m_dataArr[i] = new GuidElementData();
+                m_dataNames[i] = m_dataArr[i].ItemName;
+            }
+
+            _gridListUI.Setup(new List<GuidElementData>(m_dataArr));
+        }
+
         [ContextMenu(nameof(JumpToTest))]
         private void JumpToTest()
         {
-            _scrollRectController.JumpTo(jumpToTestIndex);
+            _scrollRectController.JumpTo(_jumpToIndex);
         }
     }
 }

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using UnityEngine.UI.Extend;
 
 namespace RecycleScrollView
 {
@@ -12,6 +11,8 @@ namespace RecycleScrollView
     [RequireComponent(typeof(UnityScrollRectExtended))]
     public partial class RecycleGridScroll : UIBehaviour
     {
+        private const int INVALID_INDEX = -1;
+
         private static Comparison<RecycleGridScrollElement> s_gridElementCompare;
 
         public static Comparison<RecycleGridScrollElement> GridElementCompare
@@ -138,7 +139,6 @@ namespace RecycleScrollView
 
         public void RefreshLayoutChanges()
         {
-            // TODO
             ApplySizeToScrollContent();
             AdjustCachedGrids();
             ApplySizeOnElements();
@@ -171,7 +171,7 @@ namespace RecycleScrollView
                 m_viewElementCountInColumn = Mathf.Clamp(m_viewElementCountInColumn, 1, _gridLayoutData.constraintCount);
             }
 
-            int result = m_viewElementCountInRow * m_viewElementCountInColumn;
+            int result = (1 + m_viewElementCountInRow) * (1 + m_viewElementCountInColumn);
             return result;
         }
 
@@ -343,12 +343,6 @@ namespace RecycleScrollView
             behaviour.name = $"Element {dataIndex}";
         }
 
-#endif
-
-        #region mono method
-
-#if UNITY_EDITOR
-
         protected override void Reset()
         {
             if (TryGetComponent<UnityScrollRectExtended>(out _scrollRect))
@@ -390,6 +384,5 @@ namespace RecycleScrollView
             }
         }
 
-        #endregion
     }
 }

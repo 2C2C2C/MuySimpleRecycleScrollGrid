@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -224,7 +223,7 @@ namespace RecycleScrollView
                 if (0 <= gridElement.ElementIndex) // prevIndexValidprevIndexValid
                 {
                     m_dataSource.UnInitElement(gridElement.ElementTransform);
-                    gridElement.SetIndex(-1);
+                    gridElement.SetIndex(INVALID_INDEX);
                 }
                 gridElement.SetObjectDeactive();
             }
