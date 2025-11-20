@@ -13,35 +13,27 @@ namespace RecycleScrollView
         private const float EDGE_HEAD = 0F;
         private const float EDGE_TAIL = 1F;
 
-        public void AddElementToHead(int dataIndex, bool forceRebuildlayout)
+        public void AddElementToHead(int dataIndex)
         {
             RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
             m_currentUsingElements.Insert(0, newElement);
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsFirstSibling();
             newElement.SetIndex(dataIndex);
-            if (forceRebuildlayout)
-            {
-                ForceRebuildContentLayout();
-            }
             // Debug.LogError($"Add on top data{dataIndex} Time {Time.time}");
         }
 
-        public void AddElementToTail(int dataIndex, bool forceRebuildlayout)
+        public void AddElementToTail(int dataIndex)
         {
             RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
             m_currentUsingElements.Add(newElement);
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsLastSibling();
             newElement.SetIndex(dataIndex);
-            if (forceRebuildlayout)
-            {
-                ForceRebuildContentLayout();
-            }
             // Debug.LogError($"Add on bottom data{dataIndex} Time {Time.time}");
         }
 
-        public void InsertElement(int dataIndex, bool forceRebuildlayout)
+        public void InsertElement(int dataIndex)
         {
             int indexUpperBound = GetCurrentShowingElementIndexUpperBound();
             if (dataIndex > indexUpperBound)
@@ -89,13 +81,6 @@ namespace RecycleScrollView
                     {
                         InternalChangeElementIndex(element, elementIndex + 1, false);
                     }
-                }
-            }
-            if (hasAdded)
-            {
-                if (forceRebuildlayout)
-                {
-                    ForceRebuildContentLayout();
                 }
             }
         }
@@ -384,7 +369,7 @@ namespace RecycleScrollView
             int canAddIndex;
             while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus() && -1 != (canAddIndex = CalculateAvaialbeNextHeadElementIndex()))
             {
-                AddElementToHead(canAddIndex, false);
+                AddElementToHead(canAddIndex);
                 if (IsVertical)
                 {
                     addSize += m_currentUsingElements[0].ElementPreferredSize.y + _scrollParam.spacing;
@@ -428,7 +413,7 @@ namespace RecycleScrollView
                 int canAddIndex = CalculateAvailabeNextTailElementIndex();
                 if (-1 != canAddIndex)
                 {
-                    AddElementToTail(canAddIndex, false);
+                    AddElementToTail(canAddIndex);
                     addCount++;
                 }
                 else

@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI.Extend;
+using ScrollDirection = RecycleScrollView.SingleDirectionScrollParam.ScrollDirection;
 
 namespace RecycleScrollView
 {
@@ -35,30 +36,87 @@ namespace RecycleScrollView
             targetElement.SetIndex(dataIndex);
             targetElement.CalculatePreferredSize();
             m_currentUsingElements.Add(targetElement);
-            ForceRebuildContentLayout();
+            Vector2 targetElementSize = targetElement.ElementPreferredSize;
 
             // HACK Since the pivot of content must be fixed, we need to adjust the position of content to make the target element at the correct position
+            Vector2 headCheckRectPosition = Vector2.zero; ;
             if (IsVertical)
             {
-                Vector2 verticalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(0.5f, navigationParams.normalizedPositionInViewPort));
+                Vector2 verticalPostion = RectTransformEx.CalulateRectPosition(viewport, new Vector2(0.5f, navigationParams.normalizedPositionInViewPort));
                 // Content pivot is (0.5, 0) (true _scrollParam.reverseArrangement) ; Content pivot is (0.5, 1) (false _scrollParam.reverseArrangement)
-                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(0.5f, 1f - navigationParams.normalizedElementPositionAdjustment));
-                elementPosition = viewport.InverseTransformPoint(elementPosition);
-                float delta = verticalPostion.y - elementPosition.y;
-                Vector3 localPosition = content.localPosition;
-                localPosition.y += delta;
+                if (ScrollDirection.Vertical_UpToDown == _scrollParam.scrollDirection)
+                {
+                    verticalPostion.y += navigationParams.normalizedElementPositionAdjustment * targetElementSize.y;
+                }
+                else // ScrollDirection.Vertical_DownToUp
+                {
+                    verticalPostion.y -= (1f - navigationParams.normalizedElementPositionAdjustment) * targetElementSize.y;
+                }
+                headCheckRectPosition = verticalPostion;
+                Vector3 localPosition = RectTransformEx.TransformRectPositionToLocalPosition(viewport, verticalPostion);
                 content.localPosition = localPosition;
             }
             else if (IsHorizontal)
             {
-                Vector2 horizontalPostion = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, new Vector2(navigationParams.normalizedPositionInViewPort, 0.5f));
+                Vector2 horizontalPostion = RectTransformEx.CalulateRectPosition(viewport, new Vector2(navigationParams.normalizedPositionInViewPort, 0.5f));
                 // Content pivot is (0, 0.5) (false _scrollParam.reverseArrangement) ; Content pivot is (1, 0.5) (true _scrollParam.reverseArrangement)
-                Vector3 elementPosition = RectTransformEx.TransformNormalizedRectPositionToWorldPosition(targetElement.ElementTransform, new Vector2(navigationParams.normalizedElementPositionAdjustment, 0.5f));
-                elementPosition = viewport.InverseTransformPoint(elementPosition);
-                float delta = horizontalPostion.x - elementPosition.x;
-                Vector3 localPosition = content.localPosition;
-                localPosition.x += delta;
+                if (ScrollDirection.Horizontal_LeftToRight == _scrollParam.scrollDirection)
+                {
+                    horizontalPostion.x -= navigationParams.normalizedElementPositionAdjustment * targetElementSize.x;
+                }
+                else // ScrollDirection.Horizontal_RightToLeft
+                {
+                    horizontalPostion.x += (1f - navigationParams.normalizedElementPositionAdjustment) * targetElementSize.x;
+                }
+                headCheckRectPosition = horizontalPostion;
+                Vector3 localPosition = RectTransformEx.TransformRectPositionToLocalPosition(viewport, horizontalPostion);
                 content.localPosition = localPosition;
+            }
+
+            // Add elements to fill the view port
+            Vector2 viewportSize = viewport.rect.size;
+            Vector2 headRectPosition = CalculateNormalizedRectPosition(0f);
+            headRectPosition = new Vector2(viewportSize.x * headRectPosition.x, viewportSize.y * headRectPosition.y);
+            int canAddIndex;
+            float spacing = _scrollParam.spacing;
+            while (-1 != (canAddIndex = CalculateAvaialbeNextHeadElementIndex()))
+            {
+                AddElementToHead(canAddIndex);
+                Vector2 size = m_currentUsingElements[0].ElementPreferredSize;
+                bool doBreak = false;
+                switch (_scrollParam.scrollDirection)
+                {
+                    // Vertical
+                    case ScrollDirection.Vertical_UpToDown:
+                        headCheckRectPosition += Vector2.up * (size.y + spacing);
+                        content.localPosition += Vector3.up * (size.y + spacing);
+                        doBreak = headCheckRectPosition.y > headRectPosition.y;
+                        break;
+                    case ScrollDirection.Vertical_DownToUp:
+                        headCheckRectPosition += Vector2.down * (size.y + spacing);
+                        content.localPosition += Vector3.down * (size.y + spacing);
+                        doBreak = headCheckRectPosition.y < headRectPosition.y;
+                        break;
+
+                    // Horizontal
+                    case ScrollDirection.Horizontal_LeftToRight:
+                        headCheckRectPosition += Vector2.left * (size.x + spacing);
+                        content.localPosition += Vector3.left * (size.x + spacing);
+                        doBreak = headCheckRectPosition.x < headRectPosition.x;
+                        break;
+                    case ScrollDirection.Horizontal_RightToLeft:
+                        headCheckRectPosition += Vector2.right * (size.x + spacing);
+                        content.localPosition += Vector3.right * (size.x + spacing);
+                        doBreak = headCheckRectPosition.x > headRectPosition.x;
+                        break;
+                    default:
+                        break;
+                }
+                
+                if (doBreak)
+                {
+                    break;
+                }
             }
 
             AddElemensIfNeed();
