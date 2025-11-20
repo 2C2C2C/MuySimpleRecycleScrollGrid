@@ -95,7 +95,7 @@ namespace RecycleScrollView.Sample
             RectTransform scrollViewport = _scrollrect.viewport;
             RectTransform newElement = RectTransform.Instantiate(_elementPrefab, scrollContent);
             Debug.LogError($"1 {_scrollrect.verticalNormalizedPosition}");
-            if (newElement.TryGetComponent<ChatTextElementUI>(out ChatTextElementUI chatTextElement))
+            if (newElement.TryGetComponent<TextElementUI>(out TextElementUI chatTextElement))
             {
                 float heightee = UnityRandom.Range(80, 560);
                 chatTextElement.SetHeight(heightee);

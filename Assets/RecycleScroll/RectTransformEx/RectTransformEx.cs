@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace UnityEngine.UI.Extend
 {
@@ -124,6 +123,25 @@ namespace UnityEngine.UI.Extend
             return result;
         }
 
+        public static Vector2 TransformLocalPositionToNormalizedRectPosition(this RectTransform rectTransform, Vector2 localPosition)
+        {
+            Vector2 rectSize = rectTransform.rect.size;
+            Vector2 rectPosition = rectTransform.TransformLocalPositionToRectPosition(localPosition);
+            Vector2 normalizedRectPosition = new Vector2(rectPosition.x / rectSize.x, rectPosition.y / rectSize.y);
+            return normalizedRectPosition;
+        }
+
+        public static Vector2 TransformLocalPositionToRectPosition(this RectTransform rectTransform, Vector2 localPosition)
+        {
+            Vector2 rectSize = rectTransform.rect.size;
+            Vector2 pivotRectPosition = rectTransform.pivot;
+            pivotRectPosition.x *= rectSize.x;
+            pivotRectPosition.y *= rectSize.y;
+
+            Vector2 rectPosition = localPosition + pivotRectPosition;
+            return rectPosition;
+        }
+
         public static Vector2 CalulateRectPosition(this RectTransform rectTransform, Vector2 normalizedRectPosition)
         {
             Vector2 rectSize = rectTransform.rect.size;
@@ -149,7 +167,11 @@ namespace UnityEngine.UI.Extend
             Vector3 extend = bounds.extents;
 
             // We can get List from listpool in higher version of Unity
+#if UNITY_2022_3_OR_NEWER
+            List<Vector3> pointList = UnityEngine.Pool.ListPool<Vector3>.Get();
+#else
             List<Vector3> pointList = new List<Vector3>();
+#endif
             // Get points from 6 directions
             pointList.Add(boundCenter + new Vector3(extend.x, 0, 0));
             pointList.Add(boundCenter + new Vector3(-extend.x, 0, 0));
@@ -189,6 +211,10 @@ namespace UnityEngine.UI.Extend
                 }
             }
 
+#if UNITY_2022_3_OR_NEWER
+            pointList.Clear();
+            UnityEngine.Pool.ListPool<Vector3>.Release(pointList);
+#endif
             RectTransform tempParent = rectTransform.parent as RectTransform;
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(tempParent, screenMinPoint, uiCamera, out Vector2 localMinPoint) &&
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(tempParent, screenMaxPoint, uiCamera, out Vector2 localMaxPoint))

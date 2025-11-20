@@ -29,9 +29,9 @@ namespace RecycleScrollView
                 RectTransform viewport = _scrollRect.viewport;
                 Vector2 viewportSize = viewport.rect.size;
                 Vector2 gridSize = _gridLayoutData.gridSize;
-                // TODO Currently it's bottom left.
                 Vector2 elementInViewportPos = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, _defaultNavigationParams.normalizedPositionInViewPort);
                 Vector2 elementOffset = _defaultNavigationParams.normalizedElementRectPositionOffset;
+                // Move to bottom left
                 elementInViewportPos.x -= gridSize.x * (1f - elementOffset.x);
                 elementInViewportPos.y -= gridSize.y * (1f - elementOffset.y);
 
