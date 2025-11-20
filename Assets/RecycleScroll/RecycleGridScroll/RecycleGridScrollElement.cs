@@ -4,14 +4,9 @@ namespace RecycleScrollView
 {
     public class RecycleGridScrollElement : MonoBehaviour
     {
-        [Header("must have"), Tooltip("should inherit from ISetupable")]
-        [SerializeField]
-        Component _dataReceiver;
-        [SerializeField, Tooltip("better to manual drag it in")]
-        RectTransform _elementTransform;
-
         [SerializeField]
         private int m_index = -1; // This value should be NonSerialized but better to show it in inspector
+        private RectTransform m_elementTransform;
 
         public int ElementIndex => m_index;
 
@@ -19,11 +14,11 @@ namespace RecycleScrollView
         {
             get
             {
-                if (TryGetComponent<RectTransform>(out _elementTransform))
+                if (null == m_elementTransform)
                 {
-                    return _elementTransform;
+                    m_elementTransform = this.transform as RectTransform;
                 }
-                return null;
+                return m_elementTransform;
             }
         }
 
@@ -61,17 +56,20 @@ namespace RecycleScrollView
 
         private void Awake()
         {
-            if (null == _elementTransform)
+            if (null == m_elementTransform)
             {
-                _elementTransform = this.transform as RectTransform;
+                m_elementTransform = this.transform as RectTransform;
             }
         }
 
 #if UNITY_EDITOR
+
         private void Reset()
         {
-            _elementTransform = this.transform as RectTransform;
+            m_elementTransform = this.transform as RectTransform;
         }
+
 #endif
+
     }
 }

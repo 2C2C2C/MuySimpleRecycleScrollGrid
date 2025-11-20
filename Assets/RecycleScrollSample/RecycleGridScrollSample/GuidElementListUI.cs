@@ -10,12 +10,12 @@ namespace RecycleScrollView.Sample
         [SerializeField]
         private RectTransform _elementPrefab;
 
-        private List<GuidTempData> m_dataList = new List<GuidTempData>();
+        private List<GuidElementData> m_dataList = new List<GuidElementData>();
         private Dictionary<RectTransform, GuidElementUI> m_viewElementMap = new Dictionary<RectTransform, GuidElementUI>();
 
         public int DataElementCount => m_dataList.Count;
 
-        public void Setup(List<GuidTempData> dataList)
+        public void Setup(List<GuidElementData> dataList)
         {
             m_dataList.Clear();
             m_dataList.AddRange(dataList);
@@ -31,6 +31,7 @@ namespace RecycleScrollView.Sample
             {
                 m_viewElementMap.Add(element, viewElement);
             }
+            element.gameObject.SetActive(true);
             return element;
         }
 
@@ -64,5 +65,11 @@ namespace RecycleScrollView.Sample
                 viewElement.Setup(m_dataList[nextIndex]);
             }
         }
+
+        private void Awake()
+        {
+            _elementPrefab.gameObject.SetActive(false);
+        }
+
     }
 }

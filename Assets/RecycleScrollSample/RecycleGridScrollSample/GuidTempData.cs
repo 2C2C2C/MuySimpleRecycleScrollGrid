@@ -1,25 +1,27 @@
-﻿namespace RecycleScrollView.Sample
+﻿using Guid = System.Guid;
+
+namespace RecycleScrollView.Sample
 {
-    public class GuidTempData
+    public class GuidElementData
     {
-        public readonly System.Guid ItemGuid;
+        public readonly Guid ItemGuid;
         public readonly string ItemName;
 
-        public GuidTempData(in System.Guid itemId, in string itemName)
+        public GuidElementData(in Guid itemId, in string itemName)
         {
             ItemGuid = itemId;
             ItemName = itemName;
         }
 
-        public GuidTempData(in System.Guid itemId)
+        public GuidElementData(in Guid itemId)
         {
             ItemGuid = itemId;
             ItemName = itemId.ToString().Substring(0, 5);
         }
 
-        public GuidTempData()
+        public GuidElementData()
         {
-            ItemGuid = System.Guid.NewGuid();
+            ItemGuid = Guid.NewGuid();
             ItemName = ItemGuid.ToString().Substring(0, 5);
         }
 
