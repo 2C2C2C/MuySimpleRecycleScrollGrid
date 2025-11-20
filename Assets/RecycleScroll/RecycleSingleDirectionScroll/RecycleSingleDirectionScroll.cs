@@ -196,6 +196,86 @@ namespace RecycleScrollView
             }
         }
 
+        private void InternalChangeElementIndex(RecycleSingleDirectionScrollElement element, int nextIndex, bool needReCalculateSize)
+        {
+            if (needReCalculateSize)
+            {
+                element.ClearPreferredSize();
+            }
+            m_dataSource.ChangeElementIndex(element.ElementTransform, element.ElementIndex, nextIndex);
+            element.SetIndex(nextIndex);
+            if (needReCalculateSize)
+            {
+                element.CalculatePreferredSize();
+            }
+#if UNITY_EDITOR
+            ChangeObjectName_EditorOnly(element, nextIndex);
+#endif
+        }
+
+        private void InternalAdjustment()
+        {
+            // TODO Since I can calculate the virtual size after add/remove, this can be optimized to avoid multiple rebuild.
+            RectTransform content = _scrollRect.content;
+            Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
+            Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
+
+            bool hasAdjustedElements = AdjustElementsIfNeed();
+            if (hasAdjustedElements)
+            {
+                // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
+                Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
+                _scrollRect.ContentStartPos = newStartPos;
+                m_hasAdjustElementsCurrentFrame = true;
+            }
+        }
+
+        private bool AdjustElementsIfNeed()
+        {
+            bool hasRemoved = RemoveElementsIfNeed();
+            bool hasAdded = AddElemensIfNeed();
+            bool hasAdjusted = hasRemoved || hasAdded;
+            if (hasAdjusted)
+            {
+                ForceRebuildContentLayout();
+                _scrollRect.CallUpdateBoundsAndPrevData();
+            }
+            return hasAdjusted;
+        }
+
+        private bool RemoveElementsIfNeed()
+        {
+            bool hasRemoveHeadElements = RemoveElementsFromHeadIfNeed();
+            bool hasRemoveTailElements = RemoveElementsFromTailIfNeed();
+            return hasRemoveHeadElements || hasRemoveTailElements;
+        }
+
+        private bool AddElemensIfNeed()
+        {
+            bool hasAddToHead = AddElementsToHeadIfNeed();
+            bool hasAddToTail = AddElementsToTailIfNeed();
+            return hasAddToHead || hasAddToTail;
+        }
+
+        private void RemoveElementFromHead()
+        {
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[0];
+            // int dataIndex = element.ElementIndex;
+            // Debug.LogError($"Remove on top data{dataIndex} Time {Time.time}");
+            m_currentUsingElements.RemoveAt(0);
+            InternalRemoveElement(element);
+        }
+
+        private void RemoveElementFromTail()
+        {
+            int elementIndex = m_currentUsingElements.Count - 1;
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[elementIndex];
+            // int dataIndex = element.ElementIndex;
+            // Debug.LogError($"Remove on bottom data{dataIndex} Time {Time.time}");
+            m_currentUsingElements.RemoveAt(elementIndex);
+            InternalRemoveElement(element);
+        }
+
         private RecycleSingleDirectionScrollElement InternalCreateElement(int dataIndex)
         {
             RectTransform content = _scrollRect.content;
@@ -222,52 +302,6 @@ namespace RecycleScrollView
             else
             {
                 m_dataSource.ReturnElement(element.transform as RectTransform);
-            }
-        }
-
-        private void InternalChangeElementIndex(RecycleSingleDirectionScrollElement element, int nextIndex, bool needReCalculateSize)
-        {
-            if (needReCalculateSize)
-            {
-                element.ClearPreferredSize();
-            }
-            m_dataSource.ChangeElementIndex(element.ElementTransform, element.ElementIndex, nextIndex);
-            element.SetIndex(nextIndex);
-            if (needReCalculateSize)
-            {
-                element.CalculatePreferredSize();
-            }
-#if UNITY_EDITOR
-            ChangeObjectName_EditorOnly(element, nextIndex);
-#endif
-        }
-
-        private bool AdjustElementsIfNeed()
-        {
-            bool hasRemoved = RemoveElementsIfNeed();
-            bool hasAdded = AddElemensIfNeed();
-            bool hasAdjusted = hasRemoved || hasAdded;
-            if (hasAdjusted)
-            {
-                ForceRebuildContentLayout();
-                _scrollRect.CallUpdateBoundsAndPrevData();
-            }
-            return hasAdjusted;
-        }
-
-        private void InternalAdjustment()
-        {
-            RectTransform content = _scrollRect.content;
-            Vector2 prevContentStartPos = _scrollRect.ContentStartPos;
-            Vector2 anchorPositionDelta = content.anchoredPosition - prevContentStartPos;
-
-            bool hasAdjustedElements = AdjustElementsIfNeed();
-            if (hasAdjustedElements)
-            {
-                // HACK Becuz I change the anchored position of drag content, so I need to adjust the prev value here. 
-                Vector2 newStartPos = content.anchoredPosition - anchorPositionDelta;
-                _scrollRect.ContentStartPos = newStartPos;
-                m_hasAdjustElementsCurrentFrame = true;
             }
         }
 
