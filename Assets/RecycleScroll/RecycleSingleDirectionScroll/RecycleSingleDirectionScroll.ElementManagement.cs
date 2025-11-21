@@ -352,7 +352,7 @@ namespace RecycleScrollView
             int prevElementCount = m_currentUsingElements.Count;
             if (0 < prevElementCount)
             {
-                while (SIDE_STATUS_NEEDREMOVE == CheckTailSideStatus() && -1 != CalculateAvaialbeNextHeadElementIndex())
+                while (SIDE_STATUS_NEEDREMOVE == CheckTailSideStatus() && -1 != CalculateAvailabeNextHeadElementIndex())
                 {
                     RemoveElementFromTail();
                     hasRemoveElements = true;
@@ -367,7 +367,7 @@ namespace RecycleScrollView
             RectTransform content = _scrollRect.content;
             float addSize = 0f;
             int canAddIndex;
-            while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus() && -1 != (canAddIndex = CalculateAvaialbeNextHeadElementIndex()))
+            while (SIDE_STATUS_NEEDADD == CheckHeadSideStatus() && -1 != (canAddIndex = CalculateAvailabeNextHeadElementIndex()))
             {
                 AddElementToHead(canAddIndex);
                 if (IsVertical)
@@ -452,7 +452,7 @@ namespace RecycleScrollView
 
         /// <summary> The data index of the element for adding head </summary>
         /// <returns> -1 Means it can not find valid index </returns>
-        private int CalculateAvaialbeNextHeadElementIndex()
+        private int CalculateAvailabeNextHeadElementIndex()
         {
             if (null == m_dataSource)
             {

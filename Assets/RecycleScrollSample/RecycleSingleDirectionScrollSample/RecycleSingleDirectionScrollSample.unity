@@ -270,7 +270,7 @@ GameObject:
   - component: {fileID: 202185320}
   - component: {fileID: 202185321}
   m_Layer: 5
-  m_Name: VerticalScroll1
+  m_Name: VerticalScroll (up to down)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -382,6 +382,8 @@ MonoBehaviour:
     normalizedPositionInViewPort: 0.3
     normalizedElementPositionAdjustment: 0.6
   _alwaysDrawGizmos: 0
+  _scrollBar: {fileID: 0}
+  tempTestValue: 0
   _scrollRect: {fileID: 202185317}
   _contentLayoutGroup: {fileID: 1512229859}
   _scrollParam:
@@ -402,13 +404,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scrollController: {fileID: 202185320}
   _elementPrefab: {fileID: 5688237535119875187}
-  _scrollrect: {fileID: 202185317}
-  _content: {fileID: 1512229856}
-  _viewport: {fileID: 1833296618}
-  _dataCount: 192
   _sizeMin: 96
   _sizeMax: 512
-  _jumpToTestIndex: 54
+  _startDataCount: 32
+  _jumpToTestIndex: 66
+  _addOrRemoveIndex: -1
 --- !u!1 &465986553
 GameObject:
   m_ObjectHideFlags: 0
@@ -780,7 +780,7 @@ GameObject:
   - component: {fileID: 936998924}
   - component: {fileID: 936998923}
   m_Layer: 5
-  m_Name: HorizontalScroll1
+  m_Name: HorizontalScroll (left to right)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -820,13 +820,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scrollController: {fileID: 936998924}
   _elementPrefab: {fileID: 5556189926784598716}
-  _scrollrect: {fileID: 936998925}
-  _content: {fileID: 525200856}
-  _viewport: {fileID: 2011683774}
-  _dataCount: 192
   _sizeMin: 80
   _sizeMax: 320
+  _startDataCount: 50
   _jumpToTestIndex: 57
+  _addOrRemoveIndex: -1
 --- !u!114 &936998924
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -843,6 +841,8 @@ MonoBehaviour:
     normalizedPositionInViewPort: 0.4
     normalizedElementPositionAdjustment: 0
   _alwaysDrawGizmos: 0
+  _scrollBar: {fileID: 0}
+  tempTestValue: 0
   _scrollRect: {fileID: 936998925}
   _contentLayoutGroup: {fileID: 525200858}
   _scrollParam:
@@ -1089,7 +1089,7 @@ GameObject:
   - component: {fileID: 1455569854}
   - component: {fileID: 1455569853}
   m_Layer: 5
-  m_Name: HorizontalScroll2
+  m_Name: HorizontalScroll (right to left)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1129,13 +1129,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scrollController: {fileID: 1455569854}
   _elementPrefab: {fileID: 5556189926784598716}
-  _scrollrect: {fileID: 1455569855}
-  _content: {fileID: 1072225914}
-  _viewport: {fileID: 2049713885}
-  _dataCount: 192
   _sizeMin: 80
   _sizeMax: 320
+  _startDataCount: 50
   _jumpToTestIndex: 74
+  _addOrRemoveIndex: -1
 --- !u!114 &1455569854
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1152,6 +1150,8 @@ MonoBehaviour:
     normalizedPositionInViewPort: 0.7
     normalizedElementPositionAdjustment: 1
   _alwaysDrawGizmos: 0
+  _scrollBar: {fileID: 0}
+  tempTestValue: 0
   _scrollRect: {fileID: 1455569855}
   _contentLayoutGroup: {fileID: 1072225916}
   _scrollParam:
@@ -1630,7 +1630,7 @@ GameObject:
   - component: {fileID: 2111627557}
   - component: {fileID: 2111627556}
   m_Layer: 5
-  m_Name: VerticalScroll2
+  m_Name: VerticalScroll (down to up)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1670,13 +1670,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scrollController: {fileID: 2111627557}
   _elementPrefab: {fileID: 5688237535119875187}
-  _scrollrect: {fileID: 2111627558}
-  _content: {fileID: 1497416156}
-  _viewport: {fileID: 34806927}
-  _dataCount: 192
   _sizeMin: 32
   _sizeMax: 256
+  _startDataCount: 192
   _jumpToTestIndex: 107
+  _addOrRemoveIndex: -1
 --- !u!114 &2111627557
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1693,6 +1691,8 @@ MonoBehaviour:
     normalizedPositionInViewPort: 0.3
     normalizedElementPositionAdjustment: 0
   _alwaysDrawGizmos: 0
+  _scrollBar: {fileID: 0}
+  tempTestValue: 0
   _scrollRect: {fileID: 2111627558}
   _contentLayoutGroup: {fileID: 1497416158}
   _scrollParam:

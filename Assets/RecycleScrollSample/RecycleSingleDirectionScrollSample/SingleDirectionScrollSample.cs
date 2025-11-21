@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityRandom = UnityEngine.Random;
 
 namespace RecycleScrollView.Sample
@@ -11,46 +11,46 @@ namespace RecycleScrollView.Sample
         private RecycleSingleDirectionScroll _scrollController;
         [SerializeField]
         private RectTransform _elementPrefab;
-        [SerializeField]
-        private ScrollRect _scrollrect;
-        [SerializeField]
-        private RectTransform _content;
-        [SerializeField]
-        private RectTransform _viewport;
-        [SerializeField]
-        private int _dataCount = 50;
+
         [SerializeField]
         private float _sizeMin = 80;
         [SerializeField]
         private float _sizeMax = 320;
+        [SerializeField]
+        private int _startDataCount = 50;
 
+        [Header("Test parameters")]
         [SerializeField]
         private int _jumpToTestIndex = 10;
+        [SerializeField]
+        private int _addOrRemoveIndex = -1;
 
-        private Dictionary<int, float> m_sizeMap = new Dictionary<int, float>();
+        private List<float> m_elementSizeList = new List<float>();
+        public event Action<int> OnDataElementCountChanged;
 
-        public int DataElementCount => _dataCount;
+        public int DataElementCount => null == m_elementSizeList ? 0 : m_elementSizeList.Count;
 
         public RectTransform RequestElement(RectTransform parent, int index)
         {
-            RectTransform newElement = RectTransform.Instantiate(_elementPrefab, parent);
-            if (newElement.TryGetComponent<TextElementUI>(out TextElementUI chatTextElement))
+            if (DataElementCount <= index)
             {
-                if (!m_sizeMap.TryGetValue(index, out float tempSize))
-                {
-                    tempSize = UnityRandom.Range(_sizeMin, _sizeMax);
-                    m_sizeMap[index] = tempSize;
-                }
+                Debug.LogError($"RequestElement index {index} exceed data count {DataElementCount}");
+                return null;
+            }
+
+            RectTransform newElement = RectTransform.Instantiate(_elementPrefab, parent);
+            if (newElement.TryGetComponent<TextElementUI>(out TextElementUI textElement))
+            {
+                float tempSize = m_elementSizeList[index];
                 if (_scrollController.IsHorizontal)
                 {
-                    chatTextElement.SetWidth(tempSize);
+                    textElement.SetWidth(tempSize);
                 }
                 else if (_scrollController.IsVertical)
                 {
-                    chatTextElement.SetHeight(tempSize);
+                    textElement.SetHeight(tempSize);
                 }
-                chatTextElement.SetText($"ee {index}");
-                chatTextElement.ForceCalculateSize();
+                textElement.SetText($"size: {tempSize}");
             }
             return newElement;
         }
@@ -61,54 +61,31 @@ namespace RecycleScrollView.Sample
             GameObject.Destroy(element.gameObject);
         }
 
-        private void Start()
+        public void ChangeElementIndex(RectTransform element, int prevIndex, int nextIndex)
         {
-            _scrollController.Init(this);
-        }
-
-        [ContextMenu("AddTopTest")]
-        private void AddTopTest()
-        {
-            RectTransform newElement = RectTransform.Instantiate(_elementPrefab, _content);
-            Debug.LogError($"1 {_scrollrect.verticalNormalizedPosition}");
-            if (newElement.TryGetComponent<TextElementUI>(out TextElementUI chatTextElement))
+            if (element.TryGetComponent<TextElementUI>(out TextElementUI textElement))
             {
-                float heightee = UnityRandom.Range(80, 560);
-                chatTextElement.SetHeight(heightee);
-                chatTextElement.SetText($"ee ");
-                chatTextElement.ForceCalculateSize();
-                newElement.SetAsFirstSibling();
-
-                LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
-                Vector2 size = newElement.rect.size;
-                float delta = heightee;
-                Vector2 contentSize = _content.rect.size;
+                float tempSize = m_elementSizeList[nextIndex];
                 if (_scrollController.IsHorizontal)
                 {
-                    contentSize.x += delta;
-                    Debug.LogError($"2 {_scrollrect.verticalNormalizedPosition} {size}");
-                    contentSize = _content.rect.size;
-                    // _content.anchoredPosition += Vector2.up * delta;
-                    _scrollrect.verticalNormalizedPosition -= delta / (contentSize.x - _viewport.rect.height);
+                    textElement.SetWidth(tempSize);
                 }
                 else if (_scrollController.IsVertical)
                 {
-                    contentSize.y += delta;
-                    Debug.LogError($"2 {_scrollrect.verticalNormalizedPosition} {size}");
-                    contentSize = _content.rect.size;
-                    // _content.anchoredPosition += Vector2.up * delta;
-                    _scrollrect.verticalNormalizedPosition -= delta / (contentSize.y - _viewport.rect.height);
+                    textElement.SetHeight(tempSize);
                 }
+                textElement.SetText($"size: {tempSize}");
             }
         }
 
-        [ContextMenu("RemoveTest")]
-        private void RemoveTest()
+        private void Start()
         {
-            RectTransform tempChild = _content.GetChild(0) as RectTransform;
-            float heightDelta = tempChild.rect.height;
-            Destroy(tempChild.gameObject);
-            _content.anchoredPosition -= Vector2.up * heightDelta;
+            m_elementSizeList = new List<float>();
+            for (int i = 0; i < _startDataCount; i++)
+            {
+                m_elementSizeList.Add(UnityRandom.Range(_sizeMin, _sizeMax));
+            }
+            _scrollController.Init(this);
         }
 
         [ContextMenu(nameof(JumpToTest))]
@@ -117,8 +94,43 @@ namespace RecycleScrollView.Sample
             _scrollController.JumpToElementInstant(_jumpToTestIndex);
         }
 
-        public void ChangeElementIndex(RectTransform element, int prevIndex, int nextIndex)
+        [ContextMenu(nameof(AddTest))]
+        private void AddTest()
         {
+            int addIndex = _addOrRemoveIndex;
+            if (-1 != _addOrRemoveIndex && _addOrRemoveIndex <= DataElementCount - 1)
+            {
+                // Add to specific index
+                m_elementSizeList.Insert(_addOrRemoveIndex, UnityRandom.Range(_sizeMin, _sizeMax));
+            }
+            else
+            {
+                // Add to tail
+                addIndex = DataElementCount;
+                m_elementSizeList.Add(UnityRandom.Range(_sizeMin, _sizeMax));
+            }
+            OnDataElementCountChanged?.Invoke(DataElementCount);
+            _scrollController.InsertElement(addIndex);
         }
+
+        [ContextMenu(nameof(RemoveTest))]
+        private void RemoveTest()
+        {
+            int removeIndex = _addOrRemoveIndex;
+            if (-1 != _addOrRemoveIndex && _addOrRemoveIndex <= DataElementCount - 1)
+            {
+                // Remove from specific index
+                m_elementSizeList.RemoveAt(removeIndex);
+            }
+            else
+            {
+                // Remove from tail
+                removeIndex = DataElementCount - 1;
+                m_elementSizeList.RemoveAt(removeIndex);
+            }
+            OnDataElementCountChanged?.Invoke(DataElementCount);
+            _scrollController.RemoveElement(removeIndex);
+        }
+
     }
 }
