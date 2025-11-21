@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -54,6 +55,8 @@ namespace RecycleScrollView.Sample
 
         private List<ChatData> m_chatList;
 
+        public event Action<int> OnDataElementCountChanged;
+
         public int DataElementCount => _dataCount;
 
         public RectTransform RequestElement(RectTransform parent, int index)
@@ -100,7 +103,6 @@ namespace RecycleScrollView.Sample
                 float heightee = UnityRandom.Range(80, 560);
                 chatTextElement.SetHeight(heightee);
                 chatTextElement.SetText($"ee ");
-                chatTextElement.ForceCalculateSize();
                 newElement.SetAsFirstSibling();
 
                 LayoutRebuilder.ForceRebuildLayoutImmediate(scrollContent);

@@ -21,6 +21,7 @@ namespace RecycleScrollView
         private SingleDirectionScrollParam _scrollParam;
 
         private bool m_hasAdjustElementsCurrentFrame = false;
+        private bool m_hasPositionChangeCurrentFrame = false;
 
         public bool IsVertical => _scrollParam.IsVertical;
         public bool IsHorizontal => _scrollParam.IsHorizontal;
@@ -34,6 +35,7 @@ namespace RecycleScrollView
         public IReadOnlyList<RecycleSingleDirectionScrollElement> CurrentUsingElements => m_currentUsingElements;
         private UnityAction<Vector2> m_onScrollPositionChanged;
         private Action m_onLateUpdated;
+        private Action<int> m_onDataElementCountChanged;
 
         public void ForceRebuildContentLayout()
         {
@@ -54,6 +56,7 @@ namespace RecycleScrollView
                     m_dataSource.ReturnElement(m_currentUsingElements[i].ElementTransform);
                 }
                 m_currentUsingElements.Clear();
+                m_dataSource.OnDataElementCountChanged -= m_onDataElementCountChanged;
                 m_dataSource = null;
             }
         }
@@ -67,6 +70,11 @@ namespace RecycleScrollView
             else
             {
                 m_dataSource = dataSource;
+                if (null == m_onDataElementCountChanged)
+                {
+                    m_onDataElementCountChanged = new Action<int>(OnDataElementCountChanged);
+                }
+                m_dataSource.OnDataElementCountChanged += m_onDataElementCountChanged;
                 ApplyLayoutSetting();
                 while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
@@ -76,6 +84,7 @@ namespace RecycleScrollView
                     }
                 }
                 _scrollRect.CallUpdateBoundsAndPrevData();
+                OnDataElementCountChanged(m_dataSource.DataElementCount);
             }
         }
 
@@ -309,6 +318,11 @@ namespace RecycleScrollView
         {
             // Debug.LogError("OnScrollPositionChanged");
             InternalAdjustment();
+            m_hasPositionChangeCurrentFrame = true;
+        }
+
+        private void OnDataElementCountChanged(int count)
+        {
         }
 
         private void OnLateUpdated()
@@ -317,7 +331,12 @@ namespace RecycleScrollView
             {
                 InternalAdjustment();
             }
+            if (m_hasPositionChangeCurrentFrame || m_hasAdjustElementsCurrentFrame)
+            {
+                // UpdateScrollBar if needed
+            }
             m_hasAdjustElementsCurrentFrame = false;
+            m_hasPositionChangeCurrentFrame = false;
         }
 
         protected override void OnEnable()

@@ -114,13 +114,19 @@ namespace UnityEngine.UI.Extend
         public static Vector2 TransformNormalizedRectPositionToLocalPosition(this RectTransform rectTransform, Vector2 normalizedRectPosition)
         {
             Vector2 rectSize = rectTransform.rect.size;
+            Vector2 rectPosition = new Vector2(normalizedRectPosition.x * rectSize.x, normalizedRectPosition.y * rectSize.y);
+            return TransformRectPositionToLocalPosition(rectTransform, rectPosition);
+        }
+
+        public static Vector2 TransformRectPositionToLocalPosition(this RectTransform rectTransform, Vector2 rectPosition)
+        {
+            Vector2 rectSize = rectTransform.rect.size;
             Vector2 pivotRectPosition = rectTransform.pivot;
             pivotRectPosition.x *= rectSize.x;
             pivotRectPosition.y *= rectSize.y;
 
-            Vector2 rectPosition = new Vector2(normalizedRectPosition.x * rectSize.x, normalizedRectPosition.y * rectSize.y);
-            Vector2 result = rectPosition - pivotRectPosition;
-            return result;
+            Vector2 localPosition = rectPosition - pivotRectPosition;
+            return localPosition;
         }
 
         public static Vector2 TransformLocalPositionToNormalizedRectPosition(this RectTransform rectTransform, Vector2 localPosition)
