@@ -11,3 +11,5 @@ But mine should be much more simple.
 ## RecycleOneDirectionScroll
 
 ![Sample](https://github.com/2C2C2C/MuyScrollRect/blob/master/TempSrc/RecycleOneDirectionScroll01.gif)
+
+![Sample](https://github.com/2C2C2C/MuyScrollRect/blob/master/TempSrc/RecycleOneDirectionScroll02.gif)
