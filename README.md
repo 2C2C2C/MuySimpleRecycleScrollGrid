@@ -2,7 +2,7 @@
 
 A simple recycle scroll based on Unity ScollRect.
 It's a bit costy then others(which have their own scroller).
-But mine should be much more simple.
+But mine should be much simpler.
 
 ## RecycleGridScroll
 
