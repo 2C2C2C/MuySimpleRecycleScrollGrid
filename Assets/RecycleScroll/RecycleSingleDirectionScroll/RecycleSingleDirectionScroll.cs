@@ -20,6 +20,7 @@ namespace RecycleScrollView
         [SerializeField]
         private SingleDirectionScrollParam _scrollParam;
 
+        private bool m_hasLateUpdateOnce = false;
         private bool m_hasAdjustElementsCurrentFrame = false;
         private bool m_hasPositionChangeCurrentFrame = false;
 
@@ -76,6 +77,7 @@ namespace RecycleScrollView
                 }
                 m_dataSource.OnDataElementCountChanged += m_onDataElementCountChanged;
                 ApplyLayoutSetting();
+                ApplyLayoutSettingToScrollBar();
                 while (SIDE_STATUS_NEEDADD == CheckTailSideStatus())
                 {
                     if (!AddElementsToTailIfNeed())
@@ -323,6 +325,7 @@ namespace RecycleScrollView
 
         private void OnDataElementCountChanged(int count)
         {
+            AdjustScrollBarSize();
         }
 
         private void OnLateUpdated()
@@ -337,6 +340,18 @@ namespace RecycleScrollView
             }
             m_hasAdjustElementsCurrentFrame = false;
             m_hasPositionChangeCurrentFrame = false;
+
+            // TO BE REMOVED
+            if (m_hasLateUpdateOnce)
+            {
+                // HACK The layout has not fully refreshed at the 1st frame :(
+                if (!m_hasSetScrollBarValueThisFrame)
+                {
+                    UpdateScrollBarPosition();
+                }
+                m_hasSetScrollBarValueThisFrame = false;
+            }
+            m_hasLateUpdateOnce = true;
         }
 
         protected override void OnEnable()
@@ -352,10 +367,13 @@ namespace RecycleScrollView
             }
             _scrollRect.AfterLateUpdate += m_onLateUpdated;
 
+            BindScrollBar();
         }
 
         protected override void OnDisable()
         {
+            UnBindScrollBar();
+
             if (null != m_onScrollPositionChanged)
             {
                 _scrollRect.onValueChanged.RemoveListener(m_onScrollPositionChanged);
@@ -370,7 +388,7 @@ namespace RecycleScrollView
 
         private void ChangeObjectName_EditorOnly(MonoBehaviour behaviour, int dataIndex)
         {
-            behaviour.name = $"Element {dataIndex}";
+            behaviour.name = $"Element DataIndex_{dataIndex}";
             // Debug.LogError($"Check; index {dataIndex}; size {newElement.ElementPreferredSize}");
         }
 
