@@ -45,6 +45,8 @@ namespace RecycleScrollView
         private LayoutElementSizeSetter _elementSizeSetter;
         [SerializeField] // TODO This value should be NonSerialized but better to show it in inspector
         private int m_index = -1;
+        [SerializeField] // TODO This value should be NonSerialized but better to show it in inspector
+        private int m_dataIndex = -1;
 
         private RectTransform m_rectTransform;
 
@@ -65,6 +67,12 @@ namespace RecycleScrollView
         public void SetIndex(int index)
         {
             m_index = index;
+        }
+
+        public void SetIndex(int index, int dataIndex)
+        {
+            m_index = index;
+            m_dataIndex = dataIndex;
         }
 
         public void ClearPreferredSize()

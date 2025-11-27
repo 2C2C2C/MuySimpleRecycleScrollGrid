@@ -345,11 +345,15 @@ namespace RecycleScrollView
             if (m_hasLateUpdateOnce)
             {
                 // HACK The layout has not fully refreshed at the 1st frame :(
-                if (!m_hasSetScrollBarValueThisFrame)
+                if (0 == m_hasSetScrollBarValueThisFrame)
                 {
                     UpdateScrollBarPosition();
                 }
-                m_hasSetScrollBarValueThisFrame = false;
+                else
+                {
+                    --m_hasSetScrollBarValueThisFrame;
+                    Debug.LogError($"skip once; Frame {Time.frameCount}");
+                }
             }
             m_hasLateUpdateOnce = true;
         }

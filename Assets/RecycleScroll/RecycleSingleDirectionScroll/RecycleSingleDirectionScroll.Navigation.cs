@@ -270,61 +270,116 @@ namespace RecycleScrollView
             ForceRebuildAndStopMove();
         }
 
-        private void JumpToExistElementInstant(int dataIndex, float refNormalizedRectPosition, float extraNormalizedGapOffset)
+        private void JumpToExistElementInstant(int elementIndex, float normalizedScrollProgress, float normalizedScrollProgressOffset)
         {
-            if (null == m_dataSource || dataIndex < 0 || dataIndex >= m_dataSource.DataElementCount)
+            if (null == m_dataSource || elementIndex < 0 || elementIndex >= m_dataSource.DataElementCount)
             {
+                Debug.LogError($"jump fail");
                 return;
             }
 
             RectTransform content = _scrollRect.content;
             RectTransform viewport = _scrollRect.viewport;
-            // if (TryGetShowingElement(dataIndex, out RecycleSingleDirectionScrollElement baseElement))
-            // {
-            //     return;
-            // }
-            // else
+
+            if (TryGetShowingElement(elementIndex, out RecycleSingleDirectionScrollElement baseElement) &&
+                TryGetShowingElement(elementIndex + 1, out RecycleSingleDirectionScrollElement nextElement))
             {
-                // TODO
+                float tempMove = 0f;
+                float stepSize = 1f / (m_dataSource.DataElementCount - 1);
+                TryGetRefElementFormScrollBarValue(m_virtualNormalizedScrollBarValue, out int currentBaseIndex, out float currentNormalizedProgress, out float currentNormalizedProgressOffset);
+                if (currentBaseIndex == elementIndex)
+                {
+                    tempMove = normalizedScrollProgress + normalizedScrollProgressOffset - currentNormalizedProgress;
+                    TryCalculateGapBetweenElement(elementIndex, elementIndex + 1, out float gapSize);
+                    tempMove *= gapSize;
+                    Debug.LogError($"move {tempMove}; normalizedScrollProgress {normalizedScrollProgress}; normalizedScrollProgressOffset {normalizedScrollProgressOffset}; temp {normalizedScrollProgress + normalizedScrollProgressOffset}");
+                }
+                else
+                {
+                    int tempIndex = currentBaseIndex;
+                    TryCalculateGapBetweenElement(tempIndex, tempIndex + 1, out float gapSize);
+                    tempMove += (stepSize - currentNormalizedProgressOffset) * gapSize;
+                    tempIndex++;
+                    while (tempIndex < elementIndex)
+                    {
+                        TryCalculateGapBetweenElement(tempIndex, tempIndex + 1, out gapSize);
+                        tempMove += gapSize;
+                        tempIndex++;
+                    }
+                    TryCalculateGapBetweenElement(elementIndex, elementIndex + 1, out gapSize);
+                    tempMove += gapSize * (normalizedScrollProgressOffset / stepSize);
+                    Debug.LogError($"move {tempMove}; Frame {Time.frameCount}");
+                }
+
+                Vector2 move = default;
+                if (IsHorizontal)
+                {
+                    move = new Vector2(tempMove, 0f);
+                }
+                else if (IsVertical)
+                {
+                    move = new Vector2(0f, tempMove);
+                }
+                Vector3 localPosition = content.localPosition;
+                content.localPosition = localPosition + (Vector3)move;
+
+                AddElemensIfNeed();
+                ForceRebuildAndStopMove();
+            }
+            else
+            {
                 RemoveCurrentElements();
                 _scrollRect.StopMovement();
 
-                RecycleSingleDirectionScrollElement targetElement = InternalCreateElement(dataIndex);
-                targetElement.SetIndex(dataIndex);
+                RecycleSingleDirectionScrollElement targetElement = InternalCreateElement(elementIndex);
+                targetElement.SetIndex(elementIndex);
                 targetElement.CalculatePreferredSize();
                 m_currentUsingElements.Add(targetElement);
 
                 // HACK Since the pivot of content must be fixed, we need to adjust the position of content to make the target element at the correct position
                 Vector2 headCheckRectPosition = Vector2.zero;
                 Vector3 localPosition = Vector2.zero;
+                Vector2 convertedRectPosition = CalculateNormalizedRectPosition(normalizedScrollProgress);
                 if (IsVertical)
                 {
-                    Vector2 verticalPostion = RectTransformEx.CalulateRectPosition(viewport, new Vector2(0.5f, refNormalizedRectPosition));
+                    Vector2 verticalPostion = RectTransformEx.CalulateRectPosition(viewport, new Vector2(0.5f, convertedRectPosition.y));
+                    verticalPostion.y += targetElement.ElementPreferredSize.y * (1f - convertedRectPosition.y);
                     headCheckRectPosition = verticalPostion;
                     localPosition = RectTransformEx.TransformRectPositionToLocalPosition(viewport, verticalPostion);
                 }
                 else if (IsHorizontal)
                 {
-                    Vector2 horizontalPostion = RectTransformEx.CalulateRectPosition(viewport, new Vector2(refNormalizedRectPosition, 0.5f));
+                    Vector2 horizontalPostion = RectTransformEx.CalulateRectPosition(viewport, new Vector2(convertedRectPosition.x, 0.5f));
+                    horizontalPostion.x += targetElement.ElementPreferredSize.x * convertedRectPosition.x;
                     headCheckRectPosition = horizontalPostion;
                     localPosition = RectTransformEx.TransformRectPositionToLocalPosition(viewport, horizontalPostion);
                 }
 
-                RecycleSingleDirectionScrollElement nextElement = InternalCreateElement(dataIndex + 1);
-                nextElement.SetIndex(dataIndex + 1);
+                nextElement = InternalCreateElement(elementIndex + 1);
+                nextElement.SetIndex(elementIndex + 1);
                 nextElement.CalculatePreferredSize();
                 m_currentUsingElements.Add(nextElement);
 
                 Vector3 offset = Vector3.zero;
-                if (TryCalculateGapBetweenElement(dataIndex, dataIndex + 1, out float gapSize))
+                float stepSize = 1f / (m_dataSource.DataElementCount - 1);
+                normalizedScrollProgressOffset /= stepSize;
+                if (Mathf.Approximately(1f, normalizedScrollProgressOffset))
+                {
+                    normalizedScrollProgressOffset = 1f;
+                }
+                else if (Mathf.Approximately(0f, normalizedScrollProgressOffset))
+                {
+                    normalizedScrollProgressOffset = 0f;
+                }
+                if (TryCalculateGapBetweenElement(elementIndex, elementIndex + 1, out float gapSize))
                 {
                     if (IsHorizontal)
                     {
-                        offset = new Vector2(gapSize * extraNormalizedGapOffset, 0f);
+                        offset = new Vector2(gapSize * normalizedScrollProgressOffset, 0f);
                     }
                     else if (IsVertical)
                     {
-                        offset = new Vector2(0f, gapSize * -extraNormalizedGapOffset);
+                        offset = new Vector2(0f, gapSize * -normalizedScrollProgressOffset);
                     }
                 }
                 headCheckRectPosition += (Vector2)offset;
