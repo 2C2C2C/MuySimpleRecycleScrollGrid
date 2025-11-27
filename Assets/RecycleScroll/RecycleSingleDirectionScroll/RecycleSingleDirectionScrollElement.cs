@@ -43,8 +43,11 @@ namespace RecycleScrollView
         private bool _forceConvertFlexiableToPreferred;
         [SerializeField]
         private LayoutElementSizeSetter _elementSizeSetter;
+
+        /// <summary> The element index in the scroll content </summary>
         [SerializeField] // TODO This value should be NonSerialized but better to show it in inspector
-        private int m_index = -1;
+        private int m_elementIndex = -1;
+        /// <summary> The actual data index in the scroll content </summary>
         [SerializeField] // TODO This value should be NonSerialized but better to show it in inspector
         private int m_dataIndex = -1;
 
@@ -61,17 +64,13 @@ namespace RecycleScrollView
                 return m_rectTransform;
             }
         }
-        public int ElementIndex => m_index;
+        public int ElementIndex => m_elementIndex;
+        public int DataIndex => m_dataIndex;
         public Vector2 ElementPreferredSize { get; private set; }
 
-        public void SetIndex(int index)
+        public void SetIndex(int elementIndex, int dataIndex)
         {
-            m_index = index;
-        }
-
-        public void SetIndex(int index, int dataIndex)
-        {
-            m_index = index;
+            m_elementIndex = elementIndex;
             m_dataIndex = dataIndex;
         }
 

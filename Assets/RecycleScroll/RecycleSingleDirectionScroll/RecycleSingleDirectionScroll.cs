@@ -99,32 +99,6 @@ namespace RecycleScrollView
             m_currentUsingElements.Clear();
         }
 
-        public int GetCurrentShowingElementIndexLowerBound()
-        {
-            int elementCount = m_currentUsingElements.Count;
-            int result = -1;
-            if (0 < elementCount)
-            {
-                result = _scrollParam.reverseArrangement ?
-                    m_currentUsingElements[elementCount - 1].ElementIndex :
-                    m_currentUsingElements[0].ElementIndex;
-            }
-            return result;
-        }
-
-        public int GetCurrentShowingElementIndexUpperBound()
-        {
-            int elementCount = m_currentUsingElements.Count;
-            int result = -1;
-            if (0 < elementCount)
-            {
-                result = _scrollParam.reverseArrangement ?
-                    m_currentUsingElements[0].ElementIndex :
-                    m_currentUsingElements[elementCount - 1].ElementIndex;
-            }
-            return result;
-        }
-
         public void NotifyElementSizeChange(int index, bool forceRebuild)
         {
             int indexLowerBound = GetCurrentShowingElementIndexLowerBound();
@@ -213,8 +187,8 @@ namespace RecycleScrollView
             {
                 element.ClearPreferredSize();
             }
-            m_dataSource.ChangeElementIndex(element.ElementTransform, element.ElementIndex, nextIndex);
-            element.SetIndex(nextIndex);
+            m_dataSource.ChangeElementIndex(element.ElementTransform, ElementIndexDataIndex2WayConvert(element.ElementIndex), ElementIndexDataIndex2WayConvert(nextIndex));
+            element.SetIndex(nextIndex, ElementIndexDataIndex2WayConvert(nextIndex));
             if (needReCalculateSize)
             {
                 element.CalculatePreferredSize();
@@ -271,8 +245,7 @@ namespace RecycleScrollView
         private void RemoveElementFromHead()
         {
             RecycleSingleDirectionScrollElement element = m_currentUsingElements[0];
-            // int dataIndex = element.ElementIndex;
-            // Debug.LogError($"Remove on top data{dataIndex} Time {Time.time}");
+            // int index = element.index;
             m_currentUsingElements.RemoveAt(0);
             InternalRemoveElement(element);
         }
@@ -281,24 +254,25 @@ namespace RecycleScrollView
         {
             int elementIndex = m_currentUsingElements.Count - 1;
             RecycleSingleDirectionScrollElement element = m_currentUsingElements[elementIndex];
-            // int dataIndex = element.ElementIndex;
-            // Debug.LogError($"Remove on bottom data{dataIndex} Time {Time.time}");
+            // int index = element.ElementIndex;
+            // Debug.LogError($"Remove on bottom index {index} Time {Time.time}");
             m_currentUsingElements.RemoveAt(elementIndex);
             InternalRemoveElement(element);
         }
 
-        private RecycleSingleDirectionScrollElement InternalCreateElement(int dataIndex)
+        private RecycleSingleDirectionScrollElement InternalCreateElement(int elementIndex)
         {
             RectTransform content = _scrollRect.content;
             RecycleSingleDirectionScrollElement newElement;
-            RectTransform requestedElement = m_dataSource.RequestElement(content, dataIndex);
+            RectTransform requestedElement = m_dataSource.RequestElement(content, ElementIndexDataIndex2WayConvert(elementIndex));
             if (!requestedElement.TryGetComponent<RecycleSingleDirectionScrollElement>(out newElement))
             {
                 Debug.LogError($"[RecycleScrollView] receive wrong element");
             }
             newElement.CalculatePreferredSize();
+
 #if UNITY_EDITOR
-            ChangeObjectName_EditorOnly(newElement, dataIndex);
+            ChangeObjectName_EditorOnly(newElement, elementIndex);
 #endif
             return newElement;
         }
@@ -352,7 +326,7 @@ namespace RecycleScrollView
                 else
                 {
                     --m_hasSetScrollBarValueThisFrame;
-                    Debug.LogError($"skip once; Frame {Time.frameCount}");
+                    // Debug.LogError($"skip once; Frame {Time.frameCount}");
                 }
             }
             m_hasLateUpdateOnce = true;
@@ -390,10 +364,9 @@ namespace RecycleScrollView
 
 #if UNITY_EDITOR
 
-        private void ChangeObjectName_EditorOnly(MonoBehaviour behaviour, int dataIndex)
+        private void ChangeObjectName_EditorOnly(MonoBehaviour behaviour, int elementIndex)
         {
-            behaviour.name = $"Element DataIndex_{dataIndex}";
-            // Debug.LogError($"Check; index {dataIndex}; size {newElement.ElementPreferredSize}");
+            behaviour.name = $"Element {elementIndex}; DataIndex {ElementIndexDataIndex2WayConvert(elementIndex)}";
         }
 
         protected override void Reset()

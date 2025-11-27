@@ -13,30 +13,31 @@ namespace RecycleScrollView
         private const float EDGE_HEAD = 0F;
         private const float EDGE_TAIL = 1F;
 
-        public void AddElementToHead(int dataIndex)
+        private void AddElementToHead(int elementIndex)
         {
-            RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+            RecycleSingleDirectionScrollElement newElement = InternalCreateElement(elementIndex);
             m_currentUsingElements.Insert(0, newElement);
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsFirstSibling();
-            newElement.SetIndex(dataIndex);
-            // Debug.LogError($"Add on top data{dataIndex} Time {Time.time}");
+            newElement.SetIndex(elementIndex, ElementIndexDataIndex2WayConvert(elementIndex));
+            // Debug.LogError($"Add on top index {elementIndex} Time {Time.time}");
         }
 
-        public void AddElementToTail(int dataIndex)
+        private void AddElementToTail(int elementIndex)
         {
-            RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+            RecycleSingleDirectionScrollElement newElement = InternalCreateElement(elementIndex);
             m_currentUsingElements.Add(newElement);
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsLastSibling();
-            newElement.SetIndex(dataIndex);
-            // Debug.LogError($"Add on bottom data{dataIndex} Time {Time.time}");
+            newElement.SetIndex(elementIndex, ElementIndexDataIndex2WayConvert(elementIndex));
+            // Debug.LogError($"Add on bottom index {elementIndex} Time {Time.time}");
         }
 
         public void InsertElement(int dataIndex)
         {
+            int insertElementIndex = ElementIndexDataIndex2WayConvert(dataIndex);
             int indexUpperBound = GetCurrentShowingElementIndexUpperBound();
-            if (dataIndex > indexUpperBound)
+            if (insertElementIndex > indexUpperBound)
             {
                 return;
             }
@@ -48,17 +49,17 @@ namespace RecycleScrollView
                 {
                     RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     int elementIndex = element.ElementIndex;
-                    if (dataIndex == elementIndex && !hasAdded)
+                    if (insertElementIndex == element.ElementIndex && !hasAdded)
                     {
-                        RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+                        RecycleSingleDirectionScrollElement newElement = InternalCreateElement(insertElementIndex);
                         newElement.ElementTransform.SetSiblingIndex(element.ElementTransform.GetSiblingIndex() + 1);
-                        newElement.SetIndex(dataIndex);
+                        newElement.SetIndex(insertElementIndex, dataIndex);
                         m_currentUsingElements.Insert(i, newElement);
                         hasAdded = true;
                     }
                     else if (dataIndex < elementIndex && hasAdded)
                     {
-                        InternalChangeElementIndex(element, elementIndex + 1, false);
+                        InternalChangeElementIndex(element, ElementIndexDataIndex2WayConvert(elementIndex + 1), false);
                     }
                 }
             }
@@ -68,11 +69,11 @@ namespace RecycleScrollView
                 {
                     RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                     int elementIndex = element.ElementIndex;
-                    if (dataIndex == elementIndex && !hasAdded)
+                    if (dataIndex == element.DataIndex && !hasAdded)
                     {
-                        RecycleSingleDirectionScrollElement newElement = InternalCreateElement(dataIndex);
+                        RecycleSingleDirectionScrollElement newElement = InternalCreateElement(insertElementIndex);
                         newElement.ElementTransform.SetSiblingIndex(element.ElementTransform.GetSiblingIndex());
-                        newElement.SetIndex(dataIndex);
+                        newElement.SetIndex(insertElementIndex, dataIndex);
                         m_currentUsingElements.Insert(i, newElement);
                         length++;
                         hasAdded = true;
@@ -87,8 +88,9 @@ namespace RecycleScrollView
 
         public void RemoveElement(int dataIndex)
         {
+            int elementIndex = ElementIndexDataIndex2WayConvert(dataIndex);
             int indexUpperBound = GetCurrentShowingElementIndexUpperBound();
-            if (dataIndex > indexUpperBound)
+            if (elementIndex > indexUpperBound)
             {
                 return;
             }
@@ -99,8 +101,7 @@ namespace RecycleScrollView
                 for (int i = m_currentUsingElements.Count - 1; i >= 0; i--)
                 {
                     RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
-                    int elementIndex = element.ElementIndex;
-                    if (dataIndex == elementIndex && !hasRemoved)
+                    if (elementIndex == element.ElementIndex && !hasRemoved)
                     {
                         m_currentUsingElements.RemoveAt(i);
                         InternalRemoveElement(element);
@@ -109,7 +110,7 @@ namespace RecycleScrollView
                     }
                     else if (dataIndex < elementIndex && !hasRemoved)
                     {
-                        InternalChangeElementIndex(element, elementIndex - 1, false);
+                        InternalChangeElementIndex(element, ElementIndexDataIndex2WayConvert(elementIndex - 1), false);
                     }
                 }
             }
@@ -118,18 +119,16 @@ namespace RecycleScrollView
                 for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
                 {
                     RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
-                    int elementIndex = element.ElementIndex;
-                    if (dataIndex == elementIndex && !hasRemoved)
+                    if (element.ElementIndex == elementIndex && !hasRemoved)
                     {
                         m_currentUsingElements.RemoveAt(i);
-                        length--;
-                        i--;
+                        length--; i--;
                         InternalRemoveElement(element);
                         hasRemoved = true;
                     }
                     else if (dataIndex < elementIndex && hasRemoved)
                     {
-                        InternalChangeElementIndex(element, elementIndex - 1, false);
+                        InternalChangeElementIndex(element, ElementIndexDataIndex2WayConvert(elementIndex - 1), false);
                     }
                 }
             }
@@ -233,13 +232,13 @@ namespace RecycleScrollView
             return SIDE_STATUS_ENOUGH;
         }
 
-        /// <param name="elementIndex"> Index in the list of current in using elements </param>
+        /// <param name="indexOfUsingElements"> Index in the list of current in using elements </param>
         /// <param name="normalizedElementEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <param name="normalizedViewportEdgePosition"> Head(0) ~ Tail(1) </param>
         /// <returns></returns>
-        private bool IsElementEdgeBeyoudViewportEdge(int elementIndex, float normalizedViewportEdgePosition, float normalizedElementEdgePosition, ScrollDirection checkDirection)
+        private bool IsElementEdgeBeyoudViewportEdge(int indexOfUsingElements, float normalizedViewportEdgePosition, float normalizedElementEdgePosition, ScrollDirection checkDirection)
         {
-            if (0 > elementIndex || elementIndex >= m_currentUsingElements.Count)
+            if (0 > indexOfUsingElements || indexOfUsingElements >= m_currentUsingElements.Count)
             {
                 return false;
             }
@@ -252,9 +251,9 @@ namespace RecycleScrollView
             // ContentPivotRectPositionInViewport
             Vector2 baseRectPosition = RectTransformEx.TransformLocalPositionToRectPosition(viewport, content.localPosition);
 
-            float tempSize = CalculateCurrentContentTotalPreferredSize(elementIndex);
+            float tempSize = CalculateCurrentContentTotalPreferredSize(indexOfUsingElements);
             Vector2 elementEdgeRectPosition = CalculateNormalizedRectPosition(normalizedElementEdgePosition);
-            RecycleSingleDirectionScrollElement element = m_currentUsingElements[elementIndex];
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[indexOfUsingElements];
             float elementEdgePositionExtra = IsHorizontal ? element.ElementPreferredSize.x * elementEdgeRectPosition.x : element.ElementPreferredSize.y * elementEdgeRectPosition.y;
             tempSize += elementEdgePositionExtra;
 
@@ -448,83 +447,6 @@ namespace RecycleScrollView
                     break;
             }
             return result;
-        }
-
-        /// <summary> The data index of the element for adding head </summary>
-        /// <returns> -1 Means it can not find valid index </returns>
-        private int CalculateAvailabeNextHeadElementIndex()
-        {
-            if (null == m_dataSource)
-            {
-                return -1;
-            }
-
-            if (0 == m_currentUsingElements.Count)
-            {
-                return _scrollParam.reverseArrangement ? m_dataSource.DataElementCount - 1 : 0;
-            }
-
-            int index = m_currentUsingElements[0].ElementIndex;
-            bool isReachedLimit = _scrollParam.reverseArrangement ? index >= m_dataSource.DataElementCount - 1 : index <= 0;
-            if (isReachedLimit)
-            {
-                return -1;
-            }
-            int dataIndex = _scrollParam.reverseArrangement ? (index + 1) : (index - 1);
-            return dataIndex;
-        }
-
-        /// <summary> The data index of the element for adding tail </summary>
-        /// <returns> -1 Means it can not find valid index </returns>
-        private int CalculateAvailabeNextTailElementIndex()
-        {
-            if (null == m_dataSource)
-            {
-                return -1;
-            }
-
-            if (0 == m_currentUsingElements.Count)
-            {
-                return _scrollParam.reverseArrangement ? m_dataSource.DataElementCount - 1 : 0;
-            }
-
-            int index = m_currentUsingElements[m_currentUsingElements.Count - 1].ElementIndex;
-            bool isReachedLimit = _scrollParam.reverseArrangement ? index <= 0 : index >= m_dataSource.DataElementCount - 1;
-            if (isReachedLimit)
-            {
-                return -1;
-            }
-            int dataIndex = _scrollParam.reverseArrangement ? (index - 1) : (index + 1);
-            return dataIndex;
-        }
-
-        private float CalculateCurrentContentTotalPreferredSize(int exceptIndex = -1)
-        {
-            float totalSize = 0f;
-            int length = m_currentUsingElements.Count;
-            for (int i = 0; i < length; i++)
-            {
-                if (-1 != exceptIndex && i == exceptIndex)
-                {
-                    break;
-                }
-
-                RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
-                if (IsVertical)
-                {
-                    totalSize += element.ElementPreferredSize.y;
-                }
-                else if (IsHorizontal)
-                {
-                    totalSize += element.ElementPreferredSize.x;
-                }
-
-                if (i > 0 && i < length - 1)
-                {
-                    totalSize += _scrollParam.spacing;
-                }
-            }
-            return totalSize;
         }
 
     }

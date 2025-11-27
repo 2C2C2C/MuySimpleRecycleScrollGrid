@@ -4,10 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.UI.Extend;
 using ScrollDirection = RecycleScrollView.SingleDirectionScrollParam.ScrollDirection;
 using ScrollbarDirection = UnityEngine.UI.Scrollbar.Direction;
-using System.Drawing;
-using Microsoft.Unity.VisualStudio.Editor;
-using System.Runtime.InteropServices;
-using System.Reflection;
+using System;
 
 namespace RecycleScrollView
 {
@@ -40,13 +37,7 @@ namespace RecycleScrollView
 
         private int m_hasSetScrollBarValueThisFrame = 0;
         private List<TempPack> m_tempList = new List<TempPack>(20);
-
-        public float tempValue = 0f;
-        [ContextMenu(nameof(TempSetValue))]
-        public void TempSetValue()
-        {
-            OnScrollBarValueChanged(tempValue);
-        }
+        private Comparison<TempPack> m_packSort = null;
 
         private void BindScrollBar()
         {
@@ -121,14 +112,13 @@ namespace RecycleScrollView
                 return;
             }
 
-            float nextPos = CalculateCurrentNormalizedPosition();
+            float nextPos = CalculateCurrentNormalizedScrollBarValue();
             if (!Mathf.Approximately(nextPos, m_virtualNormalizedScrollBarValue) && Mathf.Abs(nextPos - m_virtualNormalizedScrollBarValue) > TEMP_MIN_VALUE)
             {
-                nextPos = CalculateCurrentNormalizedPosition();
-                Debug.LogError($"sync {m_virtualNormalizedScrollBarValue} -> {nextPos} to bar; Frame {Time.frameCount}");
-                m_virtualNormalizedScrollBarValue = CalculateCurrentNormalizedPosition();
+                // nextPos = CalculateCurrentNormalizedPosition();
+                // Debug.LogError($"sync {m_virtualNormalizedScrollBarValue} -> {nextPos} to bar; Frame {Time.frameCount}");
+                m_virtualNormalizedScrollBarValue = CalculateCurrentNormalizedScrollBarValue();
                 _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
-                UpdateScrollBarVisual();
             }
         }
 
@@ -140,10 +130,9 @@ namespace RecycleScrollView
         {
             if (TryGetRefElementFormScrollBarValue(normalizedPosition, out int refElementIndex, out float normalizedBaseScrollProgress, out float normalizedScrollProgressOffset))
             {
-                JumpToExistElementInstant(refElementIndex, normalizedBaseScrollProgress, normalizedScrollProgressOffset);
+                JumpToElementInstant(refElementIndex, normalizedBaseScrollProgress, normalizedScrollProgressOffset);
                 return true;
             }
-            Debug.LogError($"eee");
             return false;
         }
 
@@ -192,7 +181,7 @@ namespace RecycleScrollView
             return false;
         }
 
-        private float CalculateCurrentNormalizedPosition()
+        private float CalculateCurrentNormalizedScrollBarValue()
         {
             if (null == m_dataSource)
             {
@@ -200,87 +189,57 @@ namespace RecycleScrollView
             }
 
             int elementCount = m_currentUsingElements.Count;
-            string debugMsg = "";
+            // string debugMsg = "";
             for (int i = 0; i < elementCount; i++)
             {
                 RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
                 bool canCalculatValidPos = TryCalculateCurrentPositionFromElement(element, out float expectedNormalizedBasePosition, out float deltaToExpectedPosition, out float finalizedPosition);
-                debugMsg += $"Element_{element.ElementIndex}_{canCalculatValidPos}; expectedNormalizedBasePosition {expectedNormalizedBasePosition}; deltaToExpectedPosition {deltaToExpectedPosition}; finalizedPosition {finalizedPosition} \n";
+                // debugMsg += $"Element_{element.ElementIndex}_{canCalculatValidPos}; expectedNormalizedBasePosition {expectedNormalizedBasePosition}; deltaToExpectedPosition {deltaToExpectedPosition}; finalizedPosition {finalizedPosition} \n";
                 if (canCalculatValidPos)
                 {
                     m_tempList.Add(new TempPack(i, finalizedPosition));
                 }
             }
 
-            float tempResult = 0f;
-            for (int i = 0, length = m_tempList.Count; i < length; i++)
-            {
-                tempResult += 1f - m_tempList[i].result;
-            }
             if (0 == m_tempList.Count)
             {
-                tempResult = 0f;
+                for (int i = 0; i < elementCount; i++)
+                {
+                    RecycleSingleDirectionScrollElement element = m_currentUsingElements[i];
+                    bool canCalculatValidPos = TryCalculateCurrentPositionFromElement(element, out float expectedNormalizedBasePosition, out float deltaToExpectedPosition, out float finalizedPosition);
+                    // debugMsg += $"Element_{element.ElementIndex}_{canCalculatValidPos}; expectedNormalizedBasePosition {expectedNormalizedBasePosition}; deltaToExpectedPosition {deltaToExpectedPosition}; finalizedPosition {finalizedPosition} \n";
+                    if (canCalculatValidPos)
+                    {
+                        m_tempList.Add(new TempPack(i, finalizedPosition));
+                    }
+                }
+                // TODO
+                m_tempList.Clear();
+                return m_virtualNormalizedScrollBarValue;
             }
-            else
+
+            if (null == m_packSort)
             {
-                // tempResult /= m_tempList.Count;
-                tempResult = 1f - m_tempList[0].result;
+                m_packSort = (x, y) =>
+                {
+                    int dataCount = m_dataSource.DataElementCount;
+                    float half = 0 == dataCount % 2 ? dataCount / 2 - 0.5f : dataCount / 2;
+
+                    float deltaX = Mathf.Abs(x.elementIndex - half);
+                    float deltaY = Mathf.Abs(y.elementIndex - half);
+
+                    return deltaY.CompareTo(deltaX);
+                };
             }
+            m_tempList.Sort(m_packSort);
+
+            // TODO Should use elements the nearer to the head/tail edge
+            float tempResult = 1f - m_tempList[0].result;
             m_tempList.Clear();
             float result = Mathf.Clamp01(tempResult);
-            debugMsg = $"Check {result} from Group:\n" + debugMsg;
+            // debugMsg = $"Check {result} from Group:\n" + debugMsg;
             // Debug.LogError(debugMsg);
             return result;
-        }
-
-        private bool TryCalculateGapBetweenElement(int dataA, int dataB, out float gapSize)
-        {
-            int lowPosIndex, highPosIndex;
-            bool reverseArrangement = _scrollParam.reverseArrangement;
-            if (dataA < dataB)
-            {
-                lowPosIndex = reverseArrangement ? dataB : dataA;
-                highPosIndex = reverseArrangement ? dataA : dataB;
-            }
-            else if (dataA < dataB)
-            {
-                lowPosIndex = reverseArrangement ? dataA : dataB;
-                highPosIndex = reverseArrangement ? dataB : dataA;
-            }
-            else
-            {
-                gapSize = 0f;
-                return false;
-            }
-
-            if (TryGetShowingElement(lowPosIndex, out RecycleSingleDirectionScrollElement lowElement) &&
-                TryGetShowingElement(highPosIndex, out RecycleSingleDirectionScrollElement highElement))
-            {
-                float lowBoundPosition = CalculateExpectedPositionForData(lowPosIndex);
-                Vector2 lowElementSize = lowElement.ElementPreferredSize;
-
-                float hightBoundPosition = CalculateExpectedPositionForData(highPosIndex);
-                Vector2 highElementBSize = highElement.ElementPreferredSize;
-
-                // From low element to high element
-                if (IsHorizontal)
-                {
-                    gapSize = (lowElementSize.x * (1f - lowBoundPosition)) + (highElementBSize.x * hightBoundPosition);
-                }
-                else if (IsVertical)
-                {
-                    gapSize = (lowElementSize.y * (1f - lowBoundPosition)) + (highElementBSize.y * hightBoundPosition);
-                }
-                else
-                {
-                    gapSize = 0f;
-                    return false;
-                }
-                gapSize += _scrollParam.spacing;
-                return true;
-            }
-            gapSize = 0f;
-            return false;
         }
 
         /// <param name="expectedRectPosInViewport"> expectedRectPosInViewport </param>
@@ -296,17 +255,13 @@ namespace RecycleScrollView
             return false;
         }
 
-        /// <param name="dataIndex"></param>
+        /// <param name="elementIndex"></param>
         /// <returns> 0 ~ 1 (head ~ tail)</returns>
-        private float CalculateExpectedPositionForData(int dataIndex)
+        private float CalculateExpectedPositionForData(int elementIndex)
         {
-            // TODO Deal different direction cases
-            int convertedIndex = dataIndex;
             int dataCount = m_dataSource.DataElementCount;
             float step = 1f / (dataCount - 1);
-            float result = _scrollParam.reverseArrangement ?
-                step * (dataCount - 1 - dataIndex) :
-                step * convertedIndex;
+            float result = step * elementIndex;
             return result;
         }
 
@@ -332,9 +287,9 @@ namespace RecycleScrollView
         }
 
         // TODO Deal with different direction and arrangement
-        private bool TryCalculateCurrentPositionFromElement(int dataIndex, out float expectedNormalizedBasePosition, out float deltaToExpectedPosition, out float finalizedPosition)
+        private bool TryCalculateCurrentPositionFromElement(int elementIndex, out float expectedNormalizedBasePosition, out float deltaToExpectedPosition, out float finalizedPosition)
         {
-            if (TryGetShowingElement(dataIndex, out RecycleSingleDirectionScrollElement element))
+            if (TryGetShowingElement(elementIndex, out RecycleSingleDirectionScrollElement element))
             {
                 return TryCalculateCurrentPositionFromElement(element, out expectedNormalizedBasePosition, out deltaToExpectedPosition, out finalizedPosition);
             }
@@ -375,24 +330,42 @@ namespace RecycleScrollView
             elementTempLocalPositionInViewport = viewport.InverseTransformPoint(tempV3);
 
             Vector2 viewportExpectedLocalPosition = RectTransformEx.TransformNormalizedRectPositionToLocalPosition(viewport, convertedNormalizedRectPosition);
-            deltaToExpectedPosition = viewportExpectedLocalPosition.y - elementTempLocalPositionInViewport.y;
+            deltaToExpectedPosition = _scrollParam.scrollDirection switch
+            {
+                ScrollDirection.Vertical_UpToDown => viewportExpectedLocalPosition.y - elementTempLocalPositionInViewport.y,
+                ScrollDirection.Vertical_DownToUp => viewportExpectedLocalPosition.y - elementTempLocalPositionInViewport.y,
+
+                ScrollDirection.Horizontal_LeftToRight => viewportExpectedLocalPosition.x - elementTempLocalPositionInViewport.x,
+                ScrollDirection.Horizontal_RightToLeft => viewportExpectedLocalPosition.x - elementTempLocalPositionInViewport.x,
+                _ => 0f,
+            };
+
+            bool tempReverseCheck = _scrollParam.scrollDirection switch
+            {
+                ScrollDirection.Vertical_UpToDown => false,
+                ScrollDirection.Vertical_DownToUp => true,
+
+                ScrollDirection.Horizontal_LeftToRight => true,
+                ScrollDirection.Horizontal_RightToLeft => false,
+                _ => false,
+            };
 
             if (Mathf.Approximately(0f, deltaToExpectedPosition) || Mathf.Abs(deltaToExpectedPosition) < TEMP_MIN_VALUE)
             {
                 return true;
             }
-            // Currently only calculate for UpToDown case(normal arrangement)
-            else if (0f > deltaToExpectedPosition)
+            else if ((0f > deltaToExpectedPosition && !tempReverseCheck) ||
+                    (0f < deltaToExpectedPosition && tempReverseCheck))
             {
                 // Greater than pre calculated base position 
                 int nextIndex = index + 1;
                 if (dataCount - 1 <= nextIndex)
                 {
-                    if (TryCalculateGapBetweenElement(index - 1, index, out float gapSize))
+                    if (TryCalculateGapBetweenElement(index, nextIndex, out float gapSize) &&
+                        Mathf.Abs(deltaToExpectedPosition) < gapSize)
                     {
-                        expectedNormalizedBasePosition = (index - 1) * stepSize;
-                        deltaToExpectedPosition = gapSize - deltaToExpectedPosition;
-                        finalizedNormalizedPosition = expectedNormalizedBasePosition + stepSize * (deltaToExpectedPosition / gapSize);
+                        float normalizedDelta = Mathf.Abs(deltaToExpectedPosition) / gapSize;
+                        finalizedNormalizedPosition = expectedNormalizedBasePosition + stepSize * normalizedDelta;
                         return true;
                     }
                     else
@@ -403,15 +376,9 @@ namespace RecycleScrollView
                         return true;
                     }
                 }
-                else if (TryCalculateGapBetweenElement(index, nextIndex, out float gapSize) &&
-                    Mathf.Abs(deltaToExpectedPosition) < gapSize)
-                {
-                    float normalizedDelta = Mathf.Abs(deltaToExpectedPosition) / gapSize;
-                    finalizedNormalizedPosition = expectedNormalizedBasePosition + stepSize * normalizedDelta;
-                    return true;
-                }
             }
-            else // 0f < deltaToExpectedPosition
+            else if ((0f < deltaToExpectedPosition && !tempReverseCheck) ||
+                    (0f > deltaToExpectedPosition && tempReverseCheck))
             {
                 // Less than pre calculated base position 
                 int prevIndex = index - 1;
@@ -436,62 +403,40 @@ namespace RecycleScrollView
                 {
                     expectedNormalizedBasePosition -= stepSize;
                     deltaToExpectedPosition = gapSize - deltaToExpectedPosition;
-                    finalizedNormalizedPosition = expectedNormalizedBasePosition + stepSize * (deltaToExpectedPosition / gapSize);
+                    finalizedNormalizedPosition = expectedNormalizedBasePosition + stepSize * Mathf.Clamp01(deltaToExpectedPosition / gapSize);
                     return true;
                 }
             }
 
-            return false;
-        }
-
-        private bool TryGetShowingElement(int dataIndex, out RecycleSingleDirectionScrollElement element)
-        {
-            for (int i = 0, length = m_currentUsingElements.Count; i < length; i++)
-            {
-                if (m_currentUsingElements[i].ElementIndex == dataIndex)
-                {
-                    element = m_currentUsingElements[i];
-                    return true;
-                }
-            }
-            element = null;
             return false;
         }
 
         private void OnScrollBarValueChanged(float scrollbarValue)
         {
-            float convertedValue = Mathf.Clamp01(scrollbarValue);
-            m_hasSetScrollBarValueThisFrame = 1;
-            if (Mathf.Approximately(convertedValue, m_virtualNormalizedScrollBarValue))
-            {
-                _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
-                UpdateScrollBarVisual();
-                Debug.LogError($"wanna set scroll 01 {m_virtualNormalizedScrollBarValue} -> {scrollbarValue}_({convertedValue}) || FALSE; Frame {Time.frameCount}");
-                return;
-            }
+            _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
+            // TODO
+            // float convertedValue = Mathf.Clamp01(scrollbarValue);
+            // m_hasSetScrollBarValueThisFrame = 1;
+            // if (Mathf.Approximately(convertedValue, m_virtualNormalizedScrollBarValue))
+            // {
+            //     _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
+            //     // Debug.LogError($"wanna set scroll 01 {m_virtualNormalizedScrollBarValue} -> {scrollbarValue}_({convertedValue}) || FALSE; Frame {Time.frameCount}");
+            //     return;
+            // }
 
-            if (TryApplyNormalizedPosition(convertedValue))
-            {
-                m_hasAdjustElementsCurrentFrame = true;
-                Debug.LogError($"wanna set scroll {m_virtualNormalizedScrollBarValue} -> {scrollbarValue}_({convertedValue}) || TRUE; Frame {Time.frameCount}");
-                m_virtualNormalizedScrollBarValue = convertedValue;
-                _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
-            }
-            else
-            {
-                Debug.LogError($"wanna set scroll {m_virtualNormalizedScrollBarValue} -> {scrollbarValue}_({convertedValue}) || FALSE; Frame {Time.frameCount}");
-                _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
-            }
-            UpdateScrollBarVisual();
+            // if (TryApplyNormalizedPosition(convertedValue))
+            // {
+            //     m_hasAdjustElementsCurrentFrame = true;
+            //     // Debug.LogError($"wanna set scroll {m_virtualNormalizedScrollBarValue} -> {scrollbarValue}_({convertedValue}) || TRUE; Frame {Time.frameCount}");
+            //     m_virtualNormalizedScrollBarValue = convertedValue;
+            //     _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
+            // }
+            // else
+            // {
+            //     Debug.LogError($"wanna set scroll {m_virtualNormalizedScrollBarValue} -> {scrollbarValue}_({convertedValue}) || FALSE; Frame {Time.frameCount}");
+            //     _scrollBar.SetValueWithoutNotify(m_virtualNormalizedScrollBarValue);
+            // }
         }
 
-        private void UpdateScrollBarVisual()
-        {
-            if (null != _scrollBar)
-            {
-                MethodInfo methodInfo = _scrollBar.GetType().GetMethod("UpdateVisuals", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                methodInfo.Invoke(_scrollBar, null);
-            }
-        }
     }
 }
