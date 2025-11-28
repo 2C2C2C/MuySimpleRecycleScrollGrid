@@ -20,6 +20,21 @@ namespace RecycleScrollView
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsFirstSibling();
             newElement.SetIndex(elementIndex, ElementIndexDataIndex2WayConvert(elementIndex));
+
+            if (null != m_preCacheHeadElement)
+            {
+                int indexToSet = (0 < elementIndex) ? elementIndex : elementIndex - 1;
+                if (m_preCacheHeadElement.ElementIndex != indexToSet)
+                {
+                    m_dataSource.ChangeElementIndex(m_preCacheHeadElement.ElementTransform, m_preCacheHeadElement.DataIndex, ElementIndexDataIndex2WayConvert(indexToSet));
+                    m_preCacheHeadElement.SetIndex(indexToSet, ElementIndexDataIndex2WayConvert(indexToSet));
+                    m_preCacheHeadElement.ClearPreferredSize();
+                    m_preCacheHeadElement.CalculatePreferredSize();
+#if UNITY_EDITOR
+                    ChangeObjectName_EditorOnly(m_preCacheHeadElement, elementIndex);
+#endif
+                }
+            }
             // Debug.LogError($"Add on top index {elementIndex} Time {Time.time}");
         }
 
@@ -30,7 +45,60 @@ namespace RecycleScrollView
             newElement.CalculatePreferredSize();
             newElement.transform.SetAsLastSibling();
             newElement.SetIndex(elementIndex, ElementIndexDataIndex2WayConvert(elementIndex));
+
+            if (null != m_preCacheTailElement)
+            {
+                int dataCount = m_dataSource.DataElementCount;
+                int indexToSet = (dataCount - 1 > elementIndex) ? elementIndex + 1 : elementIndex;
+                if (m_preCacheTailElement.ElementIndex != indexToSet)
+                {
+                    m_dataSource.ChangeElementIndex(m_preCacheTailElement.ElementTransform, m_preCacheHeadElement.DataIndex, ElementIndexDataIndex2WayConvert(indexToSet));
+                    m_preCacheTailElement.SetIndex(indexToSet, ElementIndexDataIndex2WayConvert(indexToSet));
+                    m_preCacheTailElement.ClearPreferredSize();
+                    m_preCacheTailElement.CalculatePreferredSize();
+#if UNITY_EDITOR
+                    ChangeObjectName_EditorOnly(m_preCacheTailElement, indexToSet);
+#endif
+                }
+            }
             // Debug.LogError($"Add on bottom index {elementIndex} Time {Time.time}");
+        }
+
+        private void RemoveElementFromHead()
+        {
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[0];
+            if (null != m_preCacheHeadElement)
+            {
+                int dataIndex = element.DataIndex;
+                m_dataSource.ChangeElementIndex(m_preCacheHeadElement.ElementTransform, m_preCacheHeadElement.DataIndex, dataIndex);
+                m_preCacheHeadElement.SetIndex(ElementIndexDataIndex2WayConvert(dataIndex), dataIndex);
+                m_preCacheHeadElement.ClearPreferredSize();
+                m_preCacheHeadElement.CalculatePreferredSize();
+#if UNITY_EDITOR
+                ChangeObjectName_EditorOnly(m_preCacheHeadElement, ElementIndexDataIndex2WayConvert(dataIndex));
+#endif
+            }
+            m_currentUsingElements.RemoveAt(0);
+            InternalRemoveElement(element);
+        }
+
+        private void RemoveElementFromTail()
+        {
+            int elementIndex = m_currentUsingElements.Count - 1;
+            RecycleSingleDirectionScrollElement element = m_currentUsingElements[elementIndex];
+            if (null != m_preCacheTailElement)
+            {
+                int dataIndex = element.DataIndex;
+                m_dataSource.ChangeElementIndex(m_preCacheTailElement.ElementTransform, m_preCacheTailElement.DataIndex, dataIndex);
+                m_preCacheTailElement.SetIndex(ElementIndexDataIndex2WayConvert(dataIndex), dataIndex);
+                m_preCacheTailElement.ClearPreferredSize();
+                m_preCacheTailElement.CalculatePreferredSize();
+#if UNITY_EDITOR
+                ChangeObjectName_EditorOnly(m_preCacheTailElement, ElementIndexDataIndex2WayConvert(dataIndex));
+#endif
+            }
+            m_currentUsingElements.RemoveAt(elementIndex);
+            InternalRemoveElement(element);
         }
 
         public void InsertElement(int dataIndex)

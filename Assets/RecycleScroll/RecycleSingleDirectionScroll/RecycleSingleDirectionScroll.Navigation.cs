@@ -13,6 +13,7 @@ namespace RecycleScrollView
             public float normalizedElementPositionAdjustment;
         }
 
+        [Header("Navigation params")]
         [SerializeField]
         private SingleScrollElementNavigationParams _defaultNavigationParams;
 
@@ -146,6 +147,8 @@ namespace RecycleScrollView
 
         private void JumpToElementInstant(int elementIndex, float normalizedScrollProgress, float normalizedScrollProgressOffset)
         {
+            // TODO
+            return;
             if (null == m_dataSource || elementIndex < 0 || elementIndex >= m_dataSource.DataElementCount)
             {
                 Debug.LogError($"jump fail");
@@ -160,7 +163,7 @@ namespace RecycleScrollView
             {
                 float tempMove = 0f;
                 float stepSize = 1f / (m_dataSource.DataElementCount - 1);
-                TryGetRefElementFormScrollBarValue(m_virtualNormalizedScrollBarValue, out int currentBaseIndex, out float currentNormalizedProgress, out float currentNormalizedProgressOffset);
+                TryGetRefElementFormScrollProgress(m_scrollProgress, out int currentBaseIndex, out float currentNormalizedProgress, out float currentNormalizedProgressOffset);
                 if (currentBaseIndex == elementIndex)
                 {
                     tempMove = normalizedScrollProgress + normalizedScrollProgressOffset - currentNormalizedProgress;

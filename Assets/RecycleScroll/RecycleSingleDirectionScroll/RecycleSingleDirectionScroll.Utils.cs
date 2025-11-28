@@ -59,8 +59,22 @@ namespace RecycleScrollView
                 return false;
             }
 
-            if (TryGetShowingElement(lowElementIndex, out RecycleSingleDirectionScrollElement lowElement) &&
-                TryGetShowingElement(highElementIndex, out RecycleSingleDirectionScrollElement highElement))
+            if (!TryGetShowingElement(lowElementIndex, out RecycleSingleDirectionScrollElement lowElement))
+            {
+                if (null != m_preCacheHeadElement && m_preCacheHeadElement.ElementIndex == lowElementIndex)
+                {
+                    lowElement = m_preCacheHeadElement;
+                }
+            }
+            if (!TryGetShowingElement(highElementIndex, out RecycleSingleDirectionScrollElement highElement))
+            {
+                if (null != m_preCacheTailElement && m_preCacheTailElement.ElementIndex == highElementIndex)
+                {
+                    highElement = m_preCacheTailElement;
+                }
+            }
+
+            if (null != lowElement && null != highElement)
             {
                 float lowBoundPosition = CalculateExpectedPositionForData(lowElementIndex);
                 Vector2 lowElementSize = lowElement.ElementPreferredSize;
@@ -68,14 +82,16 @@ namespace RecycleScrollView
                 float hightBoundPosition = CalculateExpectedPositionForData(highElementIndex);
                 Vector2 highElementBSize = highElement.ElementPreferredSize;
 
+                Vector2 lowBoundRectPos = CalculateNormalizedRectPosition(lowBoundPosition);
+                Vector2 highBoundRectPos = CalculateNormalizedRectPosition(hightBoundPosition);
                 // From low element to high element
                 if (IsHorizontal)
                 {
-                    gapSize = (lowElementSize.x * (1f - lowBoundPosition)) + (highElementBSize.x * hightBoundPosition);
+                    gapSize = (lowElementSize.x * (1f - lowBoundRectPos.x)) + (highElementBSize.x * highBoundRectPos.x);
                 }
                 else if (IsVertical)
                 {
-                    gapSize = (lowElementSize.y * (1f - lowBoundPosition)) + (highElementBSize.y * hightBoundPosition);
+                    gapSize = (lowElementSize.y * (1f - lowBoundRectPos.y)) + (highElementBSize.y * highBoundRectPos.y);
                 }
                 else
                 {
